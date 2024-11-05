@@ -6,7 +6,7 @@
     "scrollbarweb2": {
       "hosting": {
         "test-scrollbar": [
-          "test-scrollbar"
+          "test-scrollbarweb2"
         ],
         "scrollbarweb2": [
           "scrollbarweb2"

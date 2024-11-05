@@ -15,7 +15,7 @@
     ]
   },
   {
-    "target": "test-scrollbar",
+    "target": "test-scrollbarweb2",
     "public": "build",
     "ignore": [
       "firebase.json",
