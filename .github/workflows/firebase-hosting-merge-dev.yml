@@ -2,7 +2,7 @@ name: Deploy to Firebase Hosting on merge
 on:
   push:
     branches:
-      - develop
+      - development
     paths-ignore:
       - 'README.md'
       - 'firestore.rules'
@@ -24,7 +24,7 @@ jobs:
       FIREBASE_MESSAGING_SENDER_ID: '${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}'
       FIREBASE_APP_ID: '${{ secrets.FIREBASE_APP_ID }}'
       FIREBASE_MESSUREMENT_ID: '${{ secrets.FIREBASE_MESSUREMENT_ID }}'
-      ENV: 'production'
+      ENV: 'development'
     steps:
       - uses: actions/checkout@v4
       - name: Install Node.js
