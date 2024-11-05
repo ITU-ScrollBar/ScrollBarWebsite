@@ -5,13 +5,14 @@
   "targets": {
     "scrollbarweb2": {
       "hosting": {
-        "test-scrollbar": [
-          "test-scrollbarweb2"
-        ],
         "scrollbarweb2": [
           "scrollbarweb2"
+        ],
+        "test-scrollbarweb2": [
+          "test-scrollbarweb2"
         ]
       }
     }
-  }
+  },
+  "etags": {}
 }
