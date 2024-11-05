@@ -1,5 +1,18 @@
 {
   "projects": {
     "default": "scrollbarweb2"
-  }
+  },
+  "targets": {
+    "scrollbarweb2": {
+      "hosting": {
+        "scrollbarweb2": [
+          "scrollbarweb2"
+        ],
+        "test-scrollbarweb2": [
+          "test-scrollbarweb2"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
