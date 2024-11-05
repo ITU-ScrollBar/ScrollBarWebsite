@@ -1,5 +1,17 @@
 {
   "projects": {
     "default": "scrollbarweb2"
+  },
+  "targets": {
+    "scrollbarweb2": {
+      "hosting": {
+        "test-scrollbar": [
+          "test-scrollbar"
+        ],
+        "scrollbarweb2": [
+          "scrollbarweb2"
+        ]
+      }
+    }
   }
 }
