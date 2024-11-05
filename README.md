@@ -1,3 +1,11 @@
+# Guidelines to contribute
+
+- Please checkout to a new branch when making changes.
+    1. If you are working on a feature please name your new branch with the prefix `feature/`
+    2. If you are fixing a bug please name your new branch with the prefix `fix/`
+
+- Create a Pull Request to develop when ready for review. You can indicate work in progress by adding the prefix WIP or 🚧 to the PR title
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
