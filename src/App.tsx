@@ -31,7 +31,7 @@ function App() {
   return (
     <BrowserRouter>
     
-      <Layout style={{ minHeight: '100vh', minWidth: '100vw', flexDirection: 'column', height: 'auto'}}>
+      <Layout style={{ minHeight: '100vh', minWidth: '100%', flexDirection: 'column', height: 'auto'}}>
     
         <Layout>
           <Content><Routes>
