@@ -4,7 +4,10 @@ import { MenuOutlined } from '@ant-design/icons'
 
 import logo from '../../assets/images/logo.png';
 import Link from 'antd/es/typography/Link';
+import instagramIcon from '../../assets/images/instagram.png';
+import facebookIcon from '../../assets/images/facebook.png';
 import { useNavigate } from "react-router";
+
 
 
 
@@ -22,60 +25,72 @@ export default function HeaderBar() {
   const items = [
     {
       key: '1',
-      label: <Link style={linkcss} href="#about">About Scrollbar</Link>,
+      label: <Link style={linkcss} href="#events">EVENTS</Link>,
     },
     {
       key: '3',
-      label: <Link style={linkcss} href="#volunteers">Our volunteers</Link>,
+      label: <Link style={linkcss} href="#menu">OUR MENU</Link>,
     },
     {
       key: '4',
-      label: <Link style={linkcss} href="#future_events">Future events</Link>,
+      label: <Link style={linkcss} href="#volunteers">OUR VOLUNTEERS</Link>,
     },
     {
       key: '5',
-      label: <div style={linkcss} onClick={() => navigate("/tenders")}>Tender site</div>,
+      label: <div style={linkcss} onClick={() => navigate("/tenders")}>TENDER SITE</div>,
     },
+        {
+      key: '6',
+      label: (
+        <a href="https://www.instagram.com/scrollbaritu?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer">
+          <Image src={instagramIcon} preview={false} style={{ width: '22px', marginLeft: '-12px' }} />
+        </a>
+      ),
+    },
+    {
+      key: '7',
+      label: (
+        <a href="https://www.facebook.com/ScrollBar/" target="_blank" rel="noopener noreferrer">
+          <Image src={facebookIcon} preview={false} style={{ width: '22px', marginLeft: '-12px' }} />
+        </a>
+      ),
+    }
   ];
   
   <Menu items={items} />
 
   const navigate = useNavigate();
 
-
-  return (
-<div
-  style={{
-    display: 'flex',
-    alignItems: 'center',
-    height: '100%',
-    width: '100vw',
-    marginTop: '100px',
-    backgroundColor: 'transparent',
-    padding: '0 2rem',
-  }}
->
-  <Image
-    style={{ height: '160px' }}
-    src={logo}
-    onClick={() => console.log("yeet")}
-  />
-  <Menu
-    theme="dark"
-    mode="horizontal"
-    overflowedIndicator= {<MenuOutlined style={{ color: 'white' }} />}
+return (
+  <div
     style={{
-      flex: 1,
+      display: 'flex',
+      alignItems: 'center',
+      height: '100%',
+      width: '100vw',
+      marginTop: '100px',
       backgroundColor: 'transparent',
-      fontWeight: 'bold',
-      justifyContent: 'flex-end',
-      width: '100%',
+      padding: '0 2rem',
     }}
-    items={items}
   >
-
-  </Menu>
-</div>
-
-  )
+    <Image
+      style={{ width: '250px', height: 'auto', cursor: 'pointer' }}
+      src={logo}
+      onClick={() => console.log("yeet")}
+    />
+    <Menu
+      theme="dark"
+      mode="horizontal"
+      overflowedIndicator={<MenuOutlined style={{ color: 'white' }} />}
+      style={{
+        flex: 1,
+        backgroundColor: 'transparent',
+        fontWeight: 'bold',
+        justifyContent: 'flex-end',
+        width: '100%',
+      }}
+      items={items}
+    />
+  </div>
+)
 }

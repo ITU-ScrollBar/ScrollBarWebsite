@@ -49,7 +49,7 @@ function App() {
         <Route path="*" element={<NotFoundPage />} />
       </Routes></Content>
         </Layout>
-        <Footer style={{ backgroundColor: '#FFE600' }}>
+        <Footer style={{ backgroundColor: 'black' }}>
           <FooterBar/>
         </Footer>
       </Layout>
