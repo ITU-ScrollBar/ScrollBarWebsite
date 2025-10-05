@@ -72,11 +72,11 @@ button:focus-visible {
 
 .ant-menu-item-selected {
   background-color: transparent !important;
-  color: #FFE600 !important;
+  color: #d7ce00 !important;
 }
 
 /* Optional: You can also target the hover effect if you want to keep hover styles */
 .ant-menu-item:hover {
   background-color: transparent !important;
-  color: #FFE600 !important;
+  color: #d7ce00 !important;
 }
