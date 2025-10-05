@@ -10,7 +10,7 @@ import HeaderBar from '../components/HomePage/HeaderBar';
 
 export default function HomePage() {
   return (
-    <Layout style={{ minHeight: '100vh', minWidth: '100vw', flexDirection: 'column', height: 'auto'}}>
+    <Layout style={{ minHeight: '100vh', width: '100%', flexDirection: 'column', height: 'auto'}}>
        <Header
         style={{
           position: 'absolute',
@@ -26,7 +26,7 @@ export default function HomePage() {
       >
         <HeaderBar />
       </Header>
-    <Image style={{width: '100vw'}} preview={false} src={hero} ></Image>
+  <Image style={{ width: '100%', display: 'block' }} preview={false} src={hero} />
     <Row justify="center">
           <Col
             md={24}
