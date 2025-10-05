@@ -11,7 +11,6 @@ import {
   signInWithEmailAndPassword,
   signOut,
   User,
-  UserProfile,
 } from "firebase/auth";
 import { auth } from "../firebase/index";
 

@@ -1,7 +1,7 @@
 import React from 'react'
 import useTenders from '../hooks/useTenders'
 import { useState } from 'react'
-import { Button, DatePicker, Input } from 'antd'
+import { Button, Input } from 'antd'
 import useEvents from '../hooks/useEvents'
 import Title from 'antd/es/typography/Title'
 import TextArea from 'antd/es/input/TextArea'

@@ -1,14 +1,9 @@
 // src/App.tsx
-import React, { useContext } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
-import {
-  AntDesignOutlined,
-  FacebookOutlined,
-  InstagramOutlined,
-  LinkedinOutlined,
-  MenuOutlined,
-} from '@ant-design/icons';
+
+
 
 
 import HomePage from './pages/HomePage';
@@ -16,12 +11,9 @@ import LoginPage from './pages/LoginPage';
 import NotFoundPage from './pages/NotFoundPage'; // A 404 page
 import ProtectedRoutes from './routes/ProtectedRoutes';
 import TenderSite from './pages/TenderSite';
-import { Col, Image, Layout, Row, Space } from 'antd';
-import { Content, Footer, Header } from 'antd/es/layout/layout';
-import Sider from 'antd/es/layout/Sider';
-import HeaderBar from './components/HomePage/HeaderBar';
+import { Layout } from 'antd';
+import { Content, Footer } from 'antd/es/layout/layout';
 
-import { Typography } from "antd";
 import FooterBar from './components/HomePage/FooterBar';
 import TestPage from './pages/TestPage';
 import Register from './pages/Register';

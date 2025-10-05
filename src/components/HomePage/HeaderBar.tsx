@@ -1,9 +1,8 @@
 import React from 'react'
-import { Col, Image, Menu, Row, Typography } from 'antd'
+import { Image, Menu } from 'antd'
 import { MenuOutlined } from '@ant-design/icons'
 
 import logo from '../../assets/images/logo.png';
-import MenuItem from 'antd/es/menu/MenuItem';
 import Link from 'antd/es/typography/Link';
 import { useNavigate } from "react-router";
 
@@ -41,7 +40,7 @@ export default function HeaderBar() {
   
   <Menu items={items} />
 
-  let navigate = useNavigate();
+  const navigate = useNavigate();
 
 
   return (

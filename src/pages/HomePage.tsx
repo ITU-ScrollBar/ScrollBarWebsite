@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { Avatar, Button, Col, Divider, Image, Layout, Menu, Row, Space, Typography } from 'antd'
+import { Button, Col, Divider, Image, Layout, Row, Space } from 'antd'
 
 import hero from '../assets/images/background.png';
 import Title from 'antd/es/typography/Title';

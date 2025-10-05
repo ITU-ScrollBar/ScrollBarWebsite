@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext'; // Adjust path
 import { useNavigate } from 'react-router-dom';
-import { Form, Input, Button, Card, Alert, Spin } from 'antd';
+import { Form, Input, Button, Card, Alert } from 'antd';
 
 const LoginPage: React.FC = () => {
     const { login } = useAuth();

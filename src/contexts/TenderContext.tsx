@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useMemo, ReactNode } from "react";
 import { Tender, Invite } from "../types/types-file"; // Ensure this import path is correct
 import useTenders from "../hooks/useTenders"; // Assuming this is your custom hook for handling tender data
-import { DocumentData } from "firebase/firestore";
 
 export interface TenderContextType {
   tenderState: {

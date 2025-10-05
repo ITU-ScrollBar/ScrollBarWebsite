@@ -11,7 +11,7 @@ export default function TenderSite() {
 
     const { logout } = useAuth()
 
-    let navigate = useNavigate();
+    const navigate = useNavigate();
 
     const navigateToLink = (location: Path) => navigate(location);
 
