@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useMemo, ReactNode } from "react";
 import { DocumentData } from "firebase/firestore";
-import { Event } from "../types/types-file";
+import { Event, EventCreateParams } from "../types/types-file";
 import useEvents from "../hooks/useEvents"; // You already have this
 
 // Context type definition
@@ -13,7 +13,7 @@ export interface EventContextType {
     events: (Event & { key: string })[];
     previousEvents: (Event & { key: string })[];
   };
-  addEvent: (event: Event) => Promise<DocumentData>;
+  addEvent: (event: EventCreateParams) => Promise<DocumentData>;
   removeEvent: (event: Event) => Promise<void>;
   updateEvent: (id: string, field: string, value: any) => Promise<void>;
 }
