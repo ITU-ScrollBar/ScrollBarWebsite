@@ -15,6 +15,7 @@ import TestPage from "./pages/TestPage";
 import Register from "./pages/Register";
 import Shifts from "./pages/members/Shifts";
 import Profile from "./pages/members/Profile";
+import { TenderMenu } from "./components/HomePage/TenderMenu";
 
 function App() {
   return (
@@ -33,9 +34,11 @@ function App() {
 
               {/* --- Protected Routes --- */}
               <Route element={<ProtectedRoutes />}>
-                <Route path="/tenders" element={<TenderSite />} />
-                <Route path="/tenders/shifts" element={<Shifts />} />
-                <Route path="/members/profile" element={<Profile />} />
+                <Route element={<TenderMenu />}>
+                  <Route path="/tenders" element={<TenderSite />} />
+                  <Route path="/tenders/shifts" element={<Shifts />} />
+                  <Route path="/members/profile" element={<Profile />} />
+                </Route>
               </Route>
 
               {/* --- Catch-all Route (404 Not Found) --- */}

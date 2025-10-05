@@ -11,12 +11,15 @@ import {
   signInWithEmailAndPassword,
   signOut,
   User,
+  UserInfo
 } from "firebase/auth";
 import { auth } from "../firebase/index";
+import { getUser } from "../firebase/api/authentication";
 
 // Define and export AuthContextType and AuthProviderProps
 export interface AuthContextType {
-  currentUser: User | null;
+  currentUser: UserInfo | null;
+  authenticatedUser: User | null;
   loading: boolean;
   login: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -30,12 +33,29 @@ export interface AuthProviderProps {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [authenticatedUser, setAuthenticatedUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
+      setAuthenticatedUser(user);
+      if (user) {
+        console.log("I'm in");
+        getUser(user!.uid, {
+          next: (snapshot) => {
+            if (snapshot.exists()) {
+              var userdata = snapshot.data() as UserInfo;
+              console.log(userdata);
+              setCurrentUser(userdata);
+            }
+          },
+          error: (error) => {
+            console.error("Error fetching user data:", error);
+            setCurrentUser(null);
+          },
+        });
+      }
       setLoading(false);
       console.log("Auth State Changed:", user ? `User ${user.uid}` : "No user");
     });
@@ -57,7 +77,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const setUser = (user: User | null): void => {
-    setCurrentUser(user);
+    setAuthenticatedUser(user);
   };
 
 
@@ -75,12 +95,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value = useMemo(
     () => ({
       currentUser,
+      authenticatedUser,
       loading,
       login,
       logout,
       setUser,
     }),
-    [currentUser, loading]
+    [currentUser, authenticatedUser, loading]
   );
 
   return (
