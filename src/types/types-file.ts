@@ -84,6 +84,8 @@ export interface Shift {
   key?: string;
   start: Date;
   end: Date;
+  eventId: string;
+  title: string;
 }
 
 export interface ShiftUpdateParams {
