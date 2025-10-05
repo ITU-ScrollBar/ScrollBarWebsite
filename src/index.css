@@ -27,10 +27,15 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+}
+
+/* Ensure the app can't overflow horizontally and uses full viewport width */
+html, body, #root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 h1 {

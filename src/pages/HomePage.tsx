@@ -7,17 +7,8 @@ import HeaderBar from '../components/HomePage/HeaderBar'
 
 export default function HomePage() {
   return (
-    <Layout
-      style={{
-        minHeight: '100vh',
-        minWidth: '100vw',
-        flexDirection: 'column',
-        height: 'auto',
-        backgroundColor: 'white',
-      }}
-    >
-      {/* Header — stays over the video */}
-      <Header
+    <Layout style={{ minHeight: '100vh', width: '100%', flexDirection: 'column', height: 'auto'}}>
+       <Header
         style={{
           position: 'absolute',
           top: 0,
@@ -32,7 +23,6 @@ export default function HomePage() {
       >
         <HeaderBar />
       </Header>
-
      {/* Hero video section */}
 <div
   style={{
