@@ -6,16 +6,16 @@ import { Content, Header } from "antd/es/layout/layout";
 import Sider from "antd/es/layout/Sider";
 import Title from "antd/es/typography/Title";
 import useEvents from "../../hooks/useEvents";
-import React from "react";
 import Paragraph from "antd/es/typography/Paragraph";
 import useEngagements from "../../hooks/useEngagements";
+import { dateToHourString } from "./helpers";
 
 export default function Shifts() {
   const navigation = useNavigate();
-  const { shiftState, addShift, removeShift, updateShift } = useShifts();
+  const { shiftState } = useShifts();
   const navigateToLink = (location: Path) => navigation(location);
   const { eventState } = useEvents();
-  const { engagementState } = useEngagements(); 
+  const { engagementState } = useEngagements();
 
   if (shiftState.loading || eventState.loading || engagementState.loading) {
     return <div>Loading...</div>;
@@ -23,14 +23,6 @@ export default function Shifts() {
   console.log("shift", shiftState.shifts);
   console.log("events", eventState.events);
   console.log("engagement", engagementState.engagements);
-
-  const toDateStuff = (ts: Date) => {
-    // console.log("ts", ts);
-    const date = new Date(
-      (ts.seconds || 0) * 1000 + Math.floor((ts.nanoseconds || 0) / 1e6)
-    );
-    return date.getHours();
-  };
 
   return (
     <Layout
@@ -77,8 +69,8 @@ export default function Shifts() {
                       </Title>
                       <Paragraph>
                         <>
-                          {toDateStuff(shift.start).toString()} -{" "}
-                          {toDateStuff(shift.end).toString()}
+                          {dateToHourString(shift.start)} -{" "}
+                          {dateToHourString(shift.end)}
                         </>
                       </Paragraph>
                     </>

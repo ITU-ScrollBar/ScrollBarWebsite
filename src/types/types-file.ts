@@ -62,6 +62,11 @@ export interface Event {
   [id: string]: any;
 }
 
+export interface FirebaseDate {
+  seconds: number;
+  nanoseconds: number;
+}
+
 export type EventCreateParams = {
   start: Date;
   end: Date;
@@ -82,10 +87,11 @@ export interface EventUpdateParams {
 export interface Shift {
   id?: string;
   key?: string;
-  start: Date;
-  end: Date;
+  start: FirebaseDate;
+  end: FirebaseDate;
   eventId: string;
   title: string;
+  location: string;
 }
 
 export interface ShiftUpdateParams {
