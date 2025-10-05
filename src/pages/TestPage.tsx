@@ -12,6 +12,7 @@ import TextArea from 'antd/es/input/TextArea'
 
 
 
+
 export default function TestPage() {
     const { addInvite, removeInvite } = useTenders()
     const { addEvent, updateEvent, eventState } = useEvents();
@@ -40,6 +41,10 @@ export default function TestPage() {
         addEvent(event)
     }
 
+
+
+    
+
     const { events } = eventState
     const event = events[0] // Assuming you want to update the first event
 
@@ -53,6 +58,8 @@ export default function TestPage() {
     <Title level={3} editable={{onChange: (value) => updateEvent(event.id,'title',value) }} >Title: {event.title}</Title>
     <Title level={4} editable={{onChange: (value) => updateEvent(event.id,'location',value) }}>Location: {event.location}</Title>
     <TextArea onChange={(value) => updateEvent(event.id,'description',value.target.value) } value={event.description}></TextArea>
+
+    <Title>Create new shift</Title>
 
 
 
