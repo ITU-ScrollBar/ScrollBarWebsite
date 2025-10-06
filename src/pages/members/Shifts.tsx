@@ -72,7 +72,7 @@ export default function Shifts() {
               return (
                 <section key={event.id} style={{ marginBottom: 32 }}>
                   <Title level={2} style={{ marginBottom: 12 }}>
-                    {event.title}
+                    {event.displayName}
                   </Title>
 
                   {shifts.length === 0 ? (
