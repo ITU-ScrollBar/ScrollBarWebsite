@@ -8,7 +8,15 @@ import Title from "antd/es/typography/Title";
 import useEvents from "../../hooks/useEvents";
 import Paragraph from "antd/es/typography/Paragraph";
 import useEngagements from "../../hooks/useEngagements";
-import { dateToHourString } from "./helpers";
+import {
+  dateToHourString,
+  getEngagementsForShift,
+  getTenderForEngagement,
+  getTenderDisplayName,
+  getTenderInitial,
+  handleImageError,
+} from "./helpers";
+import useTenders from "../../hooks/useTenders";
 
 export default function Shifts() {
   const navigation = useNavigate();
@@ -16,6 +24,7 @@ export default function Shifts() {
   const navigateToLink = (location: Path) => navigation(location);
   const { eventState } = useEvents();
   const { engagementState } = useEngagements();
+  const { tenderState } = useTenders();
 
   if (shiftState.loading || eventState.loading || engagementState.loading) {
     return <div>Loading...</div>;
@@ -110,48 +119,141 @@ export default function Shifts() {
                           </Paragraph>
                         </div>
 
-                        {/* Right column: shift title and any extra data */}
+                        {/* SHIFT TITLE AND TENDERS */}
                         <div style={{ flex: 1, marginLeft: 0 }}>
                           <Title level={5} style={{ marginBottom: 6 }}>
                             {shift.title}
                           </Title>
 
-                          {/* avatars/ names aligned left */}
+                          {/* Render tenders for this shift */}
                           <Row
                             gutter={[8, 8]}
                             justify="start"
                             style={{ marginLeft: 0 }}
                           >
-                            <Col>
-                              <div
-                                style={{
-                                  width: 36,
-                                  height: 36,
-                                  borderRadius: 18,
-                                  background: "#ffd",
-                                }}
-                              />
-                            </Col>
-                            <Col>
-                              <div
-                                style={{
-                                  width: 36,
-                                  height: 36,
-                                  borderRadius: 18,
-                                  background: "#ffd",
-                                }}
-                              />
-                            </Col>
-                            <Col>
-                              <div
-                                style={{
-                                  width: 36,
-                                  height: 36,
-                                  borderRadius: 18,
-                                  background: "#ffd",
-                                }}
-                              />
-                            </Col>
+                            {getEngagementsForShift(
+                              shift.id!,
+                              engagementState.engagements
+                            ).map((engagement) => {
+                              const tender = getTenderForEngagement(
+                                engagement,
+                                tenderState.tenders
+                              );
+                              if (!tender) return null;
+
+                              return (
+                                <Col key={engagement.id}>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      alignItems: "center",
+                                      gap: 4,
+                                    }}
+                                  >
+                                    {/* Tender Avatar */}
+                                    <div
+                                      style={{
+                                        width: 36,
+                                        height: 36,
+                                        borderRadius: 18,
+                                        background: "#1890ff",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        color: "white",
+                                        fontWeight: "bold",
+                                        fontSize: "12px",
+                                        overflow: "hidden",
+                                      }}
+                                    >
+                                      {tender.photoUrl ? (
+                                        <img
+                                          src={tender.photoUrl}
+                                          alt={getTenderDisplayName(tender)}
+                                          style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit: "cover",
+                                            borderRadius: 18,
+                                          }}
+                                          onError={handleImageError}
+                                        />
+                                      ) : null}
+                                      <div
+                                        style={{
+                                          display: tender.photoUrl
+                                            ? "none"
+                                            : "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          width: "100%",
+                                          height: "100%",
+                                        }}
+                                      >
+                                        {getTenderInitial(tender)}
+                                      </div>
+                                    </div>
+                                    {/* Tender Name */}
+                                    <span
+                                      style={{
+                                        fontSize: "10px",
+                                        textAlign: "center",
+                                        maxWidth: "50px",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                      }}
+                                    >
+                                      {getTenderDisplayName(tender)}
+                                    </span>
+                                  </div>
+                                </Col>
+                              );
+                            })}
+
+                            {/* Show empty slots or "up for grabs" */}
+                            {getEngagementsForShift(
+                              shift.id!,
+                              engagementState.engagements
+                            ).length === 0 && (
+                              <Col>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    gap: 4,
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      width: 36,
+                                      height: 36,
+                                      borderRadius: 18,
+                                      background: "#f0f0f0",
+                                      border: "2px dashed #d9d9d9",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      color: "#999",
+                                      fontSize: "12px",
+                                    }}
+                                  >
+                                    ?
+                                  </div>
+                                  <span
+                                    style={{
+                                      fontSize: "10px",
+                                      textAlign: "center",
+                                      color: "#999",
+                                    }}
+                                  >
+                                    Open
+                                  </span>
+                                </div>
+                              </Col>
+                            )}
                           </Row>
                         </div>
                       </div>

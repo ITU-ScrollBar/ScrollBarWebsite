@@ -112,8 +112,10 @@ export type Tender = {
   id: string;
   key: string;
   // Add any other fields you expect from Firestore, e.g.:
-  name: string;
+  name?: string;
   email: string;
+  displayName?: string;
+  photoUrl?: string;
   // Add other fields here
 };
 
