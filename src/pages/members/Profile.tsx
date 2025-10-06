@@ -49,7 +49,7 @@ export default function Profile() {
       active: true,
       photoUrl: (currentUser as any).photoURL ?? newbiehatSvg,
       memberSince: 2004,
-      totalshifts: 5,
+      totalShifts: 5,
     }
   : null;
   
@@ -116,7 +116,7 @@ export default function Profile() {
             <h4 style={{ margin: 0, width: "100%", textAlign: "left" }}>Role: {(userProfile?.roles ?? []).join(", ")}</h4>
 
             <h4 style={{ marginTop: 8, marginBottom: 0, width: "100%", textAlign: "left" }}><b>Your Data</b></h4>
-            <h4 style={{ margin: 0, width: "100%", textAlign: "left" }}>Total shifts: {userProfile?.totalshifts ?? 5 }</h4>
+            <h4 style={{ margin: 0, width: "100%", textAlign: "left" }}>Total shifts: {userProfile?.totalShifts ?? 5 }</h4>
             <h4 style={{ margin: 0, width: "100%", textAlign: "left" }}>Member since: {userProfile?.memberSince}</h4>
 
             <h4 style={{ marginTop: 8, marginBottom: 0, width: "100%", textAlign: "left" }}><b>Badges TBD</b></h4>

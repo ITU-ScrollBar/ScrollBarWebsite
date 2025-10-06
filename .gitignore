@@ -26,3 +26,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# To ensure file is not added accidentally
+package-lock.json
