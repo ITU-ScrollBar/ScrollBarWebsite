@@ -34,7 +34,12 @@ const items: MenuItem[] = [
 export const TenderMenu = ({ children }: TenderMenuProps) => {
   const [current, setCurrent] = useState('tab');
   const { currentUser } = useAuth();
-  const userProfile: UserProfile | null = currentUser;
+  const userProfile: UserProfile | null = currentUser
+    ? {
+        displayName: currentUser.displayName ?? "No username",
+        photoUrl: (currentUser as any).photoUrl ?? avatar
+      }
+    : null;
 
   const navigate = useNavigate();
   
