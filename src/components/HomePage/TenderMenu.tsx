@@ -9,6 +9,10 @@ import { useAuth } from "../../contexts/AuthContext";
 interface TenderMenuProps {
   children?: ReactNode;
 }
+interface UserProfile {
+  displayName: string;
+  photoUrl: string;
+}
 
 type MenuItem = Required<MenuProps>['items'][number];
 
@@ -30,6 +34,7 @@ const items: MenuItem[] = [
 export const TenderMenu = ({ children }: TenderMenuProps) => {
   const [current, setCurrent] = useState('tab');
   const { currentUser } = useAuth();
+  const userProfile: UserProfile | null = currentUser;
 
   const navigate = useNavigate();
   
@@ -65,8 +70,8 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
             />
           </ConfigProvider>
           <img
-            src={currentUser?.photoURL ?? avatar}
-            alt={currentUser?.displayName ?? "avatar"}
+            src={userProfile?.photoUrl ?? avatar}
+            alt={userProfile?.displayName ?? "avatar"}
             style={{ width: 96, height: 96, borderRadius: "50%", objectFit: "cover", marginRight: 24 }}
           />
         </div>
