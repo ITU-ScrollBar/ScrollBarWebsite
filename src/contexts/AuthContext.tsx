@@ -41,12 +41,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setAuthenticatedUser(user);
       if (user) {
-        console.log("I'm in");
         getUser(user!.uid, {
           next: (snapshot) => {
             if (snapshot.exists()) {
               var userdata = snapshot.data() as UserInfo;
-              console.log(userdata);
               setCurrentUser(userdata);
             }
           },
