@@ -1,10 +1,13 @@
 import React from 'react'
-import useTenders from '../hooks/useTenders'
+import useTenders from '../../../hooks/useTenders'
 import { useState } from 'react'
 import { Button, Input } from 'antd'
-import useEvents from '../hooks/useEvents'
+import useEvents from '../../../hooks/useEvents'
 import Title from 'antd/es/typography/Title'
 import TextArea from 'antd/es/input/TextArea'
+import type { RadioChangeEvent } from 'antd';
+import { Radio, Tabs } from 'antd';
+import EventInfo from './EventInfo'
 
 
 
@@ -33,20 +36,36 @@ export default function TestPage() {
             start: nextFriday,
             end: new Date(nextFriday.getTime() + 60 * 60 * 11000), // 1 hour later
             description: 'No description',
-            title: 'New Event wup wup',
-            location: 'ScrollBar',
+            displayName: 'New Event wup wup',
+            where: 'ScrollBar',
             published: false,
             internal: false,
         }
         addEvent(event)
     }
 
+    type TabPosition = 'left' | 'right' | 'top' | 'bottom';
+
+
+    const [mode, setMode] = useState<TabPosition>('top');
+
+    const handleModeChange = (e: RadioChangeEvent) => {
+      setMode(e.target.value);
+    };
+
 
 
     
 
     const { events } = eventState
+    const {previousEvents} = eventState
+
     const event = events[0] // Assuming you want to update the first event
+    console.log(events)
+
+    events.sort((a, b) => a.start.getTime() - b.start.getTime());
+    const [SelectedEventId, setSelectedEventId] = useState('');
+        console.log(SelectedEventId);
 
   return (
     eventState.isLoaded && <div>
@@ -60,7 +79,31 @@ export default function TestPage() {
     <TextArea onChange={(value) => updateEvent(event.id,'description',value.target.value) } value={event.description}></TextArea>
 
     <Title>Create new shift</Title>
+    
 
+    <div>
+      <Radio.Group onChange={handleModeChange} value={mode} style={{ marginBottom: 8 }}>
+        <Radio.Button value="top">Current Events</Radio.Button>
+        <Radio.Button value="left">Previous Events</Radio.Button>
+      </Radio.Group>
+      <Tabs
+        onChange={(key) => setSelectedEventId(key)}
+        defaultActiveKey="1"
+        tabPosition={"left"}
+        style={{ height: 600 }}
+        items={Array.from(events, (e, i) => {
+          const id = e.id;
+          return {
+            label: `${e.displayName} - ${e.start.toDateString() + ' ' + e.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} to ${e.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+            key: id,
+            disabled: i === 28,
+            children: <EventInfo event={e}></EventInfo>,
+          };
+        })}
+      />
+      <Button onClick={() => console.log(events)}>Create event for next Friday in line</Button>
+      <Button onClick={() => console.log(previousEvents)}>Create new custom event</Button>
+    </div>
 
 
     </div>

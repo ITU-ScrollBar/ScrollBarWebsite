@@ -55,8 +55,8 @@ export interface Event {
   start: Date;
   end: Date;
   description: string;
-  title: string;
-  location: string;
+  displayName: string;
+  where: string;
   published: boolean;
   internal: boolean;
   [id: string]: any;
@@ -66,8 +66,8 @@ export type EventCreateParams = {
   start: Date;
   end: Date;
   description: string;
-  title: string;
-  location: string;
+  displayName: string;
+  where: string;
   published: boolean;
   internal: boolean;
 };
@@ -80,8 +80,12 @@ export interface EventUpdateParams {
 
 // Shift-related types
 export interface Shift {
-  id?: string;
-  key?: string;
+  id: string;
+  eventId: string;
+  location: string;
+  title: string;
+  tenders: number;
+  anchors: number;
   start: Date;
   end: Date;
 }

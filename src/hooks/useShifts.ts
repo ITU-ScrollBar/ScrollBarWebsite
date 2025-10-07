@@ -43,10 +43,17 @@ const useShifts = () => {
     const unsubscribe = streamShifts({
       next: (snapshot: QuerySnapshot<DocumentData>) => {
         const updatedShifts: Shift[] = snapshot.docs
-          .map((doc) => {
-            return { ...doc.data(), id: doc.id, key: doc.id } as Shift;
-          })
-          .sort(sortShifts);
+        .map((doc) => {
+          const data = doc.data()
+          return {
+            ...data,
+            id: doc.id,
+            key: doc.id,
+            start: data.start?.toDate(),
+            end: data.end?.toDate(),
+          } as unknown as Shift
+        })
+        .sort(sortShifts);
 
         setShiftState((prevState) => ({
           ...prevState,
