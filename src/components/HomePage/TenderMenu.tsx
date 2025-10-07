@@ -3,9 +3,15 @@ import { Outlet, useNavigate } from "react-router-dom";
 import type { MenuProps } from 'antd';
 import { ConfigProvider, Menu } from "antd";
 import logo from '../../assets/images/logo.png';
+import avatar from '../../assets/images/avatar.png';
+import { useAuth } from "../../contexts/AuthContext";
 
 interface TenderMenuProps {
   children?: ReactNode;
+}
+interface UserProfile {
+  displayName: string;
+  photoUrl: string;
 }
 
 type MenuItem = Required<MenuProps>['items'][number];
@@ -27,6 +33,8 @@ const items: MenuItem[] = [
 
 export const TenderMenu = ({ children }: TenderMenuProps) => {
   const [current, setCurrent] = useState('tab');
+  const { currentUser } = useAuth();
+  const userProfile: UserProfile | null = currentUser;
 
   const navigate = useNavigate();
   
@@ -61,7 +69,11 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
               mode="horizontal"
             />
           </ConfigProvider>
-          <span role="img" aria-label="icon" style={{ fontSize: 128 }}>⭐</span>
+          <img
+            src={userProfile?.photoUrl ?? avatar}
+            alt={userProfile?.displayName ?? "avatar"}
+            style={{ width: 96, height: 96, borderRadius: "50%", objectFit: "cover", marginRight: 24 }}
+          />
         </div>
       </div>
       {children || <Outlet />}
