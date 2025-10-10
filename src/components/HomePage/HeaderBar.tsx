@@ -37,7 +37,7 @@ export default function HeaderBar() {
     },
     {
       key: '5',
-      label: <div style={linkcss} onClick={() => navigate("/tenders")}>TENDER SITE</div>,
+      label: <div style={linkcss} onClick={() => navigate("/tenders/shifts")}>TENDER SITE</div>,
     },
         {
       key: '6',
