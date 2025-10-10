@@ -43,24 +43,7 @@ export default function Shifts() {
         height: "auto",
       }}
     >
-      <Header style={{ height: "150px" }}></Header>
       <Layout style={{ flexDirection: "row" }}>
-        <Sider breakpoint="lg" collapsedWidth="0">
-          <Menu
-            theme="dark"
-            mode="inline"
-            defaultSelectedKeys={[location.pathname]}
-            onSelect={(info) => navigateToLink(info.key as unknown as Path)}
-          >
-            <Menu.Item key="/tenders/shifts" icon={<HomeOutlined />}>
-              Tender site
-            </Menu.Item>
-            <Menu.Item key="/members/profile" icon={<ProfileOutlined />}>
-              Profile
-            </Menu.Item>
-          </Menu>
-        </Sider>
-
         <Content style={{ padding: 24 }}>
           <Title id="about" level={1} style={{ scrollMarginTop: "135px" }}>
             Shifts Page

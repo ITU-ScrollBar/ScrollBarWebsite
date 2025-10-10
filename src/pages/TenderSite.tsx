@@ -21,23 +21,7 @@ export default function TenderSite() {
         height: "auto",
       }}
     >
-      <Header style={{ height: "150px" }}></Header>
       <Layout style={{ flexDirection: "row" }}>
-        <Sider breakpoint="lg" collapsedWidth="0">
-          <Menu
-            theme="dark"
-            mode="inline"
-            defaultSelectedKeys={[location.pathname]}
-            onSelect={(info) => navigateToLink(info.key as unknown as Path)}
-          >
-            <Menu.Item key="/tenders/shifts" icon={<HomeOutlined />}>
-              Tender site
-            </Menu.Item>
-            <Menu.Item key="/members/profile" icon={<ProfileOutlined />}>
-              Profile
-            </Menu.Item>
-          </Menu>
-        </Sider>
         <Content>
           {" "}
           <Button onClick={() => logout()}>SomeProtectedPage</Button>
