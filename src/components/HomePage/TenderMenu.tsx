@@ -32,16 +32,27 @@ const items: MenuItem[] = [
   }
 ];
 
+
 export const TenderMenu = ({ children }: TenderMenuProps) => {
   const [current, setCurrent] = useState('tab');
   const { currentUser, logout } = useAuth();
   const userProfile: UserProfile | null = currentUser
-    ? {
-        displayName: currentUser.displayName ?? "No username",
-        photoUrl: (currentUser as any).photoUrl ?? avatar
-      }
-    : null;
-
+  ? {
+    displayName: currentUser.displayName ?? "No username",
+    photoUrl: (currentUser as any).photoUrl ?? avatar
+  }
+  : null;
+  
+  const avatarMenuItems: MenuItem[] = [
+    {
+      key: 'logout', 
+      label: <strong onClick={logout}>Logout</strong> 
+    },
+    {
+      key: 'profile',
+      label: <a href="/members/profile">Profile</a>
+    }
+  ];
   const navigate = useNavigate();
   
   const onClick: MenuProps['onClick'] = e => {
@@ -77,7 +88,7 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
               mode="horizontal"
             />
           </ConfigProvider>
-          <Dropdown menu={{ items: [{ key: 'logout', label: <strong onClick={logout}>Logout</strong>}]}}>
+          <Dropdown menu={{ items: avatarMenuItems }}>
             <img
               src={userProfile?.photoUrl ? userProfile.photoUrl : avatar}
               alt={userProfile?.photoUrl && userProfile.displayName ? userProfile.displayName : "default avatar"}
