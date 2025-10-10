@@ -36,6 +36,7 @@ const items: MenuItem[] = [
 export const TenderMenu = ({ children }: TenderMenuProps) => {
   const [current, setCurrent] = useState('tab');
   const { currentUser, logout } = useAuth();
+  const navigate = useNavigate();
   const userProfile: UserProfile | null = currentUser
   ? {
     displayName: currentUser.displayName ?? "No username",
@@ -50,10 +51,9 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
     },
     {
       key: 'profile',
-      label: <a href="/members/profile">Profile</a>
+      label: <strong onClick={() => navigate('/members/profile')}>Profile</strong>
     }
   ];
-  const navigate = useNavigate();
   
   const onClick: MenuProps['onClick'] = e => {
     setCurrent(e.key);
