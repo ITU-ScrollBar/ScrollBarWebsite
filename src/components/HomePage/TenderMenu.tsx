@@ -1,10 +1,11 @@
 import { ReactNode, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import type { MenuProps } from 'antd';
-import { ConfigProvider, Menu } from "antd";
+import { ConfigProvider, Dropdown, Menu } from "antd";
 import logo from '../../assets/images/logo.png';
 import avatar from '../../assets/images/avatar.png';
 import { useAuth } from "../../contexts/AuthContext";
+import MenuContext from "antd/es/menu/MenuContext";
 
 interface TenderMenuProps {
   children?: ReactNode;
@@ -33,7 +34,7 @@ const items: MenuItem[] = [
 
 export const TenderMenu = ({ children }: TenderMenuProps) => {
   const [current, setCurrent] = useState('tab');
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
   const userProfile: UserProfile | null = currentUser
     ? {
         displayName: currentUser.displayName ?? "No username",
@@ -76,11 +77,13 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
               mode="horizontal"
             />
           </ConfigProvider>
-          <img
-            src={userProfile?.photoUrl ? userProfile.photoUrl : avatar}
-            alt={userProfile?.photoUrl && userProfile.displayName ? userProfile.displayName : "default avatar"}
-            style={{ width: 96, height: 96, borderRadius: "50%", objectFit: "cover", marginRight: 24 }}
-          />
+          <Dropdown menu={{ items: [{ key: 'logout', label: <strong onClick={logout}>Logout</strong>}]}}>
+            <img
+              src={userProfile?.photoUrl ? userProfile.photoUrl : avatar}
+              alt={userProfile?.photoUrl && userProfile.displayName ? userProfile.displayName : "default avatar"}
+              style={{ width: 96, height: 96, borderRadius: "50%", objectFit: "cover", marginRight: 24 }}
+            />
+          </Dropdown>
         </div>
       </div>
       {children || <Outlet />}
