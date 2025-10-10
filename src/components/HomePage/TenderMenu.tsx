@@ -48,6 +48,8 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
     var currentPage = items.find(item => item?.key?.toString() && location.pathname.endsWith(item?.key?.toString()));
     if (currentPage) {
       setCurrent(currentPage.key as string);
+    } else {
+      setCurrent(''); // Navigating to a route not in the menu
     }
   }, [location.pathname, items]);
   
