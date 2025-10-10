@@ -75,8 +75,8 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
             />
           </ConfigProvider>
           <img
-            src={userProfile?.photoUrl ?? avatar}
-            alt={userProfile?.displayName ?? "avatar"}
+            src={userProfile?.photoUrl ? userProfile.photoUrl : avatar}
+            alt={userProfile?.photoUrl && userProfile.displayName ? userProfile.displayName : "default avatar"}
             style={{ width: 96, height: 96, borderRadius: "50%", objectFit: "cover", marginRight: 24 }}
           />
         </div>
