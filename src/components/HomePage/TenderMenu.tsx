@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import type { MenuProps } from 'antd';
 import { ConfigProvider, Dropdown, Menu } from "antd";
@@ -43,6 +43,13 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
     photoUrl: (currentUser as any).photoUrl ?? avatar
   }
   : null;
+
+  useEffect(() => {
+    var currentPage = items.find(item => item?.key?.toString() && location.pathname.endsWith(item?.key?.toString()));
+    if (currentPage) {
+      setCurrent(currentPage.key as string);
+    }
+  }, [location.pathname, items]);
   
   const avatarMenuItems: MenuItem[] = [
     {
