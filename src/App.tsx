@@ -6,7 +6,6 @@ import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import NotFoundPage from "./pages/NotFoundPage"; // A 404 page
 import ProtectedRoutes from "./routes/ProtectedRoutes";
-import TenderSite from "./pages/TenderSite";
 import { Layout } from "antd";
 import { Content, Footer } from "antd/es/layout/layout";
 
@@ -35,8 +34,9 @@ function App() {
               {/* --- Protected Routes --- */}
               <Route element={<ProtectedRoutes />}>
                 <Route element={<TenderMenu />}>
-                  <Route path="/tenders" element={<TenderSite />} />
                   <Route path="/tenders/shifts" element={<Shifts />} />
+                  <Route path="/tenders/allshifts" element={<Shifts />} />
+                  <Route path="/tenders/upforgrabs" element={<Shifts />} />
                   <Route path="/members/profile" element={<Profile />} />
                 </Route>
               </Route>
