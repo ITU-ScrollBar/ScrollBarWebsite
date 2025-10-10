@@ -17,7 +17,7 @@ const LoginPage: React.FC = () => {
             await login(values.email, values.password);
             // Login successful, onAuthStateChanged handles user state.
             // Redirect to the tender dashboard or desired page.
-            navigate('/admin/my-shifts'); // Or wherever tenders should land
+            navigate('/tenders/shifts');
         } catch (err: any) {
             console.error(err);
             // Improve error message based on Firebase error codes if needed
