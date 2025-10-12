@@ -57,6 +57,8 @@ const GlobalSettingsPage = () => {
         { key: 'hero', inputType: 'text', label: 'Link to hero image', value: settingsState.settings.hero },
         { key: 'constitution', inputType: 'text', label: 'Link to constitution', value: settingsState.settings.constitution },
         { key: 'minutes', inputType: 'text', label: 'Link to minutes from last GA', value: settingsState.settings.minutes },
+        { key: 'homepageTitle', inputType: 'text', label: 'Homepage title', value: settingsState.settings.homepageTitle },
+        { key: 'homepageDescription', inputType: 'textarea', label: 'Homepage description', value: settingsState.settings.homepageDescription },
         { key: 'joinScrollBarLink', inputType: 'text', label: 'Join ScrollBar link', value: settingsState.settings.joinScrollBarLink },
         { key: 'joinScrollBarTitle', inputType: 'text', label: 'Join ScrollBar title', value: settingsState.settings.joinScrollBarTitle },
         { key: 'joinScrollBarText', inputType: 'textarea', label: 'Join ScrollBar text', value: settingsState.settings.joinScrollBarText },

@@ -43,6 +43,8 @@ export interface PasswordResetParams {
 export interface Settings {
   constitution: string;
   hero: string;
+  homepageTitle: string;
+  homepageDescription: string;
   joinScrollBarLink: string;
   joinScrollBarText: string;
   joinScrollBarTitle: string;
