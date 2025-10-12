@@ -15,6 +15,7 @@ import Register from "./pages/Register";
 import Shifts from "./pages/members/Shifts";
 import Profile from "./pages/members/Profile";
 import { TenderMenu } from "./components/HomePage/TenderMenu";
+import { ShiftFiltering } from "./types/types-file";
 
 function App() {
   return (
@@ -41,10 +42,31 @@ function App() {
                 <Route element={<TenderMenu />}>
                   <Route
                     path="/tenders/shifts"
-                    element={<Shifts fucker={true} title="My Shifts" />}
+                    element={
+                      <Shifts
+                        filter={ShiftFiltering.MY_SHIFTS}
+                        title="My Shifts"
+                      />
+                    }
                   />
-                  <Route path="/tenders/allshifts" element={<Shifts title="All Shifts" />} />
-                  <Route path="/tenders/upforgrabs" element={<Shifts title="Up for Grabs" />} />
+                  <Route
+                    path="/tenders/allshifts"
+                    element={
+                      <Shifts
+                        filter={ShiftFiltering.ALL_SHIFTS}
+                        title="All Shifts"
+                      />
+                    }
+                  />
+                  <Route
+                    path="/tenders/upforgrabs"
+                    element={
+                      <Shifts
+                        filter={ShiftFiltering.UP_FOR_GRABS}
+                        title="Up for Grabs"
+                      />
+                    }
+                  />
                   <Route path="/members/profile" element={<Profile />} />
                 </Route>
               </Route>

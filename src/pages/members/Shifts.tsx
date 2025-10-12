@@ -5,13 +5,14 @@ import useTenders from "../../hooks/useTenders";
 import { Layout } from "antd";
 import Title from "antd/es/typography/Title";
 import { ShiftList } from "./ShiftList";
+import { ShiftFiltering } from "../../types/types-file";
 
 interface ShiftsProps {
-  fucker?: boolean;
+  filter?: ShiftFiltering;
   title: string;
 }
 
-function Shifts({ fucker = false, title }: ShiftsProps) {
+function Shifts({ filter = ShiftFiltering.ALL_SHIFTS, title }: ShiftsProps) {
   const { shiftState } = useShifts();
   const { eventState } = useEvents();
   const { engagementState } = useEngagements();
@@ -51,7 +52,7 @@ function Shifts({ fucker = false, title }: ShiftsProps) {
                   engagements={engagementState.engagements}
                   tenders={tenderState.tenders}
                   eventId={event.id}
-                  onlyMyShifts={fucker}
+                  shiftFiltering={filter}
                 />
               </section>
             ))}

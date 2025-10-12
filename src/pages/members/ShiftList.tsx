@@ -7,9 +7,15 @@ import {
   getTenderInitial,
   handleImageError,
 } from "./helpers";
-import { Shift, Engagement, Tender } from "../../types/types-file";
+import {
+  Shift,
+  Engagement,
+  Tender,
+  ShiftFiltering,
+} from "../../types/types-file";
 import { useAuth } from "../../contexts/AuthContext";
 import { useEffect, useState } from "react";
+import useEvents from "../../hooks/useEvents";
 
 const { Title, Paragraph } = Typography;
 
@@ -18,7 +24,7 @@ interface ShiftListProps {
   engagements: Engagement[];
   tenders: Tender[];
   eventId?: string;
-  onlyMyShifts?: boolean;
+  shiftFiltering?: ShiftFiltering;
 }
 
 export function ShiftList({
@@ -26,15 +32,16 @@ export function ShiftList({
   engagements,
   tenders,
   eventId,
-  onlyMyShifts = false,
+  shiftFiltering = ShiftFiltering.ALL_SHIFTS,
 }: ShiftListProps) {
   const { currentUser } = useAuth();
+  const { eventState } = useEvents();
   const [filteredShifts, setFilteredShifts] = useState<Shift[]>([]);
 
   useEffect(() => {
     let result = eventId ? shifts.filter((s) => s.eventId === eventId) : shifts;
 
-    if (onlyMyShifts && currentUser) {
+    if (shiftFiltering === ShiftFiltering.MY_SHIFTS && currentUser) {
       const userId = tenders.find(
         (t) => t.displayName === currentUser?.displayName
       )?.id;
@@ -44,6 +51,12 @@ export function ShiftList({
           .map((e) => e.shiftId);
         result = result.filter((s) => userShiftIds.includes(s.id));
       }
+    } else if (shiftFiltering === ShiftFiltering.UP_FOR_GRABS) {
+      const engagementsWithUpForGrabs = engagements.filter((e) => e.upForGrabs);
+      const shiftIdsWithUpForGrabs = engagementsWithUpForGrabs.map(
+        (e) => e.shiftId
+      );
+      result = result.filter((s) => shiftIdsWithUpForGrabs.includes(s.id));
     }
 
     // Only shifts with engagements
@@ -51,7 +64,7 @@ export function ShiftList({
       engagements.some((e) => e.shiftId === shift.id)
     );
     setFilteredShifts(result);
-  }, [shifts, engagements, tenders, eventId, onlyMyShifts, currentUser]);
+  }, [shifts, engagements, tenders, eventId, shiftFiltering, currentUser]);
 
   const renderTender = (engagement: any, isAnchor = false) => {
     const tender = getTenderForEngagement(engagement, tenders);
@@ -121,45 +134,87 @@ export function ShiftList({
 
   if (filteredShifts.length === 0) return null;
 
+  // Group shifts by eventId
+  const shiftsByEvent: { [eventId: string]: Shift[] } = {};
+  filteredShifts.forEach((shift) => {
+    if (!shiftsByEvent[shift.eventId]) {
+      shiftsByEvent[shift.eventId] = [];
+    }
+    shiftsByEvent[shift.eventId].push(shift);
+  });
+
   return (
     <div>
-      {filteredShifts.map((shift) => {
-        const shiftEngagements = getEngagementsForShift(shift.id!, engagements);
-        const anchors = shiftEngagements.filter((e) => e.type === "anchor");
-        const regulars = shiftEngagements.filter((e) => e.type !== "anchor");
-
+      {Object.entries(shiftsByEvent).map(([eventId, shifts]) => {
+        const event = eventState.events.find((e) => e.id === eventId);
         return (
-          <div
-            key={shift.id}
-            style={{
-              display: "flex",
-              gap: 4,
-              padding: 8,
-              borderRadius: 8,
-              background: "#fff",
-              marginBottom: 12,
-            }}
-          >
-            {/* Left: Location & Time */}
-            <div style={{ minWidth: 80, flex: "0 0 80px" }}>
-              <Title level={5} style={{ marginBottom: 4, fontSize: "1.1em" }}>
-                {shift.location}
-              </Title>
-              <Paragraph style={{ margin: 0, color: "#555", fontSize: "1em" }}>
-                {dateToHourString(shift.start)} — {dateToHourString(shift.end)}
-              </Paragraph>
-            </div>
+          <div key={eventId} style={{ marginBottom: 32 }}>
+            {/* Event Title */}
+            <Title level={2} style={{ marginBottom: 12 }}>
+              {event?.displayName || event?.title || "Unknown Event"}
+            </Title>
 
-            {/* Right: Title & Avatars */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <Title level={5} style={{ marginBottom: 8, fontSize: "1.1em" }}>
-                {shift.title}
-              </Title>
-              <Row gutter={[8, 8]} style={{ flexWrap: "wrap" }}>
-                {anchors.map((engagement) => renderTender(engagement, true))}
-                {regulars.map((engagement) => renderTender(engagement, false))}
-              </Row>
-            </div>
+            {/* Shifts for this event */}
+            {shifts.map((shift) => {
+              const shiftEngagements = getEngagementsForShift(
+                shift.id!,
+                engagements
+              );
+              const anchors = shiftEngagements.filter(
+                (e) => e.type === "anchor"
+              );
+              const regulars = shiftEngagements.filter(
+                (e) => e.type !== "anchor"
+              );
+
+              return (
+                <div
+                  key={shift.id}
+                  style={{
+                    display: "flex",
+                    gap: 4,
+                    padding: 8,
+                    borderRadius: 8,
+                    background: "#fff",
+                    marginBottom: 12,
+                  }}
+                >
+                  {/* Left: Location & Time */}
+                  <div style={{ minWidth: 80, flex: "0 0 80px" }}>
+                    <Title
+                      level={5}
+                      style={{ marginBottom: 4, fontSize: "1.1em" }}
+                    >
+                      {shift.location}
+                    </Title>
+                    <Paragraph
+                      style={{ margin: 0, color: "#555", fontSize: "1em" }}
+                    >
+                      {dateToHourString(shift.start)} —{" "}
+                      {dateToHourString(shift.end)}
+                    </Paragraph>
+                  </div>
+
+                  {/* Right: Title & Avatars */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <Title
+                      level={5}
+                      style={{ marginBottom: 8, fontSize: "1.1em" }}
+                    >
+                      {shift.title}
+                    </Title>
+                    <Row gutter={[8, 8]} style={{ flexWrap: "wrap" }}>
+                      {anchors.map((engagement) =>
+                        renderTender(engagement, true)
+                      )}
+                      {regulars.map((engagement) =>
+                        renderTender(engagement, false)
+                      )}
+                    </Row>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         );
       })}

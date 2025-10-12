@@ -83,6 +83,12 @@ export interface EventUpdateParams {
   value: any;
 }
 
+export enum ShiftFiltering {
+  MY_SHIFTS = "MY_SHIFTS",
+  UP_FOR_GRABS = "UP_FOR_GRABS",
+  ALL_SHIFTS = "ALL_SHIFTS",
+}
+
 // Shift-related types
 export interface Shift {
   id?: string;
