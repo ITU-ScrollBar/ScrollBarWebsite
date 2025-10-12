@@ -19,6 +19,16 @@ import useEvents from "../../hooks/useEvents";
 
 const { Title, Paragraph } = Typography;
 
+// Color constants
+const COLORS = {
+  ANCHOR_BACKGROUND: "#FFD600", // Yellow for anchor avatars
+  REGULAR_BACKGROUND: "#1890ff", // Blue for regular avatars
+  ANCHOR_TEXT: "#222", // Dark text for anchor avatars
+  REGULAR_TEXT: "white", // White text for regular avatars
+  SHIFT_BACKGROUND: "#fff", // White background for shift cards
+  TIME_TEXT: "#555", // Gray text for time display
+} as const;
+
 interface ShiftListProps {
   shifts: Shift[];
   engagements: Engagement[];
@@ -85,7 +95,9 @@ export function ShiftList({
               width: 40,
               height: 40,
               borderRadius: "50%",
-              background: isAnchor ? "#FFD600" : "#1890ff",
+              background: isAnchor
+                ? COLORS.ANCHOR_BACKGROUND
+                : COLORS.REGULAR_BACKGROUND,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -107,7 +119,7 @@ export function ShiftList({
             ) : (
               <span
                 style={{
-                  color: isAnchor ? "#222" : "white",
+                  color: isAnchor ? COLORS.ANCHOR_TEXT : COLORS.REGULAR_TEXT,
                   fontWeight: "bold",
                 }}
               >
@@ -175,7 +187,7 @@ export function ShiftList({
                     gap: 4,
                     padding: 8,
                     borderRadius: 8,
-                    background: "#fff",
+                    background: COLORS.SHIFT_BACKGROUND,
                     marginBottom: 12,
                   }}
                 >
@@ -188,7 +200,11 @@ export function ShiftList({
                       {shift.location}
                     </Title>
                     <Paragraph
-                      style={{ margin: 0, color: "#555", fontSize: "1em" }}
+                      style={{
+                        margin: 0,
+                        color: COLORS.TIME_TEXT,
+                        fontSize: "1em",
+                      }}
                     >
                       {dateToHourString(shift.start)} —{" "}
                       {dateToHourString(shift.end)}

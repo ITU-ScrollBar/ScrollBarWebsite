@@ -17,6 +17,8 @@ function Shifts({ filter = ShiftFiltering.ALL_SHIFTS, title }: ShiftsProps) {
   const { eventState } = useEvents();
   const { engagementState } = useEngagements();
   const { tenderState } = useTenders();
+  const BACKGROUND = "#fff31907";
+  const BOX_SHADOW = "0 6px 18px rgba(59, 56, 7, 0.3)";
 
   if (shiftState.loading || eventState.loading || engagementState.loading) {
     return <div>Loading...</div>;
@@ -38,10 +40,10 @@ function Shifts({ filter = ShiftFiltering.ALL_SHIFTS, title }: ShiftsProps) {
           </Title>
           <div
             style={{
-              background: "#f3ebdb",
+              background: BACKGROUND,
               borderRadius: 12,
               padding: 24,
-              boxShadow: "0 6px 18px rgba(18,24,31,0.06)",
+              boxShadow: BOX_SHADOW,
               marginBottom: 28,
             }}
           >
