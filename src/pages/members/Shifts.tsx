@@ -8,9 +8,10 @@ import { ShiftList } from "./ShiftList";
 
 interface ShiftsProps {
   fucker?: boolean;
+  title: string;
 }
 
-function Shifts({ fucker = false }: ShiftsProps) {
+function Shifts({ fucker = false, title }: ShiftsProps) {
   const { shiftState } = useShifts();
   const { eventState } = useEvents();
   const { engagementState } = useEngagements();
@@ -32,7 +33,7 @@ function Shifts({ fucker = false }: ShiftsProps) {
       <Layout style={{ flexDirection: "row" }}>
         <Layout.Content style={{ padding: 24 }}>
           <Title id="about" level={1} style={{ scrollMarginTop: "135px" }}>
-            My Shifts
+            {title}
           </Title>
           <div
             style={{

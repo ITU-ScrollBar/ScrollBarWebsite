@@ -41,10 +41,10 @@ function App() {
                 <Route element={<TenderMenu />}>
                   <Route
                     path="/tenders/shifts"
-                    element={<Shifts fucker={true} />}
+                    element={<Shifts fucker={true} title="My Shifts" />}
                   />
-                  <Route path="/tenders/allshifts" element={<Shifts />} />
-                  <Route path="/tenders/upforgrabs" element={<Shifts />} />
+                  <Route path="/tenders/allshifts" element={<Shifts title="All Shifts" />} />
+                  <Route path="/tenders/upforgrabs" element={<Shifts title="Up for Grabs" />} />
                   <Route path="/members/profile" element={<Profile />} />
                 </Route>
               </Route>
