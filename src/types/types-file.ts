@@ -39,6 +39,22 @@ export interface PasswordResetParams {
   email: string;
 }
 
+// Settings-related types
+export interface Settings {
+  constitution: string;
+  hero: string;
+  joinScrollBarLink: string;
+  joinScrollBarText: string;
+  joinScrollBarTitle: string;
+  minutes: string;
+  openForSignups: boolean;
+}
+
+export interface SettingsUpdateParams {
+  field: string;
+  value: any;
+}
+
 // Engagement-related types
 export interface Engagement {
   id?: string;

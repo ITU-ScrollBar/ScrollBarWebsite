@@ -17,6 +17,7 @@ import Shifts from "./pages/members/Shifts";
 import Profile from "./pages/members/Profile";
 import { TenderMenu } from "./components/HomePage/TenderMenu";
 import { ShiftFiltering } from "./types/types-file";
+import GlobalSettingsPage from "./pages/admin/GlobalSettingsPage";
 
 function App() {
   return (
@@ -71,7 +72,7 @@ function App() {
                   <Route path="/members/profile" element={<Profile />} />
                   {/* --- Admin Routes --- */}
                   <Route element={<RoleProtectedRoute />}>
-                    <Route path="admin/settings" element={<div>Manage Settings Page (to be implemented)</div>} />
+                    <Route path="admin/settings" element={<GlobalSettingsPage />} />
                   </Route>
                   <Route element={<RoleProtectedRoute requiredRole={'event_manager'} />}>
                     <Route path="admin/events" element={<div>Manage Events Page (to be implemented)</div>} />
