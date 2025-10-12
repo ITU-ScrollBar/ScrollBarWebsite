@@ -58,6 +58,7 @@ export const updateEvent = ({
 
 export const streamEvents = (observer: { next: (snapshot: QuerySnapshot<DocumentData>) => void; error: (error: Error) => void }): Unsubscribe => {
   const eventsRef = collection(db, 'env', env, 'events');
+  console.log("Streaming events from env:", env);
   const q = query(eventsRef); // Add any additional filters or ordering as needed
 
   // Return the unsubscribe function from onSnapshot
