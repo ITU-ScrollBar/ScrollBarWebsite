@@ -1,11 +1,19 @@
 import React from 'react'
-import { Button, Col, Divider, Layout, Row, Space } from 'antd'
+import { Button, Col, Divider, Layout, Row, Space, Spin } from 'antd'
 import Title from 'antd/es/typography/Title'
 import Paragraph from 'antd/es/typography/Paragraph'
 import { Header } from 'antd/es/layout/layout'
 import HeaderBar from '../components/HomePage/HeaderBar'
+import useSettings from '../hooks/useSettings'
+import MDEditor from '@uiw/react-md-editor'
 
 export default function HomePage() {
+  const { settingsState } = useSettings();
+
+  if (settingsState.loading) {
+    return <Spin size="large" />
+  }
+
   return (
     <Layout style={{ minHeight: '100vh', width: '100%', flexDirection: 'column', height: 'auto'}}>
        <Header
@@ -44,7 +52,7 @@ export default function HomePage() {
     }}
   >
     <source
-      src="https://firebasestorage.googleapis.com/v0/b/scrollweb-cc9b4.appspot.com/o/assets%2FheroVideo.mp4?alt=media&token=594c9f7b-2871-43f8-92a6-914eaf4a3c85"
+      src={settingsState.settings.hero}
       type="video/mp4"
     />
   </video>
@@ -114,32 +122,46 @@ export default function HomePage() {
           </Col>
         </Row>
 
-        <Divider />
+        {settingsState.settings.openForSignups && (
+        <>
+          <Divider />
 
-        <Row justify="center">
-          <Col
-            md={24}
-            lg={12}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-            }}
-          >
-            <Title id="join_scrollbar" level={2} style={{ scrollMarginTop: '135px' }}>
-              Join Scrollbar
-            </Title>
-
-            <Button
-              type="primary"
-              size="large"
-              href={'settings.joinScrollBarLink'}
-              target="_blank"
+          <Row justify="center">
+            <Col
+              md={24}
+              lg={12}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+              }}
             >
-              Apply now!
-            </Button>
-          </Col>
-        </Row>
+              <Title id="join_scrollbar" level={2} style={{ scrollMarginTop: '135px' }}>
+                {settingsState.settings.joinScrollBarTitle}
+              </Title>
+
+              <MDEditor.Markdown
+                style={{
+                  fontSize: '18px',
+                  lineHeight: '36px',
+                  textAlign: 'center',
+                  color: 'black',
+                  background: 'white',
+                }}
+                source={settingsState.settings.joinScrollBarText}
+              />
+
+              <Button
+                type="primary"
+                size="large"
+                href={settingsState.settings.joinScrollBarLink}
+                target="_blank"
+              >
+                Apply now!
+              </Button>
+            </Col>
+          </Row>
+        </>)}
 
         <Divider />
 
