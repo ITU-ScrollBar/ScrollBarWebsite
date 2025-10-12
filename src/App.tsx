@@ -6,6 +6,7 @@ import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import NotFoundPage from "./pages/NotFoundPage"; // A 404 page
 import ProtectedRoutes from "./routes/ProtectedRoutes";
+import RoleProtectedRoute from "./routes/RoleProtectedRoute";
 import { Layout } from "antd";
 import { Content, Footer } from "antd/es/layout/layout";
 
@@ -68,8 +69,22 @@ function App() {
                     }
                   />
                   <Route path="/members/profile" element={<Profile />} />
+                  {/* --- Admin Routes --- */}
+                  <Route element={<RoleProtectedRoute />}>
+                    <Route path="admin/settings" element={<div>Manage Settings Page (to be implemented)</div>} />
+                  </Route>
+                  <Route element={<RoleProtectedRoute requiredRole={'event_manager'} />}>
+                    <Route path="admin/events" element={<div>Manage Events Page (to be implemented)</div>} />
+                  </Route>
+                  <Route element={<RoleProtectedRoute requiredRole={'shifts_manager'} />}>
+                    <Route path="admin/shifts" element={<div>Manage Shifts Page (to be implemented)</div>} />
+                  </Route>
+                  <Route element={<RoleProtectedRoute requiredRole={'user_manager'} />}>
+                    <Route path="admin/users" element={<div>Manage Users Page (to be implemented)</div>} />
+                  </Route>
                 </Route>
               </Route>
+
 
               {/* --- Catch-all Route (404 Not Found) --- */}
               <Route path="*" element={<NotFoundPage />} />
