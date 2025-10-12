@@ -41,8 +41,8 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
     const adminItems = [];
     if (currentUser?.isAdmin || currentUser?.roles.includes('tender_manager')) {
       adminItems.push({
-        label: 'Manage Tenders',
-        key: 'admin/tenders',
+        label: 'Manage Events',
+        key: 'admin/events',
       });
     }
     if (currentUser?.isAdmin || currentUser?.roles.includes('shift_manager')) {
@@ -85,7 +85,7 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
       label: <strong onClick={() => navigate('/members/profile')}>Profile</strong>
     }
   ];
-  
+
   const onClick: MenuProps['onClick'] = e => {
     setCurrent(e.key);
     navigate(`/${e.key}`);
