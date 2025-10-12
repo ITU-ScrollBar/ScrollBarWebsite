@@ -19,9 +19,14 @@ import { TenderMenu } from "./components/HomePage/TenderMenu";
 function App() {
   return (
     <BrowserRouter>
-    
-      <Layout style={{ minHeight: '100vh', minWidth: '100%', flexDirection: 'column', height: 'auto'}}>
-    
+      <Layout
+        style={{
+          minHeight: "100vh",
+          minWidth: "100%",
+          flexDirection: "column",
+          height: "auto",
+        }}
+      >
         <Layout>
           <Content>
             <Routes>
@@ -34,7 +39,10 @@ function App() {
               {/* --- Protected Routes --- */}
               <Route element={<ProtectedRoutes />}>
                 <Route element={<TenderMenu />}>
-                  <Route path="/tenders/shifts" element={<Shifts />} />
+                  <Route
+                    path="/tenders/shifts"
+                    element={<Shifts fucker={true} />}
+                  />
                   <Route path="/tenders/allshifts" element={<Shifts />} />
                   <Route path="/tenders/upforgrabs" element={<Shifts />} />
                   <Route path="/members/profile" element={<Profile />} />

@@ -18,8 +18,6 @@ type TenderState = {
   studylines?: StudyLine[]; // Optional property for study lines
 };
 
-
-
 const useTenders = () => {
   const [tenderState, setTenderState] = useState<TenderState>({
     loading: false,
@@ -32,15 +30,14 @@ const useTenders = () => {
 
   useEffect(() => {
     setTenderState((prevState) => ({ ...prevState, loading: true }));
-    
+
     // Fetch study lines
     getStudyLines()
       .then((response) => {
         const studylines: StudyLine[] = response.map((doc: DocumentData) => {
           return doc as StudyLine; // Type the document data as StudyLine
-        }
-        );
-        
+        });
+
         setTenderState((prevState) => ({
           ...prevState,
           loading: false,
