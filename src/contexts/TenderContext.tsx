@@ -12,7 +12,7 @@ export interface TenderContextType {
   };
   invitedTenders: (Invite & { key: string })[];
   addInvite: (email: string) => Promise<void>;
-  removeInvite: (invite: Invite) => Promise<void>;
+  removeInvite: (invite: string) => Promise<void>;
   updateTender: (id: string, field: string, value: any) => Promise<void>;
 }
 

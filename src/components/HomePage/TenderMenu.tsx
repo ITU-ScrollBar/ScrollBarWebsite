@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import type { MenuProps } from 'antd';
-import { ConfigProvider, Dropdown, Menu } from "antd";
+import { Avatar, ConfigProvider, Dropdown, Menu } from "antd";
 import logo from '../../assets/images/logo.png';
 import avatar from '../../assets/images/avatar.png';
 import { useAuth } from "../../contexts/AuthContext";
@@ -99,7 +99,7 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
             <img src={logo} alt="Logo" style={{ height: 150 }} />
           </a>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16, padding: '0 16px' }}>
           <ConfigProvider
             theme={{
               components: {
@@ -122,10 +122,10 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
             />
           </ConfigProvider>
           <Dropdown menu={{ items: avatarMenuItems }}>
-            <img
+            <Avatar
+              size={96}
               src={currentUser?.photoUrl ? currentUser.photoUrl : avatar}
               alt={currentUser?.photoUrl && currentUser.displayName ? currentUser.displayName : "default avatar"}
-              style={{ width: 96, height: 96, borderRadius: "50%", objectFit: "cover", marginRight: 24 }}
             />
           </Dropdown>
         </div>

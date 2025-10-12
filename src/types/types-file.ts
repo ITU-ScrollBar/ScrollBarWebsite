@@ -13,7 +13,7 @@ export interface UserProfile {
 export interface StudyLine {
   id: string;
   name: string;
-  abreviation: string;
+  abbreviation: string;
   Prefix: string;
 }
 
@@ -140,6 +140,9 @@ export type Tender = {
   email: string;
   displayName?: string;
   photoUrl?: string;
+  isAdmin: boolean;
+  roles?: string[];
+  studyline?: string;
   // Add other fields here
 };
 
@@ -147,6 +150,7 @@ export type Invite = {
   id: string;
   key: string;
   email: string;
+  registered: boolean;
   // Other invite-related fields here
 };
 

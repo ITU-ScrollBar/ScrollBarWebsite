@@ -117,8 +117,8 @@ const useTenders = () => {
   };
 
   // Remove invite
-  const removeInvite = (row: Invite) => {
-    return deleteInvite(row)
+  const removeInvite = (row: string) => {
+    return deleteInvite({id: row})
       .then(() => {
         message.success("Invite removed successfully!");
       })
