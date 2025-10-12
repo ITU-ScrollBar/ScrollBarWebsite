@@ -15,10 +15,11 @@ import {
 } from "firebase/auth";
 import { auth } from "../firebase/index";
 import { getUser } from "../firebase/api/authentication";
+import { UserProfile } from "../types/types-file";
 
 // Define and export AuthContextType and AuthProviderProps
 export interface AuthContextType {
-  currentUser: UserInfo | null;
+  currentUser: UserProfile | null;
   authenticatedUser: User | null;
   loading: boolean;
   login: (email: string, pass: string) => Promise<void>;
@@ -34,7 +35,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [authenticatedUser, setAuthenticatedUser] = useState<User | null>(null);
-  const [currentUser, setCurrentUser] = useState<UserInfo | null>(null);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -44,7 +45,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         getUser(user!.uid, {
           next: (snapshot) => {
             if (snapshot.exists()) {
-              var userdata = snapshot.data() as UserInfo;
+              var userdata = snapshot.data() as UserProfile;
               setCurrentUser(userdata);
             }
           },

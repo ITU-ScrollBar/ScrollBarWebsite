@@ -58,7 +58,7 @@ interface ResetPasswordPayload {
 }
 
 // User profile type
-interface UserProfile {
+export interface UserProfile {
   displayName: string;
   email: string;
   studyline: string;

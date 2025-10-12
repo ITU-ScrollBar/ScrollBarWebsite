@@ -5,47 +5,69 @@ import { ConfigProvider, Dropdown, Menu } from "antd";
 import logo from '../../assets/images/logo.png';
 import avatar from '../../assets/images/avatar.png';
 import { useAuth } from "../../contexts/AuthContext";
-import MenuContext from "antd/es/menu/MenuContext";
 
 interface TenderMenuProps {
   children?: ReactNode;
 }
-interface UserProfile {
-  displayName: string;
-  photoUrl: string;
-}
 
 type MenuItem = Required<MenuProps>['items'][number];
-
-const items: MenuItem[] = [
-  {
-    label: 'My shifts',
-    key: 'tenders/shifts',    
-  },
-  {
-    label: 'All shifts',
-    key: 'tenders/allshifts',
-  },
-  {
-    label: "Up for grabs",
-    key: 'tenders/upforgrabs',
-  }
-];
-
 
 export const TenderMenu = ({ children }: TenderMenuProps) => {
   const [current, setCurrent] = useState('tab');
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
-  const userProfile: UserProfile | null = currentUser
-  ? {
-    displayName: currentUser.displayName ?? "No username",
-    photoUrl: (currentUser as any).photoUrl ?? avatar
+  
+  const items: MenuItem[] = [
+    {
+      label: 'My shifts',
+      key: 'tenders/shifts',    
+    },
+    {
+      label: 'All shifts',
+      key: 'tenders/allshifts',
+    },
+    {
+      label: "Up for grabs",
+      key: 'tenders/upforgrabs',
+    }
+  ];
+
+  if (
+    currentUser?.isAdmin 
+    || currentUser?.roles.includes('tender_manager')
+    || currentUser?.roles.includes('shift_manager')
+    || currentUser?.roles.includes('user_manager')
+  ) {
+    const adminItems = [];
+    if (currentUser?.isAdmin || currentUser?.roles.includes('tender_manager')) {
+      adminItems.push({
+        label: 'Manage Tenders',
+        key: 'admin/tenders',
+      });
+    }
+    if (currentUser?.isAdmin || currentUser?.roles.includes('shift_manager')) {
+      adminItems.push({
+        label: 'Manage Shifts',
+        key: 'admin/shifts',
+      });
+    }
+    if (currentUser?.isAdmin || currentUser?.roles.includes('user_manager')) {
+      adminItems.push({
+        label: 'Manage Users',
+        key: 'admin/users',
+      });
+    }
+    if (currentUser?.isAdmin) {
+      adminItems.push({
+        label: 'System Settings',
+        key: 'admin/settings',
+      });
+    }
+    items.push({ label: 'Admin', key: 'admin', children: adminItems });
   }
-  : null;
 
   useEffect(() => {
-    var currentPage = items.find(item => item?.key?.toString() && location.pathname.endsWith(item?.key?.toString()));
+    const currentPage = items.find(item => item?.key?.toString() && location.pathname.endsWith(item?.key?.toString()));
     if (currentPage) {
       setCurrent(currentPage.key as string);
     } else {
@@ -83,13 +105,15 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
               components: {
                 Menu: {
                   itemColor: 'white',
+                  popupBg: '#2E2E2E',
+                  itemBg: 'transparent',
                   horizontalItemSelectedColor: "transparent",
                 },
               }
             }}
           >
             <Menu
-              style={{ backgroundColor: "transparent", color: "white", fontWeight: "bold", fontSize: 18 }}
+              style={{ fontWeight: "bold", fontSize: 18 }}
               onClick={onClick}
               disabledOverflow
               items={items}
@@ -99,8 +123,8 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
           </ConfigProvider>
           <Dropdown menu={{ items: avatarMenuItems }}>
             <img
-              src={userProfile?.photoUrl ? userProfile.photoUrl : avatar}
-              alt={userProfile?.photoUrl && userProfile.displayName ? userProfile.displayName : "default avatar"}
+              src={currentUser?.photoUrl ? currentUser.photoUrl : avatar}
+              alt={currentUser?.photoUrl && currentUser.displayName ? currentUser.displayName : "default avatar"}
               style={{ width: 96, height: 96, borderRadius: "50%", objectFit: "cover", marginRight: 24 }}
             />
           </Dropdown>
