@@ -24,6 +24,7 @@ jobs:
       FIREBASE_MESSAGING_SENDER_ID: '${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}'
       FIREBASE_APP_ID: '${{ secrets.FIREBASE_APP_ID }}'
       FIREBASE_MESSUREMENT_ID: '${{ secrets.FIREBASE_MESSUREMENT_ID }}'
+      VITE_APP_ENV: 'dev'
       ENV: 'development'
     steps:
       - uses: actions/checkout@v4
