@@ -32,7 +32,6 @@ export default function Profile() {
   if (loading) {
     return <div>Loading...</div>;
   }
-  console.log(currentUser);
 
   const userProfile: UserProfile | null = currentUser
     ? {
