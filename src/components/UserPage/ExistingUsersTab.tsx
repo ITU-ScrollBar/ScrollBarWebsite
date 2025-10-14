@@ -2,7 +2,7 @@ import { Avatar, Button, Divider, Drawer, Form, Input, notification, Select, Swi
 import { StudyLine, Tender } from "../../types/types-file";
 import useTenders from "../../hooks/useTenders";
 import { Key, useEffect, useState } from "react";
-import { getStudyLines, uploadProfilePicture } from "../../firebase/api/authentication";
+import { deleteFileFromStorage, getStudyLines, uploadProfilePicture } from "../../firebase/api/authentication";
 import { EditOutlined } from '@ant-design/icons'
 import avatar from '../../assets/images/avatar.png';
 
@@ -64,6 +64,8 @@ export const ExistingUsersTab = () => {
         }
     ];
 
+    const tokenRegex = /(\?alt=media&token=[\w-]+)$/;
+
     return (<>
         <Table columns={columns} dataSource={tenderState.tenders} rowKey="id" />
         <Drawer title="Edit User" open={isModalOpen} onClose={() => {setIsModalOpen(false); setEditingUser(null)}}>
@@ -71,10 +73,14 @@ export const ExistingUsersTab = () => {
                 <Upload
                     customRequest={({ file }: any) => {
                         uploadProfilePicture(file, editingUser.email).then((url) => {
-                            console.log("URL: ", url);
                             setEditingUser((prev) => prev ? ({ ...prev, photoUrl: url }) : prev);
+                            const previousUrl = editingUser.photoUrl;
                             updateTender(editingUser.id, 'photoUrl', url);
-                            // TODO: We should also remove the previous file to avoid old pictures laying around forever
+                            
+                            // Remove the previous file to avoid old pictures laying around forever
+                            if (previousUrl && previousUrl.replace(tokenRegex, '') !== url.replace(tokenRegex, '')) {
+                                deleteFileFromStorage(previousUrl);
+                            }
                         }).catch((error) => {
                             api.error({
                                 message: "Error",
