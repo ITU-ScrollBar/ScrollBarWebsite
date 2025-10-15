@@ -10,8 +10,7 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
-  User,
-  UserInfo
+  User
 } from "firebase/auth";
 import { auth } from "../firebase/index";
 import { getUser } from "../firebase/api/authentication";
@@ -20,7 +19,6 @@ import { UserProfile } from "../types/types-file";
 // Define and export AuthContextType and AuthProviderProps
 export interface AuthContextType {
   currentUser: UserProfile | null;
-  authenticatedUser: User | null;
   loading: boolean;
   login: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -34,19 +32,17 @@ export interface AuthProviderProps {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [authenticatedUser, setAuthenticatedUser] = useState<User | null>(null);
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setAuthenticatedUser(user);
       if (user) {
         getUser(user!.uid, {
           next: (snapshot) => {
             if (snapshot.exists()) {
               var userdata = snapshot.data() as UserProfile;
-              setCurrentUser(userdata);
+              setCurrentUser({...userdata, uid: user.uid});
             }
           },
           error: (error) => {
@@ -76,7 +72,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const setUser = (user: User | null): void => {
-    setAuthenticatedUser(user);
+    setCurrentUser(user as UserProfile | null);
   };
 
 
@@ -94,13 +90,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value = useMemo(
     () => ({
       currentUser,
-      authenticatedUser,
       loading,
       login,
       logout,
       setUser,
     }),
-    [currentUser, authenticatedUser, loading]
+    [currentUser, loading]
   );
 
   return (

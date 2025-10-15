@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext'; // Adjust path
 import { Spin } from 'antd'; // For loading state
 
 const ProtectedRoutes: React.FC = () => {
-    const { authenticatedUser, loading } = useAuth();
+    const { currentUser, loading } = useAuth();
 
     if (loading) {
         // Show a loading indicator while checking auth state
@@ -14,7 +14,7 @@ const ProtectedRoutes: React.FC = () => {
     }
 
     // If not loading and no user, redirect to login
-    if (!authenticatedUser) {
+    if (!currentUser) {
         return <Navigate to="/login" replace />; // 'replace' prevents going back to the protected route
     }
 

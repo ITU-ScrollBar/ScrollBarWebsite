@@ -1,52 +1,53 @@
 import { Path, useNavigate } from "react-router-dom";
-import { useState } from "react";
 
-import { Layout } from "antd";
+import { Layout, Upload } from "antd";
 import { Content } from "antd/es/layout/layout";
 import Title from "antd/es/typography/Title";
 import { useAuth } from "../../contexts/AuthContext";
-import newbiehatSvg from "../../assets/images/newbiehat.svg";
-import { StudyLine } from "../../types/types-file";
+import avatar from "../../assets/images/avatar.png";
 import StudyLinePicker from "./StudyLinePicker";
+import { updateUser } from "../../firebase/api/authentication";
 
 export default function Profile() {
   const navigation = useNavigate();
   const navigateToLink = (location: Path) => navigation(location);
   const { loading, currentUser } = useAuth();
-  const [studyLine, setStudyLine] = useState<StudyLine | null>(null);
+
+  const setStudyLine = (studyLine: string) => {
+    if (!currentUser) return;
+    updateUser({ id: currentUser.uid, field: 'studyline', value: studyLine });
+  };
 
   // TODO
   type UserProfile = {
+    uid?: string;
     displayName: string;
     email: string;
-    studyline: string;
+    studyline?: string;
     isAdmin: boolean;
     roles: string[];
-    phone: string | null;
     active: boolean;
     photoUrl: string;
     memberSince: number;
     totalShifts: number;
   };
 
-  if (loading) {
+  if (loading || !currentUser) {
     return <div>Loading...</div>;
   }
 
-  const userProfile: UserProfile | null = currentUser
-    ? {
-        displayName: currentUser.displayName ?? "Lorem",
-        email: currentUser.email ?? "test",
-        studyline: studyLine?.name ?? "Not selected",
-        isAdmin: false,
-        roles: ["tester"], // populate from your DB/profile store if available
-        phone: (currentUser as any).phoneNumber ?? null,
-        active: true,
-        photoUrl: (currentUser as any).photoURL ?? newbiehatSvg,
-        memberSince: 2004,
-        totalShifts: 5,
-      }
-    : null;
+  const userProfile: UserProfile | null = {
+    uid: currentUser.uid,
+    displayName: currentUser.displayName ?? "Lorem",
+    email: currentUser.email ?? "test",
+    studyline: currentUser.studyline,
+    isAdmin: false,
+    roles: currentUser.roles ?? [],
+    active: true,
+    photoUrl: currentUser.photoUrl ?? avatar,
+    memberSince: 2004,
+    totalShifts: 5,
+  };
 
   return (
     <Layout
@@ -101,7 +102,7 @@ export default function Profile() {
               </div>
               <div style={{ textAlign: "left" }}>
                 <h4 style={{ margin: 0 }}>{userProfile?.displayName}</h4>
-                <StudyLinePicker value={studyLine} onChange={setStudyLine} />
+                <StudyLinePicker bold value={userProfile?.studyline} onChange={setStudyLine} />
               </div>
             </div>
 

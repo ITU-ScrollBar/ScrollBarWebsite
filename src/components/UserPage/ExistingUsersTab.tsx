@@ -5,6 +5,7 @@ import { Key, useEffect, useState } from "react";
 import { deleteFileFromStorage, getStudyLines, uploadProfilePicture } from "../../firebase/api/authentication";
 import { EditOutlined } from '@ant-design/icons'
 import avatar from '../../assets/images/avatar.png';
+import StudyLinePicker from "../../pages/members/StudyLinePicker";
 
 export const ExistingUsersTab = () => {
     const { tenderState, updateTender } = useTenders();
@@ -105,14 +106,10 @@ export const ExistingUsersTab = () => {
                     {editingUser?.email}
                 </Form.Item>
                 <Form.Item label="Studyline">
-                    <Select
-                        options={studylines.map((line) => ({ value: line.id, label: line.name }))}
-                        value={studylines.find((line) => line.id === editingUser?.studyline)?.id}
-                        onChange={(value) => {
-                            setEditingUser((prev) => prev ? ({ ...prev, studyline: value }) : prev);
-                            if (editingUser) updateTender(editingUser.id, 'studyline', value);
-                        }}
-                    />
+                    <StudyLinePicker value={editingUser?.studyline} fontSize={14} onChange={(value) => {
+                        setEditingUser((prev) => prev ? ({ ...prev, studyline: value }) : prev);
+                        if (editingUser) updateTender(editingUser.id, 'studyline', value);
+                    }} />
                 </Form.Item>
                 <Form.Item label="Roles">
                     <Select

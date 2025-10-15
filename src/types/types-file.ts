@@ -1,5 +1,6 @@
 // User-related types
 export interface UserProfile {
+  uid: string;
   displayName: string;
   email: string;
   studyline: string;

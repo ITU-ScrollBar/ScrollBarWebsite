@@ -1,36 +1,32 @@
 import React, { useState, useEffect } from "react";
-import { getStudyLines } from "../../firebase/api/authentication";
 import { StudyLine } from "../../types/types-file";
+import { getStudyLines } from "../../firebase/api/authentication";
 
 interface StudyLinePickerProps {
-  value?: StudyLine | null;
-  onChange?: (studyLine: StudyLine | null) => void;
+  value?: string;
+  onChange?: (studyLine: string) => void;
   fontSize?: number;
+  bold?: boolean;
 }
 
-export default function StudyLinePicker({ value = null, onChange, fontSize = 16 }: StudyLinePickerProps) {
+export default function StudyLinePicker({ value, onChange, fontSize = 16, bold = false }: StudyLinePickerProps) {
+  const [selectedValue, setSelectedValue] = useState<string | undefined>(value);
   const [studyLines, setStudyLines] = useState<StudyLine[]>([]);
 
-  // Fetch study lines on component mount
   useEffect(() => {
-    getStudyLines()
-      .then((response) => {
+      getStudyLines().then((response) => {
         const studylines: StudyLine[] = response.map((doc: any) => doc as StudyLine);
         setStudyLines(studylines);
-      })
-      .catch((error) => {
-        console.error("Failed to fetch study lines:", error);
+        console.log(studylines);
       });
-  }, []);
+    }, []);
 
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     if (onChange) {
-      const selectedName = event.target.value;
-      if (selectedName === "") {
-        onChange(null);
-      } else {
-        const selectedStudyLine = studyLines.find(sl => sl.name === selectedName);
-        onChange(selectedStudyLine || null);
+      const selectedStudyLine = event.target.value;
+      setSelectedValue(selectedStudyLine);
+      if (selectedStudyLine) {
+        onChange(selectedStudyLine);
       }
     }
   };
@@ -39,18 +35,18 @@ export default function StudyLinePicker({ value = null, onChange, fontSize = 16 
   const paddingRight = arrowSize + 8; // Dynamic padding based on arrow size
   
   // Calculate width based on current selection
-  const currentText = value?.name || "Select study line";
-  const estimatedWidth = currentText.length * (fontSize * 0.6) + paddingRight; // Rough character width estimation
+  const estimatedWidth = 17 * (fontSize * 0.6) + paddingRight; // Rough character width estimation
 
   return (
     <select 
-      value={value?.name || ""} 
+      value={selectedValue} 
       onChange={handleChange}
+      defaultValue={"Select study line"}
       style={{
         border: "none",
         background: "transparent",
         fontSize: `${fontSize}px`,
-        fontWeight: "bold",
+        fontWeight: bold ? "bold" : "normal",
         color: "inherit",
         cursor: "pointer",
         padding: "0",
@@ -68,11 +64,11 @@ export default function StudyLinePicker({ value = null, onChange, fontSize = 16 
         minWidth: `${estimatedWidth}px`
       }}
     >
-      <option value="">Select study line</option>
       {studyLines.map((sl) => (
-        <option 
+        <option
           key={(sl as any).id ?? sl.name} 
-          value={sl.name}
+          value={sl.id}
+          label={sl.name}
         >
           {sl.name}
         </option>
