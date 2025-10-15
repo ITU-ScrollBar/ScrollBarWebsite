@@ -17,7 +17,6 @@ export default function StudyLinePicker({ value, onChange, fontSize = 16, bold =
       getStudyLines().then((response) => {
         const studylines: StudyLine[] = response.map((doc: any) => doc as StudyLine);
         setStudyLines(studylines);
-        console.log(studylines);
       });
     }, []);
 

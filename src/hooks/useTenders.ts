@@ -59,7 +59,7 @@ const useTenders = () => {
       next: (snapshot) => {
         const updatedTenders: Tender[] = snapshot.docs.map((doc) => {
           const data = doc.data() as Tender; // Typing the data as Tender
-          return { ...data, id: doc.id, key: doc.id };
+          return { ...data, uid: doc.id };
         });
         setTenderState((prevState) => ({
           ...prevState,

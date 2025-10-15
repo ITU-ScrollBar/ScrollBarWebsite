@@ -1,11 +1,11 @@
-import { Avatar, Button, Divider, Drawer, Form, Input, notification, Select, Switch, Table, TableColumnsType, Tooltip, Upload } from "antd"
+import { Button, Divider, Drawer, Form, Input, notification, Select, Switch, Table, TableColumnsType, Tooltip, Upload } from "antd"
 import { StudyLine, Tender } from "../../types/types-file";
 import useTenders from "../../hooks/useTenders";
 import { Key, useEffect, useState } from "react";
-import { deleteFileFromStorage, getStudyLines, uploadProfilePicture } from "../../firebase/api/authentication";
+import { getStudyLines } from "../../firebase/api/authentication";
 import { EditOutlined } from '@ant-design/icons'
-import avatar from '../../assets/images/avatar.png';
 import StudyLinePicker from "../../pages/members/StudyLinePicker";
+import { UserAvatarWithUpload } from "../UserAvatar";
 
 export const ExistingUsersTab = () => {
     const { tenderState, updateTender } = useTenders();
@@ -65,40 +65,18 @@ export const ExistingUsersTab = () => {
         }
     ];
 
-    const tokenRegex = /(\?alt=media&token=[\w-]+)$/;
-
     return (<>
         <Table columns={columns} dataSource={tenderState.tenders} rowKey="id" />
         <Drawer title="Edit User" open={isModalOpen} onClose={() => {setIsModalOpen(false); setEditingUser(null)}}>
             {editingUser && <Form>
-                <Upload
-                    customRequest={({ file }: any) => {
-                        uploadProfilePicture(file, editingUser.email).then((url) => {
-                            setEditingUser((prev) => prev ? ({ ...prev, photoUrl: url }) : prev);
-                            const previousUrl = editingUser.photoUrl;
-                            updateTender(editingUser.id, 'photoUrl', url);
-                            
-                            // Remove the previous file to avoid old pictures laying around forever
-                            if (previousUrl && previousUrl.replace(tokenRegex, '') !== url.replace(tokenRegex, '')) {
-                                deleteFileFromStorage(previousUrl);
-                            }
-                        }).catch((error) => {
-                            api.error({
-                                message: "Error",
-                                description: "Failed to upload profile picture: " + error.message,
-                                placement: "top",
-                            });
-                        });
-                    }}
-                    showUploadList={false}
-                >
-                    <Avatar src={editingUser.photoUrl ? editingUser.photoUrl : avatar} size={128} style={{ marginBottom: 16 }} />
-                </Upload>
+                <UserAvatarWithUpload user={editingUser} onChange={(url) => {
+                    setEditingUser((prev) => prev ? ({ ...prev, photoUrl: url }) : prev);
+                }} />
                 <Form.Item label="Name">
                     <Input
                         value={editingUser?.displayName}
                         onChange={(e) => setEditingUser((prev) => prev ? ({ ...prev, displayName: e.target.value }) : prev)}
-                        onBlur={(e) => { if (editingUser) updateTender(editingUser.id, 'displayName', e.target.value) }}
+                        onBlur={(e) => { if (editingUser) updateTender(editingUser.uid, 'displayName', e.target.value) }}
                     />
                 </Form.Item>
                 <Divider />
@@ -108,7 +86,7 @@ export const ExistingUsersTab = () => {
                 <Form.Item label="Studyline">
                     <StudyLinePicker value={editingUser?.studyline} fontSize={14} onChange={(value) => {
                         setEditingUser((prev) => prev ? ({ ...prev, studyline: value }) : prev);
-                        if (editingUser) updateTender(editingUser.id, 'studyline', value);
+                        if (editingUser) updateTender(editingUser.uid, 'studyline', value);
                     }} />
                 </Form.Item>
                 <Form.Item label="Roles">
@@ -128,7 +106,7 @@ export const ExistingUsersTab = () => {
                         value={editingUser?.roles}
                         onChange={(value) => {
                             setEditingUser((prev) => prev ? ({ ...prev, roles: value }) : prev);
-                            if (editingUser) updateTender(editingUser.id, 'roles', value);
+                            if (editingUser) updateTender(editingUser.uid, 'roles', value);
                         }}
                     />
                 </Form.Item>
@@ -137,7 +115,7 @@ export const ExistingUsersTab = () => {
                         checked={editingUser?.isAdmin}
                         onChange={(checked) => {
                             setEditingUser((prev) => prev ? ({ ...prev, isAdmin: checked }) : prev);
-                            if (editingUser) updateTender(editingUser.id, 'isAdmin', checked);
+                            if (editingUser) updateTender(editingUser.uid, 'isAdmin', checked);
                         }}
                     />
                 </Form.Item>

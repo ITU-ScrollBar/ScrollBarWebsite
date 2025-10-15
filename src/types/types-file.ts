@@ -134,8 +134,7 @@ export interface DocumentData {
 
 // Define the types for the tenders and invited tenders
 export type Tender = {
-  id: string;
-  key: string;
+  uid: string;
   // Add any other fields you expect from Firestore, e.g.:
   name?: string;
   email: string;

@@ -7,6 +7,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import avatar from "../../assets/images/avatar.png";
 import StudyLinePicker from "./StudyLinePicker";
 import { updateUser } from "../../firebase/api/authentication";
+import { UserAvatarWithUpload } from "../../components/UserAvatar";
 
 export default function Profile() {
   const navigation = useNavigate();
@@ -20,7 +21,7 @@ export default function Profile() {
 
   // TODO
   type UserProfile = {
-    uid?: string;
+    uid: string;
     displayName: string;
     email: string;
     studyline?: string;
@@ -36,7 +37,7 @@ export default function Profile() {
     return <div>Loading...</div>;
   }
 
-  const userProfile: UserProfile | null = {
+  const userProfile: UserProfile = {
     uid: currentUser.uid,
     displayName: currentUser.displayName ?? "Lorem",
     email: currentUser.email ?? "test",
@@ -89,16 +90,9 @@ export default function Profile() {
                   background: "#f0f0f0",
                 }}
               >
-                <img
-                  src={userProfile?.photoUrl ?? "/newbiehat.svg"}
-                  alt={userProfile?.displayName ?? "avatar"}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block",
-                  }}
-                />
+                <UserAvatarWithUpload user={userProfile} onChange={(url) => {
+                  userProfile.photoUrl = url;
+                }} />
               </div>
               <div style={{ textAlign: "left" }}>
                 <h4 style={{ margin: 0 }}>{userProfile?.displayName}</h4>

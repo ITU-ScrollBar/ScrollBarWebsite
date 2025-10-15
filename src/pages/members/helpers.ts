@@ -44,7 +44,7 @@ export const getTenderForEngagement = (
   engagement: Engagement,
   tenders: Tender[]
 ): Tender | null => {
-  return tenders.find((t) => t.id === engagement.userId) || null;
+  return tenders.find((t) => t.uid === engagement.userId) || null;
 };
 
 /**

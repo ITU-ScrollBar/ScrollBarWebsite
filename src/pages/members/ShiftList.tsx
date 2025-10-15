@@ -52,9 +52,7 @@ export function ShiftList({
     let result = eventId ? shifts.filter((s) => s.eventId === eventId) : shifts;
 
     if (shiftFiltering === ShiftFiltering.MY_SHIFTS && currentUser) {
-      const userId = tenders.find(
-        (t) => t.displayName === currentUser?.displayName
-      )?.id;
+      const userId = currentUser.uid;
       if (userId) {
         const userShiftIds = engagements
           .filter((e) => e.userId === userId)
