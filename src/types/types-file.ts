@@ -68,6 +68,7 @@ export interface Engagement {
   id: string;
   type: engagementType;
   key?: string;
+  shiftId: string;
   shiftEnd: Date;
   userId?: string;
   upForGrabs: boolean;
@@ -116,7 +117,7 @@ export enum ShiftFiltering {
 
 // Shift-related types
 export interface Shift {
-  id?: string;
+  id: string;
   key?: string;
   start: FirebaseDate;
   end: FirebaseDate;

@@ -78,17 +78,11 @@ export function ShiftList({
     setFilteredShifts(result);
   }, [shifts, engagements, tenders, eventId, shiftFiltering, currentUser]);
 
-  const putUpForGrabs = (engagementId: string) => {
-    setUpForGrabs(engagementId, true);
-  }
-  
-  const removeUpForGrabs = (engagementId: string) => {
-    setUpForGrabs(engagementId, false);
-  }
-
   const grabShift = (engagement: Engagement) => {
     if (engagement.type === engagementType.ANCHOR && !currentUser?.roles?.includes('anchor')) {
       message.error("You must be an anchor to grab an anchor shift");
+    } else if (engagements.some(e => e.shiftId === engagement.shiftId && e.userId === currentUser?.uid)) {
+      message.error("You are already on this shift");
     } else {
       takeShift(engagement.id, currentUser!.uid);
     }
