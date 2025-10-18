@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 
 type UserAvatarProps = {
     user: UserProfile | Tender;
+    size?: number;
 }
 
 type UserAvatarWithUploadProps = {
@@ -14,7 +15,7 @@ type UserAvatarWithUploadProps = {
     onChange: (url: string) => void;
 }
 
-export const UserAvatar = ({ user }: UserAvatarProps) => {
+export const UserAvatar = ({ user, size = 128 }: UserAvatarProps) => {
     const [ photoUrl, setPhotoUrl ] = useState(user.photoUrl ?? avatar);
     
     useEffect(() => {
@@ -22,7 +23,7 @@ export const UserAvatar = ({ user }: UserAvatarProps) => {
     }, [user.photoUrl]);
 
     return (
-        <Avatar src={photoUrl} size={128} style={{ marginBottom: 16 }} />
+        <Avatar src={photoUrl} size={size} style={{ marginBottom: 16 }} />
     );
 };
 

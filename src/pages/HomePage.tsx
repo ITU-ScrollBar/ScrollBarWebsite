@@ -1,14 +1,23 @@
-import React from 'react'
-import { Button, Col, Divider, Layout, Row, Space, Spin } from 'antd'
+import React, { useEffect } from 'react'
+import { Button, Col, Divider, Layout, Row, List, Avatar, Space, Spin } from 'antd'
 import Title from 'antd/es/typography/Title'
 import Paragraph from 'antd/es/typography/Paragraph'
 import { Header } from 'antd/es/layout/layout'
 import HeaderBar from '../components/HomePage/HeaderBar'
 import useSettings from '../hooks/useSettings'
 import MDEditor from '@uiw/react-md-editor'
+import useTenders from '../hooks/useTenders'
+import { UserAvatar } from '../components/UserAvatar'
+import { getTenderDisplayName } from './members/helpers'
+import { StudyLine, Tender } from '../types/types-file'
+import { getStudyLines } from '../firebase/api/authentication'
 
 export default function HomePage() {
   const { settingsState } = useSettings();
+  const { tenderState } = useTenders();
+
+  const activeTenders = tenderState.tenders.filter(t => !t.roles?.includes('passive') && !t.roles?.includes('board'));
+  const boardMembers = tenderState.tenders.filter(t => t.roles?.includes('board'));
 
   if (settingsState.loading) {
     return <Spin size="large" />
@@ -161,14 +170,7 @@ export default function HomePage() {
             <Title level={2} style={{ scrollMarginTop: '135px' }} id="volunteers">
               The Board
             </Title>
-            <Space
-              direction="horizontal"
-              style={{ width: '100%', justifyContent: 'space-around' }}
-              size={16}
-              wrap
-            >
-              alot of board members here
-            </Space>
+            <UserList users={boardMembers} />
           </Col>
         </Row>
 
@@ -186,14 +188,7 @@ export default function HomePage() {
             <Title level={2} style={{ scrollMarginTop: '135px' }} id="volunteers">
               The Volunteers
             </Title>
-            <Space
-              direction="horizontal"
-              style={{ width: '100%', justifyContent: 'space-around' }}
-              size={16}
-              wrap
-            >
-              alot of tenders here
-            </Space>
+            <UserList users={activeTenders} />
           </Col>
         </Row>
 
@@ -202,3 +197,35 @@ export default function HomePage() {
     </Layout>
   )
 }
+
+const UserList = ({ users }: { users: Tender[] }) => {
+  const [studylines, setStudylines] = React.useState<StudyLine[]>([]);
+
+  useEffect(() => {
+    getStudyLines().then((response) => {
+        const studylines: StudyLine[] = response.map((doc: any) => doc as StudyLine);
+        setStudylines(studylines);
+    }).catch((error) => {
+        console.error("Failed to fetch study lines: " + error.message);
+    });
+  }, []);
+
+  const andersLyngesen = users.find(user => user.displayName === "Anders Lyngesen");
+  console.log(andersLyngesen);
+
+  return (
+    <List
+      grid={{ gutter: 16, column: 10, xs: 4, sm: 3, md: 5, lg: 8, xl: 10 }}
+      dataSource={users}
+      renderItem={(user) => (
+        <List.Item>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <UserAvatar user={user} size={64} />
+            <div style={{ marginTop: 8, textAlign: 'center' }}>{getTenderDisplayName(user)}</div>
+            <div style={{ marginTop: 8, textAlign: 'center' }}>{studylines.find(sl => sl.id === user.studyline)?.abbreviation?.toLocaleUpperCase()}</div>
+          </div>
+        </List.Item>
+      )}
+    />
+  );
+};
