@@ -157,12 +157,13 @@ export function ShiftList({
             >
             {getTenderDisplayName(tender)}
           </span>
-          {(tender.uid === currentUser?.uid || engagement.upForGrabs) && (
-            <Popconfirm title="Are you sure?" okText="Yes" okButtonProps={{ color: "yellow" }} onConfirm={() => {
-                  (tender.uid === currentUser?.uid && !engagement.upForGrabs) && putUpForGrabs(engagement.id) ||
-                  (tender.uid === currentUser?.uid && engagement.upForGrabs) && removeUpForGrabs(engagement.id) ||
-                  (tender.uid !== currentUser?.uid && engagement.upForGrabs) && grabShift(engagement)
-                }}>
+          {(tender.uid !== currentUser?.uid && engagement.upForGrabs) && (
+            <Popconfirm 
+              title="Are you sure?"
+              description="This action cannot be undone."
+              okText="Yes"
+              okButtonProps={{ color: "yellow" }}
+              onConfirm={() => grabShift(engagement)}>
               <Button
                 size="small"
                 style={{
@@ -176,11 +177,7 @@ export function ShiftList({
                   bottom: -24,
                 }}
                 >
-                {
-                  (tender.uid === currentUser?.uid && !engagement.upForGrabs) && ("Put up for grabs") ||
-                  (tender.uid === currentUser?.uid && engagement.upForGrabs) && ("I want this shift anyways") ||
-                  (tender.uid !== currentUser?.uid && engagement.upForGrabs) && ("Grab shift")
-                }
+                Grab shift
               </Button>
             </Popconfirm>
           )}
@@ -223,6 +220,9 @@ export function ShiftList({
               const regulars = shiftEngagements.filter(
                 (e) => e.type !== "anchor"
               );
+              const myShift = shiftEngagements.filter(
+                (e) => e.userId === currentUser?.uid
+              ).find(e => e); // Cannot be part of the shift twice so this is similar to `.firstOrDefault()`
 
               return (
                 <div
@@ -252,9 +252,27 @@ export function ShiftList({
                         fontSize: "1em",
                       }}
                     >
-                      {dateToHourString(shift.start)} —{" "}
-                      {dateToHourString(shift.end)}
+                      {dateToHourString(shift.start).padStart(2, "0")} —{" "}
+                      {dateToHourString(shift.end).padStart(2, "0")}
                     </Paragraph>
+                    {myShift && (
+                      <Popconfirm title="Are you sure?" okText="Yes" okButtonProps={{ color: "yellow" }} onConfirm={() => {
+                          setUpForGrabs(myShift.id, !myShift.upForGrabs);
+                        }}>
+                        <Button
+                          size="small"
+                          style={{
+                            backgroundColor: "#FFE600",
+                            border: "none",
+                            marginTop: 6,
+                            padding: "4px 8px",
+                            color: "#000",
+                          }}
+                        >
+                          {myShift.upForGrabs ? "Keep shift" : "Swap shift"}
+                        </Button>
+                      </Popconfirm>
+                    )}
                   </div>
 
                   {/* Right: Title & Avatars */}
