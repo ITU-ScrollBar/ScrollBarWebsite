@@ -195,11 +195,12 @@ export function ShiftList({
     <div>
       {Object.entries(shiftsByEvent).map(([eventId, shifts]) => {
         const event = eventState.events.find((e) => e.id === eventId);
+        if (!event) return null;
         return (
           <div key={eventId} style={{ marginBottom: 32 }}>
             {/* Event Title */}
             <Title level={2} style={{ marginBottom: 12 }}>
-              {event?.displayName || event?.title || "Unknown Event"}
+              {`${event.displayName ?? event.title ?? "Unknown Event"} (${event.start.getUTCDate()}/${event.start.getUTCMonth() + 1})`}
             </Title>
 
             {/* Shifts for this event */}
