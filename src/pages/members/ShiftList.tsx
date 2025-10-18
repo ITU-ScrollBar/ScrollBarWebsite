@@ -26,7 +26,7 @@ const COLORS = {
   ANCHOR_TEXT: "#222", // Dark text for anchor avatars
   REGULAR_TEXT: "white", // White text for regular avatars
   SHIFT_BACKGROUND: "#F5F5F5", // White background for shift cards
-  BOX_SHADOW: "inset 0 1px 3px rgba(7, 7, 7, 0.1)", // Subtle shadow for shift cards
+  BOX_SHADOW: "inset 0 1px 3px rgba(7, 7, 7, 0.3)", // Subtle shadow for shift cards
   TIME_TEXT: "#555", // Gray text for time display
 } as const;
 
