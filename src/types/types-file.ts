@@ -58,9 +58,15 @@ export interface SettingsUpdateParams {
   value: any;
 }
 
+export enum engagementType {
+  ANCHOR = "anchor",
+  TENDER = "tender",
+}
+
 // Engagement-related types
 export interface Engagement {
-  id?: string;
+  id: string;
+  type: engagementType;
   key?: string;
   shiftEnd: Date;
   userId?: string;

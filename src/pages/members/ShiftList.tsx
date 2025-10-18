@@ -1,4 +1,4 @@
-import { Row, Col, Typography } from "antd";
+import { Row, Col, Typography, Divider, Splitter, Button, Popconfirm, message } from "antd";
 import {
   dateToHourString,
   getEngagementsForShift,
@@ -12,10 +12,12 @@ import {
   Engagement,
   Tender,
   ShiftFiltering,
+  engagementType,
 } from "../../types/types-file";
 import { useAuth } from "../../contexts/AuthContext";
 import { useEffect, useState } from "react";
 import useEvents from "../../hooks/useEvents";
+import useEngagements from "../../hooks/useEngagements";
 
 const { Title, Paragraph } = Typography;
 
@@ -48,6 +50,7 @@ export function ShiftList({
   const { currentUser } = useAuth();
   const { eventState } = useEvents();
   const [filteredShifts, setFilteredShifts] = useState<Shift[]>([]);
+  const { setUpForGrabs, takeShift } = useEngagements();
 
   useEffect(() => {
     let result = eventId ? shifts.filter((s) => s.eventId === eventId) : shifts;
@@ -75,7 +78,23 @@ export function ShiftList({
     setFilteredShifts(result);
   }, [shifts, engagements, tenders, eventId, shiftFiltering, currentUser]);
 
-  const renderTender = (engagement: any, isAnchor = false) => {
+  const putUpForGrabs = (engagementId: string) => {
+    setUpForGrabs(engagementId, true);
+  }
+  
+  const removeUpForGrabs = (engagementId: string) => {
+    setUpForGrabs(engagementId, false);
+  }
+
+  const grabShift = (engagement: Engagement) => {
+    if (engagement.type === engagementType.ANCHOR && !currentUser?.roles?.includes('anchor')) {
+      message.error("You must be an anchor to grab an anchor shift");
+    } else {
+      takeShift(engagement.id, currentUser!.uid);
+    }
+  }
+
+  const renderTender = (engagement: Engagement, isAnchor = false) => {
     const tender = getTenderForEngagement(engagement, tenders);
     if (!tender) return null;
 
@@ -135,9 +154,36 @@ export function ShiftList({
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
             }}
-          >
+            >
             {getTenderDisplayName(tender)}
           </span>
+          {(tender.uid === currentUser?.uid || engagement.upForGrabs) && (
+            <Popconfirm title="Are you sure?" okText="Yes" okButtonProps={{ color: "yellow" }} onConfirm={() => {
+                  (tender.uid === currentUser?.uid && !engagement.upForGrabs) && putUpForGrabs(engagement.id) ||
+                  (tender.uid === currentUser?.uid && engagement.upForGrabs) && removeUpForGrabs(engagement.id) ||
+                  (tender.uid !== currentUser?.uid && engagement.upForGrabs) && grabShift(engagement)
+                }}>
+              <Button
+                size="small"
+                style={{
+                  position: "absolute",
+                  backgroundColor: "#FFE600",
+                  border: "none",
+                  marginTop: 6,
+                  padding: "4px 8px",
+                  alignSelf: "center",
+                  color: "#000",
+                  bottom: -24,
+                }}
+                >
+                {
+                  (tender.uid === currentUser?.uid && !engagement.upForGrabs) && ("Put up for grabs") ||
+                  (tender.uid === currentUser?.uid && engagement.upForGrabs) && ("I want this shift anyways") ||
+                  (tender.uid !== currentUser?.uid && engagement.upForGrabs) && ("Grab shift")
+                }
+              </Button>
+            </Popconfirm>
+          )}
         </div>
       </Col>
     );
