@@ -1,11 +1,11 @@
-import useShifts from "../../hooks/useShifts";
 import useEvents from "../../hooks/useEvents";
-import useEngagements from "../../hooks/useEngagements";
 import useTenders from "../../hooks/useTenders";
 import { Layout } from "antd";
 import Title from "antd/es/typography/Title";
 import { ShiftList } from "./ShiftList";
 import { ShiftFiltering } from "../../types/types-file";
+import { useShiftContext } from "../../contexts/ShiftContext";
+import { useEngagementContext } from "../../contexts/EngagementContext";
 
 interface ShiftsProps {
   filter?: ShiftFiltering;
@@ -13,9 +13,9 @@ interface ShiftsProps {
 }
 
 function Shifts({ filter = ShiftFiltering.ALL_SHIFTS, title }: ShiftsProps) {
-  const { shiftState } = useShifts();
+  const { shiftState } = useShiftContext();
   const { eventState } = useEvents();
-  const { engagementState } = useEngagements();
+  const { engagementState } = useEngagementContext();
   const { tenderState } = useTenders();
   const BACKGROUND = "#F5F5F5";
   const BOX_SHADOW = "0 2px 6px rgba(7, 7, 7, 0.5)";

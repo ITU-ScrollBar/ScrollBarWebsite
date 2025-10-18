@@ -210,9 +210,6 @@ const UserList = ({ users }: { users: Tender[] }) => {
     });
   }, []);
 
-  const andersLyngesen = users.find(user => user.displayName === "Anders Lyngesen");
-  console.log(andersLyngesen);
-
   return (
     <List
       grid={{ gutter: 16, column: 10, xs: 4, sm: 3, md: 5, lg: 8, xl: 10 }}

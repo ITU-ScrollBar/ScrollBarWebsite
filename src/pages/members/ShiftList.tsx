@@ -17,7 +17,7 @@ import {
 import { useAuth } from "../../contexts/AuthContext";
 import { useEffect, useState } from "react";
 import useEvents from "../../hooks/useEvents";
-import useEngagements from "../../hooks/useEngagements";
+import { useEngagementContext } from "../../contexts/EngagementContext";
 
 const { Title, Paragraph } = Typography;
 
@@ -50,7 +50,7 @@ export function ShiftList({
   const { currentUser } = useAuth();
   const { eventState } = useEvents();
   const [filteredShifts, setFilteredShifts] = useState<Shift[]>([]);
-  const { setUpForGrabs, takeShift } = useEngagements();
+  const { setUpForGrabs, takeShift } = useEngagementContext();
 
   useEffect(() => {
     let result = eventId ? shifts.filter((s) => s.eventId === eventId) : shifts;

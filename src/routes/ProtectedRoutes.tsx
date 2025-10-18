@@ -3,6 +3,8 @@ import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext'; // Adjust path
 import { Spin } from 'antd'; // For loading state
+import { EngagementProvider } from '../contexts/EngagementContext';
+import { ShiftProvider } from '../contexts/ShiftContext';
 
 const ProtectedRoutes: React.FC = () => {
     const { currentUser, loading } = useAuth();
@@ -19,7 +21,11 @@ const ProtectedRoutes: React.FC = () => {
     }
 
     // If user is logged in, render the child route components
-    return <Outlet />;
+    return <EngagementProvider>
+            <ShiftProvider>
+                <Outlet />
+            </ShiftProvider>
+        </EngagementProvider>;
 };
 
 export default ProtectedRoutes;
