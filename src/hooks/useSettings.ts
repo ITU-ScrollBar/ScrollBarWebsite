@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { streamSettings, updateSettings } from '../firebase/api/settings';
 import { Settings } from '../types/types-file';
+import { message } from 'antd';
 
 type SettingsState = {
     loading: boolean;
@@ -26,8 +27,9 @@ export default function useSettings() {
         return unsubscribe;
     }, []);
 
-    const updateSetting = (field: string, value: any) => {
+    const updateSetting = (field: string, displayName: string, value: any) => {
         updateSettings(field, value);
+        message.success(`Updated ${displayName} successfully`);
     };
 
     return { settingsState, updateSetting };

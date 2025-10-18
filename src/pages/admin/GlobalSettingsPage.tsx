@@ -77,7 +77,7 @@ const GlobalSettingsPage = () => {
             dataIndex: 'value',
             key: 'value',
             render: (value: Setting['value'], record: Setting) => (
-                <EditableCell value={value} inputType={record.inputType} onChange={(next) => updateSetting(record.key, next)} />
+                <EditableCell value={value} inputType={record.inputType} onChange={(next) => updateSetting(record.key, record.label, next)} />
             ),
         },
     ];
