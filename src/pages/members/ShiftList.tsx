@@ -25,7 +25,8 @@ const COLORS = {
   REGULAR_BACKGROUND: "#1890ff", // Blue for regular avatars
   ANCHOR_TEXT: "#222", // Dark text for anchor avatars
   REGULAR_TEXT: "white", // White text for regular avatars
-  SHIFT_BACKGROUND: "#fff", // White background for shift cards
+  SHIFT_BACKGROUND: "#F5F5F5", // White background for shift cards
+  BOX_SHADOW: "inset 0 1px 3px rgba(7, 7, 7, 0.1)", // Subtle shadow for shift cards
   TIME_TEXT: "#555", // Gray text for time display
 } as const;
 
@@ -187,6 +188,7 @@ export function ShiftList({
                     borderRadius: 8,
                     background: COLORS.SHIFT_BACKGROUND,
                     marginBottom: 12,
+                    boxShadow: COLORS.BOX_SHADOW,
                   }}
                 >
                   {/* Left: Location & Time */}
