@@ -16,14 +16,14 @@ type UserAvatarWithUploadProps = {
 }
 
 export const UserAvatar = ({ user, size = 128 }: UserAvatarProps) => {
-    const [ photoUrl, setPhotoUrl ] = useState(user.photoUrl ?? avatar);
-    
+    const [ photoUrl, setPhotoUrl ] = useState(user.photoUrl);
+
     useEffect(() => {
-        setPhotoUrl(user.photoUrl ?? avatar);
+        setPhotoUrl(user.photoUrl);
     }, [user.photoUrl]);
 
     return (
-        <Avatar src={photoUrl} size={size} style={{ marginBottom: 16 }} />
+        <Avatar src={photoUrl || avatar} size={size} style={{ marginBottom: 16 }} />
     );
 };
 
