@@ -47,7 +47,7 @@ function Shifts({ filter = ShiftFiltering.ALL_SHIFTS, title }: ShiftsProps) {
               marginBottom: 28,
             }}
           >
-            {eventState.events.map((event) => (
+            {eventState.events.sort((a, b) => a.start.getTime() - b.start.getTime()).map((event) => (
               <section key={event.id} style={{ marginBottom: 32 }}>
                 <ShiftList
                   shifts={shiftState.shifts}
