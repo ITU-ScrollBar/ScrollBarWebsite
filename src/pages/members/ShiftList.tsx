@@ -1,4 +1,4 @@
-import { Row, Col, Typography, Divider, Splitter, Button, Popconfirm, message } from "antd";
+import { Row, Col, Typography, Button, Popconfirm, message } from "antd";
 import {
   dateToHourString,
   getEngagementsForShift,
@@ -79,14 +79,21 @@ export function ShiftList({
   }, [shifts, engagements, tenders, eventId, shiftFiltering, currentUser]);
 
   const grabShift = (engagement: Engagement) => {
-    if (engagement.type === engagementType.ANCHOR && !currentUser?.roles?.includes('anchor')) {
+    if (
+      engagement.type === engagementType.ANCHOR &&
+      !currentUser?.roles?.includes("anchor")
+    ) {
       message.error("You must be an anchor to grab an anchor shift");
-    } else if (engagements.some(e => e.shiftId === engagement.shiftId && e.userId === currentUser?.uid)) {
+    } else if (
+      engagements.some(
+        (e) => e.shiftId === engagement.shiftId && e.userId === currentUser?.uid
+      )
+    ) {
       message.error("You are already on this shift");
     } else {
       takeShift(engagement.id, currentUser!.uid);
     }
-  }
+  };
 
   const renderTender = (engagement: Engagement, isAnchor = false) => {
     const tender = getTenderForEngagement(engagement, tenders);
@@ -148,16 +155,17 @@ export function ShiftList({
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
             }}
-            >
+          >
             {getTenderDisplayName(tender)}
           </span>
-          {(tender.uid !== currentUser?.uid && engagement.upForGrabs) && (
-            <Popconfirm 
+          {tender.uid !== currentUser?.uid && engagement.upForGrabs && (
+            <Popconfirm
               title="Are you sure?"
               description="This action cannot be undone."
               okText="Yes"
               okButtonProps={{ color: "yellow" }}
-              onConfirm={() => grabShift(engagement)}>
+              onConfirm={() => grabShift(engagement)}
+            >
               <Button
                 size="small"
                 style={{
@@ -170,7 +178,7 @@ export function ShiftList({
                   color: "#000",
                   bottom: -24,
                 }}
-                >
+              >
                 Grab shift
               </Button>
             </Popconfirm>
@@ -215,9 +223,9 @@ export function ShiftList({
               const regulars = shiftEngagements.filter(
                 (e) => e.type !== "anchor"
               );
-              const myShift = shiftEngagements.filter(
-                (e) => e.userId === currentUser?.uid
-              ).find(e => e); // Cannot be part of the shift twice so this is similar to `.firstOrDefault()`
+              const myShift = shiftEngagements
+                .filter((e) => e.userId === currentUser?.uid)
+                .find((e) => e); // Cannot be part of the shift twice so this is similar to `.firstOrDefault()`
 
               return (
                 <div
@@ -251,9 +259,14 @@ export function ShiftList({
                       {dateToHourString(shift.end).padStart(2, "0")}
                     </Paragraph>
                     {myShift && (
-                      <Popconfirm title="Are you sure?" okText="Yes" okButtonProps={{ color: "yellow" }} onConfirm={() => {
+                      <Popconfirm
+                        title="Are you sure?"
+                        okText="Yes"
+                        okButtonProps={{ color: "yellow" }}
+                        onConfirm={() => {
                           setUpForGrabs(myShift.id, !myShift.upForGrabs);
-                        }}>
+                        }}
+                      >
                         <Button
                           size="small"
                           style={{
