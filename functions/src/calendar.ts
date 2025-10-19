@@ -141,8 +141,6 @@ app.get('/calendar/:uid', async (req, res) => {
       return { ...doc.data(), id: doc.id } as Engagement;
     });
 
-    console.log('Related engagements:', relatedEngagementsMap);
-
     const allUsers = (await db.collection('users').get()).docs.map(doc => {
       return { ...doc.data(), id: doc.id } as User;
     });
@@ -157,14 +155,11 @@ app.get('/calendar/:uid', async (req, res) => {
     for (const doc of shiftsSnapshot.docs) {
       const d = { ...doc.data(), id: doc.id } as Shift;
       const event = eventsMap.find(event => event.id === d.eventId);
-      console.log('Processing event:', event?.displayName, "for shift id:", d.id);
       const relatedEngagements = relatedEngagementsMap.filter(e => e.shiftId === d.id);
-      console.log('Related engagements:', relatedEngagements);
       const shiftMembers = relatedEngagements.map(e => {
         const user = relatedUsersMap.find(u => u.id === e.userId);
         return { type: e.type, name: user?.displayName ?? "Unknown user" };
       });
-      console.log('Shift members:', shiftMembers);
       const e = mapDocToIcsEvent({ shift: d, event, shiftMembers });
       if (e) events.push(e);
     }
