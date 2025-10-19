@@ -8,6 +8,10 @@
     ],
     "rewrites": [
       {
+        "source": "/calendar/**",
+        "function": "calendar"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

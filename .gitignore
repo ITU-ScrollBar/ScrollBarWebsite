@@ -1,4 +1,6 @@
 .env
+functions/.credentials.json
+.firebase
 
 # Logs
 logs
