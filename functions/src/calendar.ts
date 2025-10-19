@@ -54,15 +54,37 @@ const db = admin.firestore();
 
 export const app = express();
 
+type Shift = {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  description: string;
+  location: string;
+  uid: string;
+  eventId: string;
+}
+
+type Event = {
+  id: string;
+  displayName: string;
+  description: string;
+  where: string;
+}
+
+type MapToIcsEventProps = {
+  shift: Shift;
+  event?: Event;
+}
+
 function toIcsArray(d: Date): [number, number, number, number, number] {
   return [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes()];
 }
 
-function mapDocToIcsEvent(doc: any): EventAttributes | null {
-  if (!doc) return null;
+function mapDocToIcsEvent({shift, event}: MapToIcsEventProps): EventAttributes | null {
+  if (!shift || !event) return null;
 
   const toDate = (v: any): Date | null => {
-    console.log(typeof v);
     if (!v) return null;
     if (v instanceof Date) return v;
     if (v && typeof v.toDate === 'function') return v.toDate();
@@ -72,40 +94,21 @@ function mapDocToIcsEvent(doc: any): EventAttributes | null {
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   };
 
-  const start = toDate(doc.start);
-  const end = toDate(doc.end);
-  if (!start) return null;
+  const start = toDate(shift.start);
+  const end = toDate(shift.end);
+  if (!start || !end) return null;
 
-  const makeDateArray = (d: Date, allDay?: boolean) => {
-    if (allDay) return [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate()] as any;
-    return toIcsArray(d);
-  };
-
-  const allDay = !!doc.allDay;
-  let endArray;
-  if (end) {
-    endArray = makeDateArray(end, allDay);
-  } else if (allDay) {
-    const e = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate() + 1));
-    endArray = makeDateArray(e, true);
-  }
-
-  const event: Partial<EventAttributes> & { end?: any } = {
-    start: makeDateArray(start, allDay),
-    title: `${doc.title} shift`,
+  const calEvent: Partial<EventAttributes> & { end?: any } = {
+    start: toIcsArray(start),
+    end: toIcsArray(end),
+    title: `${event?.displayName} - ${shift.title}`,
     startInputType: 'utc',
-    description: doc.description || doc.notes || undefined,
-    location: doc.location,
-    uid: doc.id,
+    description: shift.description,
+    location: `${event?.where} ${shift.location}`,
+    uid: shift.id,
   };
 
-  if (endArray) event.end = endArray;
-  if (doc.url) event.url = doc.url;
-  if (doc.status) event.status = doc.status;
-  if (doc.organizer) event.organizer = doc.organizer;
-  if (doc.attendees) event.attendees = doc.attendees;
-
-  return event as EventAttributes;
+  return calEvent as EventAttributes;
 }
 
 app.get('/calendar/:uid', async (req, res) => {
@@ -128,11 +131,27 @@ app.get('/calendar/:uid', async (req, res) => {
       .collection('shifts')
       .where(admin.firestore.FieldPath.documentId(), 'in', shiftIds)
       .get();
+    
+    const eventIds = shiftsSnapshot.docs.map(doc => doc.data().eventId);
+
+    const eventsSnapshot = await db
+      .collection('env')
+      .doc('dev')
+      .collection('events')
+      .where(admin.firestore.FieldPath.documentId(), 'in', eventIds)
+      .get();
+
+    const eventsMap = eventsSnapshot.docs.map(doc => {
+      const d = doc.data() as Event;
+      console.log('Event data', d);
+      return {...d, id: doc.id};
+    });
 
     const events: EventAttributes[] = [];
     for (const doc of shiftsSnapshot.docs) {
-      const d = doc.data();
-      const e = mapDocToIcsEvent({ ...d, id: doc.id });
+      const d = doc.data() as Shift;
+      console.log('Shift data', d);
+      const e = mapDocToIcsEvent({ shift: d, event: eventsMap.find(event => event.id === d.eventId)});
       if (e) events.push(e);
     }
 
