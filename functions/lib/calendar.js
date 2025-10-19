@@ -113,7 +113,7 @@ function mapDocToIcsEvent(doc) {
         return null;
     const makeDateArray = (d, allDay) => {
         if (allDay)
-            return [d.getFullYear(), d.getMonth() + 1, d.getDate()];
+            return [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate()];
         return toIcsArray(d);
     };
     const allDay = !!doc.allDay;
@@ -121,21 +121,17 @@ function mapDocToIcsEvent(doc) {
     if (end) {
         endArray = makeDateArray(end, allDay);
     }
-    else if (doc.durationMinutes && !allDay) {
-        const e = new Date(start.getTime() + Number(doc.durationMinutes) * 60000);
-        endArray = makeDateArray(e, false);
-    }
     else if (allDay) {
         const e = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate() + 1));
         endArray = makeDateArray(e, true);
     }
     const event = {
         start: makeDateArray(start, allDay),
-        title: doc.title || doc.summary || doc.name || 'Event',
+        title: `${doc.title} shift`,
         startInputType: 'utc',
         description: doc.description || doc.notes || undefined,
-        location: doc.location || doc.place || undefined,
-        uid: doc.id || undefined,
+        location: doc.location,
+        uid: doc.id,
     };
     if (endArray)
         event.end = endArray;
@@ -154,8 +150,6 @@ exports.app.get('/calendar/:uid', async (req, res) => {
         const uid = req.params.uid;
         if (!uid)
             return res.status(400).send('Missing uid');
-        console.log(`Generating calendar for uid: ${uid}`);
-        console.log('db:', db.listCollections());
         const engagementsSnapshot = await db
             .collection('env')
             .doc('dev')
@@ -163,19 +157,16 @@ exports.app.get('/calendar/:uid', async (req, res) => {
             .where('userId', '==', uid)
             .get();
         const shiftIds = engagementsSnapshot.docs.map(doc => doc.data().shiftId);
-        const eventsSnapshot = await db
+        const shiftsSnapshot = await db
             .collection('env')
             .doc('dev')
             .collection('shifts')
             .where(admin.firestore.FieldPath.documentId(), 'in', shiftIds)
             .get();
-        console.log(`Found ${eventsSnapshot.size} events for uid: ${uid}`);
         const events = [];
-        for (const doc of eventsSnapshot.docs) {
+        for (const doc of shiftsSnapshot.docs) {
             const d = doc.data();
             const e = mapDocToIcsEvent({ ...d, id: doc.id });
-            console.log('Document data:', d);
-            console.log('Mapped ICS event:', e);
             if (e)
                 events.push(e);
         }
