@@ -5,6 +5,8 @@ import { Avatar, ConfigProvider, Dropdown, Menu } from "antd";
 import logo from '../../assets/images/logo.png';
 import avatar from '../../assets/images/avatar.png';
 import { useAuth } from "../../contexts/AuthContext";
+import { MenuOutlined } from '@ant-design/icons'
+import { useWindowSize } from "../../hooks/useWindowSize";
 
 interface TenderMenuProps {
   children?: ReactNode;
@@ -16,7 +18,13 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
   const [current, setCurrent] = useState('tab');
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
-  
+  const windowSize = useWindowSize();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(windowSize.width < 768);
+  }, [windowSize]);
+
   const items: MenuItem[] = [
     {
       label: 'My shifts',
@@ -113,10 +121,11 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
             }}
           >
             <Menu
-              style={{ fontWeight: "bold", fontSize: 18 }}
+              style={{ fontWeight: "bold", fontSize: 18, minWidth: 0, flex: "auto", maxWidth: 'calc(100vw - 324px)' }}
               onClick={onClick}
-              disabledOverflow
               items={items}
+              disabledOverflow={!isMobile}
+              overflowedIndicator={<MenuOutlined style={{ color: 'white', fontSize: '24px' }} />}
               selectedKeys={[current]}
               mode="horizontal"
             />
