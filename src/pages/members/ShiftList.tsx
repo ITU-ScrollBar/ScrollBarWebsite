@@ -110,7 +110,7 @@ export function ShiftList({
         >
           <UserAvatar
             user={tender}
-            size={40}
+            size={50}
             backgroundColor={
               isAnchor ? COLORS.ANCHOR_BACKGROUND : COLORS.REGULAR_BACKGROUND
             }
@@ -138,14 +138,14 @@ export function ShiftList({
               <Button
                 size="small"
                 style={{
-                  position: "absolute",
+                  position: "relative",
                   backgroundColor: "#FFE600",
                   border: "none",
                   marginTop: 6,
                   padding: "4px 8px",
                   alignSelf: "center",
                   color: "#000",
-                  bottom: -24,
+                  bottom: 0,
                 }}
               >
                 Grab shift
@@ -244,6 +244,7 @@ export function ShiftList({
                             marginTop: 6,
                             padding: "4px 8px",
                             color: "#000",
+                            position: "relative",
                           }}
                         >
                           {myShift.upForGrabs ? "Keep shift" : "Swap shift"}
