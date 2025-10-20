@@ -17,7 +17,7 @@ type UserAvatarWithUploadProps = UserAvatarProps & {
     onChange: (url: string) => void;
 }
 
-export const UserAvatar = ({ user, size = 128, showHats = true, backgroundColor }: UserAvatarProps & { backgroundColor?: string }) => {
+export const UserAvatar = ({ user, size = 128, showHats = true, backgroundColor, ...divProps }: UserAvatarProps & Record<string, any>) => {
     const [ photoUrl, setPhotoUrl ] = useState(user.photoUrl);
     const [ showNewbieHat, setShowNewbieHat ] = useState(showHats);
 
@@ -29,8 +29,22 @@ export const UserAvatar = ({ user, size = 128, showHats = true, backgroundColor 
         setShowNewbieHat(showHats && (user.roles?.includes('newbie') ?? false));
     }, [showHats, user.roles]);
 
+    const passedStyle = divProps.style || {};
+    const combinedStyle = {
+        position: "relative",
+        display: "inline-block",
+        width: size + 3,
+        height: size + 3,
+        backgroundColor: backgroundColor || "transparent",
+        borderRadius: "50%",
+        ...passedStyle,
+    };
+
+    const restProps = { ...divProps };
+    delete restProps.style;
+
     return (
-        <div style={{ position: "relative", display: "inline-block", width: size+3, height: size+3, backgroundColor: backgroundColor || "transparent", borderRadius: "50%" }}>
+        <div {...restProps} style={combinedStyle}>
             <Avatar src={photoUrl || avatar} size={size} style={{ display: "block", left: 1.5, top: 1.5 }} />
             {showNewbieHat && (
                 <img
