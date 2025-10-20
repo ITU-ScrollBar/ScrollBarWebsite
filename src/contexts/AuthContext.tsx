@@ -43,15 +43,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             if (snapshot.exists()) {
               var userdata = snapshot.data() as UserProfile;
               setCurrentUser({...userdata, uid: user.uid});
+              setLoading(false);
             }
           },
           error: (error) => {
             console.error("Error fetching user data:", error);
             setCurrentUser(null);
+            setLoading(false);
           },
         });
       }
-      setLoading(false);
       console.log("Auth State Changed:", user ? `User ${user.uid}` : "No user");
     });
 
