@@ -25,7 +25,7 @@ export default function HeaderBar() {
   const items = [
     {
       key: '1',
-      label: <Link style={linkcss} href="#events">EVENTS</Link>,
+      label: <Link style={linkcss} onClick={() => navigate("/events")}>EVENTS</Link>,
     },
     {
       key: '3',
