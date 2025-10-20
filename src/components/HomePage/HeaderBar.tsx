@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Image, Menu } from 'antd'
 import { MenuOutlined } from '@ant-design/icons'
 
@@ -7,6 +7,7 @@ import Link from 'antd/es/typography/Link';
 import instagramIcon from '../../assets/images/instagram.png';
 import facebookIcon from '../../assets/images/facebook.png';
 import { useNavigate } from "react-router";
+import { useWindowSize } from '../../hooks/useWindowSize';
 
 
 
@@ -21,6 +22,8 @@ const linkcss = {
 
 
 export default function HeaderBar() {
+  const windowSize = useWindowSize();
+  const [isMobile, setIsMobile] = useState(false);
 
   const items = [
     {
@@ -83,11 +86,12 @@ return (
       mode="horizontal"
       overflowedIndicator={<MenuOutlined style={{ color: 'white' }} />}
       style={{
-        flex: 1,
+        flex: 'auto',
         backgroundColor: 'transparent',
         fontWeight: 'bold',
         justifyContent: 'flex-end',
-        width: '100%',
+        minWidth: 0,
+        maxWidth: 'calc(100vw - 270px)',
       }}
       items={items}
     />

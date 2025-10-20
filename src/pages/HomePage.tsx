@@ -84,6 +84,7 @@ export default function HomePage() {
       {/* White content area below video */}
       <div
         style={{
+          padding: '50px 40px',
           backgroundColor: 'white',
           color: 'black',
           paddingTop: '50px',
