@@ -73,7 +73,6 @@ return (
       width: '100vw',
       marginTop: '100px',
       backgroundColor: 'transparent',
-      padding: '0 2rem',
     }}
   >
     <Image
