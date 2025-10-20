@@ -4,8 +4,6 @@ import {
   getEngagementsForShift,
   getTenderForEngagement,
   getTenderDisplayName,
-  getTenderInitial,
-  handleImageError,
 } from "./helpers";
 import {
   Shift,
@@ -18,6 +16,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useEffect, useState } from "react";
 import useEvents from "../../hooks/useEvents";
 import { useEngagementContext } from "../../contexts/EngagementContext";
+import { UserAvatar } from "../../components/UserAvatar";
 
 const { Title, Paragraph } = Typography;
 
@@ -109,43 +108,13 @@ export function ShiftList({
             gap: 2,
           }}
         >
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: "50%",
-              background: isAnchor
-                ? COLORS.ANCHOR_BACKGROUND
-                : COLORS.REGULAR_BACKGROUND,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              overflow: "hidden",
-            }}
-          >
-            {tender.photoUrl ? (
-              <img
-                src={tender.photoUrl}
-                alt={getTenderDisplayName(tender)}
-                style={{
-                  width: 36,
-                  height: 36,
-                  objectFit: "cover",
-                  borderRadius: "50%",
-                }}
-                onError={handleImageError}
-              />
-            ) : (
-              <span
-                style={{
-                  color: isAnchor ? COLORS.ANCHOR_TEXT : COLORS.REGULAR_TEXT,
-                  fontWeight: "bold",
-                }}
-              >
-                {getTenderInitial(tender)}
-              </span>
-            )}
-          </div>
+          <UserAvatar
+            user={tender}
+            size={40}
+            backgroundColor={
+              isAnchor ? COLORS.ANCHOR_BACKGROUND : COLORS.REGULAR_BACKGROUND
+            }
+          />
           <span
             style={{
               fontSize: "0.85em",

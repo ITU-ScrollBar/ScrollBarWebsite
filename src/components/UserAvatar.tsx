@@ -10,13 +10,14 @@ type UserAvatarProps = {
     user: UserProfile | Tender;
     size?: number;
     showHats?: boolean;
+    backgroundColor?: string;
 }
 
 type UserAvatarWithUploadProps = UserAvatarProps & {
     onChange: (url: string) => void;
 }
 
-export const UserAvatar = ({ user, size = 128, showHats = true }: UserAvatarProps) => {
+export const UserAvatar = ({ user, size = 128, showHats = true, backgroundColor }: UserAvatarProps & { backgroundColor?: string }) => {
     const [ photoUrl, setPhotoUrl ] = useState(user.photoUrl);
     const [ showNewbieHat, setShowNewbieHat ] = useState(showHats);
 
@@ -29,8 +30,8 @@ export const UserAvatar = ({ user, size = 128, showHats = true }: UserAvatarProp
     }, [showHats, user.roles]);
 
     return (
-        <div style={{ position: "relative", display: "inline-block", width: size, height: size }}>
-            <Avatar src={photoUrl || avatar} size={size} style={{ display: "block" }} />
+        <div style={{ position: "relative", display: "inline-block", width: size+3, height: size+3, backgroundColor: backgroundColor || "transparent", borderRadius: "50%" }}>
+            <Avatar src={photoUrl || avatar} size={size} style={{ display: "block", left: 1.5, top: 1.5 }} />
             {showNewbieHat && (
                 <img
                     src={newbiehat}
