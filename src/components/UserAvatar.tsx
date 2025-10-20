@@ -57,7 +57,7 @@ export const UserAvatar = ({
       <Avatar
         src={photoUrl || avatar}
         size={size}
-        style={{ display: "block", left: 1.5, top: 1.5, zIndex: 12 }}
+        style={{ display: "block", left: 1.5, top: 1.5, zIndex: 9 }}
       />
       {showNewbieHat && (
         <img
