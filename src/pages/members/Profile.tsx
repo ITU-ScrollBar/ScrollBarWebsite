@@ -8,6 +8,7 @@ import avatar from "../../assets/images/avatar.png";
 import StudyLinePicker from "./StudyLinePicker";
 import { updateUser } from "../../firebase/api/authentication";
 import { UserAvatarWithUpload } from "../../components/UserAvatar";
+import { CalendarSection } from "../../components/CalendarComponent";
 
 export default function Profile() {
   const navigation = useNavigate();
@@ -153,6 +154,7 @@ export default function Profile() {
               <b>Badges TBD</b>
             </h4>
           </div>
+          <CalendarSection />
         </Content>
       </Layout>
     </Layout>

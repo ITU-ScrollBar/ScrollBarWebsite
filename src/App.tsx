@@ -19,8 +19,10 @@ import { TenderMenu } from "./components/HomePage/TenderMenu";
 import { ShiftFiltering } from "./types/types-file";
 import GlobalSettingsPage from "./pages/admin/GlobalSettingsPage";
 import { UserManagerPage } from "./pages/admin/UserManagerPage";
+import { setTwoToneColor } from '@ant-design/icons';
 
 function App() {
+  setTwoToneColor("#FFE600");
   return (
     <BrowserRouter>
       <Layout
