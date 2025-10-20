@@ -150,9 +150,11 @@ export function ShiftList({
                 <Button
                   size="small"
                   style={{
-                    position: "relative",
+                    position: "absolute",
                     backgroundColor: "#FFE600",
                     border: "none",
+                    bottom: -10,
+                    zIndex: 13,
                     marginTop: 6,
                     padding: "4px 8px",
                     alignSelf: "center",
