@@ -1,0 +1,367 @@
+.eventsPage {
+  min-height: 100vh;
+  min-width: 100vw;
+  flex-direction: column;
+  height: auto;
+}
+
+.header {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  background-color: transparent;
+  box-shadow: none;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  color: #fff;
+}
+
+.countdownSection {
+  position: absolute;
+  top: 37vh;
+  left: 7vw;
+  width: 80vw;
+  max-width: 1200px;
+  text-align: left;
+  padding: 30px 20px;
+  z-index: 2;
+}
+
+.countdownContent > * {
+  margin-bottom: 2px !important;
+}
+
+.countdownContent > *:last-child {
+  margin-bottom: 0 !important;
+}
+
+.nextEventTag {
+  background-color: rgba(46, 46, 46, 1);
+  color: yellow !important;
+  font-size: 16px;
+  padding: 10px;
+  position: relative;
+  top: 40px;
+}
+
+.eventTitle {
+  color: white !important;
+  font-weight: bold;
+  font-size: 60px !important;
+  line-height: 1.1;
+}
+
+.countdownDisplay {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.countdownUnit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.countdownBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 70px;
+  height: 60px;
+  background-color: rgb(46 46 46);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.countdownNumber {
+  color: yellow;
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.countdownLabel {
+  color: yellow;
+  font-size: 10px;
+  font-weight: normal;
+  margin: 2px 0 0 0;
+  line-height: 1;
+}
+
+.countdownSeparator {
+  color: yellow;
+  font-size: 32px !important;
+  font-weight: bolder;
+}
+
+.facebookButton {
+  background: yellow; 
+  border-color: rgba(46, 46, 46, 0.6);
+  border-width: 1px;
+  color: black;
+  margin-top: 50px;
+  padding-right: 50px;
+  border-radius: 25px;
+}
+
+.heroImage {
+  position: relative;
+  width: 100vw;
+  height: 70vh;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.eventsContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.eventsTitle {
+  text-align: left;
+  align-self: flex-start;
+  font-size: large;
+  font-weight: bold;
+  margin-bottom: 30px;
+}
+
+.eventsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  width: 100%;
+}
+
+.featuredEvent {
+  grid-row: span 2;
+  grid-column: span 1;
+}
+
+/* CSS Custom Properties for reusability */
+.eventsPage {
+  --card-overlay-bg: rgba(46, 46, 46, 0.8);
+  --card-border-radius: 10px;
+  --card-margin: -10px;
+  --card-padding: 20px;
+  --date-color: yellow;
+  --title-color: white;
+  --description-color: white;
+  --date-font-size: 34px;
+  --title-font-size: 30px;
+  --description-font-size: 10px;
+  --featured-height: 400px;
+  --small-height: 190px;
+  --featured-overlay-height: 150px;
+  --small-overlay-height: 150px;
+}
+
+/* Base event card styles */
+.eventCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-size: cover;
+  background-position: center;
+}
+
+/* Card size modifiers */
+.eventCard--featured {
+    height: var(--featured-height);
+}   
+
+.eventCard--small {
+  height: var(--small-height);
+}
+
+/* Overlay base styles */
+.eventOverlay {
+  z-index: 2;
+  background-color: var(--card-overlay-bg);
+  padding: var(--card-padding);
+  border-radius: var(--card-border-radius);
+  margin: var(--card-margin);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  text-align: center;
+  position: relative;
+  height: var(--small-overlay-height);
+  overflow: hidden;
+
+}
+
+/* Overlay positioning modifiers */
+.eventOverlay--featured {
+  top: 80%;
+  height: var(--featured-overlay-height);
+  text-align: left;
+}
+
+
+.eventText {
+  line-height: 1.1;
+}
+
+.eventText--date {
+  color: var(--date-color);
+  font-size: var(--date-font-size);
+}
+
+.eventText--title {
+  color: var(--title-color);
+  font-size: var(--title-font-size);
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.eventText--description {
+  color: var(--description-color);
+  font-size: var(--description-font-size);
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  .countdownSection {
+    top: 25vh;
+    left: 5vw;
+    width: 90vw;
+    padding: 15px 10px;
+  }
+
+  .eventTitle {
+    font-size: 40px !important;
+  }
+
+  .countdownDisplay {
+    gap: 4px;
+  }
+
+  .countdownBlock {
+    width: 50px;
+    height: 45px;
+  }
+
+  .countdownNumber {
+    font-size: 16px;
+  }
+
+  .countdownLabel {
+    font-size: 8px;
+  }
+
+  .countdownSeparator {
+    font-size: 24px !important;
+  }
+
+  .nextEventTag {
+    position: relative;
+    top: 12px;
+  }
+
+  .facebookButton {
+    padding-right: 30px;
+    font-size: 14px;
+  }
+
+  .heroImage {
+    height: 50vh;
+  }
+
+  .eventsTitle {
+    font-size: medium;
+  }
+
+  .eventsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .featuredEvent {
+    display: none;
+  }
+
+  .eventOverlay--featured {
+    width: 90%;
+    transform: translateX(-45%);
+  }
+
+  .eventText--date {
+    font-size: 24px;
+  }
+
+  .eventText--title {
+    font-size: 16px;
+  }
+
+  .eventText--description {
+    font-size: 8px;
+  }
+}
+
+/* Extra small mobile styles */
+@media (max-width: 480px) {
+  .countdownSection {
+    top: 20vh;
+    padding: 10px 5px;
+  }
+
+  .eventTitle {
+    font-size: 24px !important;
+  }
+
+  .countdownBlock {
+    width: 37.5px;
+    height: 35px;
+  }
+
+ .nextEventTag {
+    font-size: 12px;
+    padding: 5px;
+    position: relative;
+    top: 8px;
+    }
+  .countdownNumber {
+    font-size: 12px;
+  }
+
+  .countdownLabel {
+    font-size: 6px;
+  }
+
+  .countdownSeparator {
+    font-size: 20px !important;
+  }
+
+  .facebookButton {
+    padding-right: 20px;
+    font-size: 12px;
+  }
+
+  .heroImage {
+    height: 40vh;
+  }
+
+  .eventsGrid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+
+  .eventText--date {
+    font-size: 18px;
+  }
+
+  .eventText--title {
+    font-size: 16px;
+  }
+
+  .eventOverlay {
+    margin: 0;
+    justify-content: center;
+  }
+}
