@@ -132,6 +132,9 @@ export function ShiftList({
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
+                zIndex: 12,
+                backgroundColor: "rgba(245, 245, 245, 0.5)",
+                backdropFilter: "blur(4px)",
               }}
             >
               {getTenderDisplayName(tender)}
@@ -147,14 +150,13 @@ export function ShiftList({
                 <Button
                   size="small"
                   style={{
-                    position: "absolute",
+                    position: "relative",
                     backgroundColor: "#FFE600",
                     border: "none",
                     marginTop: 6,
                     padding: "4px 8px",
                     alignSelf: "center",
                     color: "#000",
-                    bottom: -24,
                   }}
                 >
                   Grab shift
