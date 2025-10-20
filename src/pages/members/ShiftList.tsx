@@ -1,4 +1,12 @@
-import { Row, Col, Typography, Button, Popconfirm, message } from "antd";
+import {
+  Row,
+  Col,
+  Typography,
+  Button,
+  Popconfirm,
+  message,
+  Tooltip,
+} from "antd";
 import {
   dateToHourString,
   getEngagementsForShift,
@@ -100,59 +108,61 @@ export function ShiftList({
 
     return (
       <Col key={engagement.id} style={{ minWidth: 56 }}>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 2,
-          }}
-        >
-          <UserAvatar
-            user={tender}
-            size={50}
-            backgroundColor={
-              isAnchor ? COLORS.ANCHOR_BACKGROUND : COLORS.REGULAR_BACKGROUND
-            }
-          />
-          <span
+        <Tooltip title={getTenderDisplayName(tender)}>
+          <div
             style={{
-              fontSize: "0.85em",
-              textAlign: "center",
-              maxWidth: "56px",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 2,
             }}
           >
-            {getTenderDisplayName(tender)}
-          </span>
-          {tender.uid !== currentUser?.uid && engagement.upForGrabs && (
-            <Popconfirm
-              title="Are you sure?"
-              description="This action cannot be undone."
-              okText="Yes"
-              okButtonProps={{ color: "yellow" }}
-              onConfirm={() => grabShift(engagement)}
+            <UserAvatar
+              user={tender}
+              size={50}
+              backgroundColor={
+                isAnchor ? COLORS.ANCHOR_BACKGROUND : COLORS.REGULAR_BACKGROUND
+              }
+            />
+            <span
+              style={{
+                fontSize: "0.85em",
+                textAlign: "center",
+                maxWidth: "56px",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
             >
-              <Button
-                size="small"
-                style={{
-                  position: "relative",
-                  backgroundColor: "#FFE600",
-                  border: "none",
-                  marginTop: 6,
-                  padding: "4px 8px",
-                  alignSelf: "center",
-                  color: "#000",
-                  bottom: 0,
-                }}
+              {getTenderDisplayName(tender)}
+            </span>
+            {tender.uid !== currentUser?.uid && engagement.upForGrabs && (
+              <Popconfirm
+                title="Are you sure?"
+                description="This action cannot be undone."
+                okText="Yes"
+                okButtonProps={{ color: "yellow" }}
+                onConfirm={() => grabShift(engagement)}
               >
-                Grab shift
-              </Button>
-            </Popconfirm>
-          )}
-        </div>
+                <Button
+                  size="small"
+                  style={{
+                    position: "absolute",
+                    backgroundColor: "#FFE600",
+                    border: "none",
+                    marginTop: 6,
+                    padding: "4px 8px",
+                    alignSelf: "center",
+                    color: "#000",
+                    bottom: -24,
+                  }}
+                >
+                  Grab shift
+                </Button>
+              </Popconfirm>
+            )}
+          </div>
+        </Tooltip>
       </Col>
     );
   };
@@ -244,7 +254,6 @@ export function ShiftList({
                             marginTop: 6,
                             padding: "4px 8px",
                             color: "#000",
-                            position: "relative",
                           }}
                         >
                           {myShift.upForGrabs ? "Keep shift" : "Swap shift"}
