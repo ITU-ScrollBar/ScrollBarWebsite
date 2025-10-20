@@ -34,7 +34,7 @@ export default function Profile() {
   };
 
   if (loading || !currentUser) {
-    return <div>Loading...</div>;
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><Spin size="large" /></div>;
   }
 
   const userProfile: UserProfile = {

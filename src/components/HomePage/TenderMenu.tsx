@@ -1,12 +1,13 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import type { MenuProps } from 'antd';
-import { Avatar, ConfigProvider, Dropdown, Menu } from "antd";
+import { Avatar, ConfigProvider, Dropdown, Menu, Spin } from "antd";
 import logo from '../../assets/images/logo.png';
 import avatar from '../../assets/images/avatar.png';
 import { useAuth } from "../../contexts/AuthContext";
 import { MenuOutlined } from '@ant-design/icons'
 import { useWindowSize } from "../../hooks/useWindowSize";
+import { UserAvatar } from "../UserAvatar";
 
 interface TenderMenuProps {
   children?: ReactNode;
@@ -16,7 +17,7 @@ type MenuItem = Required<MenuProps>['items'][number];
 
 export const TenderMenu = ({ children }: TenderMenuProps) => {
   const [current, setCurrent] = useState('tab');
-  const { currentUser, logout } = useAuth();
+  const { currentUser, loading, logout } = useAuth();
   const navigate = useNavigate();
   const windowSize = useWindowSize();
   const [isMobile, setIsMobile] = useState(false);
@@ -24,6 +25,10 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
   useEffect(() => {
     setIsMobile(windowSize.width < 768);
   }, [windowSize]);
+
+  if (loading || !currentUser) {
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><Spin size="large" /></div>;
+  }
 
   const items: MenuItem[] = [
     {
@@ -131,10 +136,9 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
             />
           </ConfigProvider>
           <Dropdown menu={{ items: avatarMenuItems }}>
-            <Avatar
+            <UserAvatar
               size={96}
-              src={currentUser?.photoUrl ? currentUser.photoUrl : avatar}
-              alt={currentUser?.photoUrl && currentUser.displayName ? currentUser.displayName : "default avatar"}
+              user={currentUser}
             />
           </Dropdown>
         </div>

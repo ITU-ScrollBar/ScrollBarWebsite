@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Button, Col, Divider, Layout, Row, List, Avatar, Space, Spin } from 'antd'
+import { Button, Col, Divider, Layout, Row, List, Spin } from 'antd'
 import Title from 'antd/es/typography/Title'
 import Paragraph from 'antd/es/typography/Paragraph'
 import { Header } from 'antd/es/layout/layout'
@@ -217,7 +217,7 @@ const UserList = ({ users }: { users: Tender[] }) => {
       renderItem={(user) => (
         <List.Item>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <UserAvatar user={user} size={64} />
+            <UserAvatar user={user} size={64} showHats={false} />
             <div style={{ marginTop: 8, textAlign: 'center' }}>{getTenderDisplayName(user)}</div>
             <div style={{ marginTop: 8, textAlign: 'center' }}>{studylines.find(sl => sl.id === user.studyline)?.abbreviation?.toLocaleUpperCase()}</div>
           </div>
