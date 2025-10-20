@@ -1,6 +1,6 @@
 import { Path, useNavigate } from "react-router-dom";
 
-import { Layout, Upload } from "antd";
+import { Layout, Spin } from "antd";
 import { Content } from "antd/es/layout/layout";
 import Title from "antd/es/typography/Title";
 import { useAuth } from "../../contexts/AuthContext";
@@ -16,7 +16,7 @@ export default function Profile() {
 
   const setStudyLine = (studyLine: string) => {
     if (!currentUser) return;
-    updateUser({ id: currentUser.uid, field: 'studyline', value: studyLine });
+    updateUser({ id: currentUser.uid, field: "studyline", value: studyLine });
   };
 
   // TODO
@@ -34,7 +34,18 @@ export default function Profile() {
   };
 
   if (loading || !currentUser) {
-    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><Spin size="large" /></div>;
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <Spin size="large" />
+      </div>
+    );
   }
 
   const userProfile: UserProfile = {
@@ -90,13 +101,20 @@ export default function Profile() {
                   background: "#f0f0f0",
                 }}
               >
-                <UserAvatarWithUpload user={userProfile} onChange={(url) => {
-                  userProfile.photoUrl = url;
-                }} />
+                <UserAvatarWithUpload
+                  user={userProfile}
+                  onChange={(url) => {
+                    userProfile.photoUrl = url;
+                  }}
+                />
               </div>
               <div style={{ textAlign: "left" }}>
                 <h4 style={{ margin: 0 }}>{userProfile?.displayName}</h4>
-                <StudyLinePicker bold value={userProfile?.studyline} onChange={setStudyLine} />
+                <StudyLinePicker
+                  bold
+                  value={userProfile?.studyline}
+                  onChange={setStudyLine}
+                />
               </div>
             </div>
 
