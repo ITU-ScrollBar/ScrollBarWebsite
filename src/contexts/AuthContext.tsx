@@ -37,24 +37,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        getUser(user!.uid, {
-          next: (snapshot) => {
-            if (snapshot.exists()) {
-              var userdata = snapshot.data() as UserProfile;
-              setCurrentUser({...userdata, uid: user.uid});
-              setLoading(false);
-            }
-          },
-          error: (error) => {
-            console.error("Error fetching user data:", error);
-            setCurrentUser(null);
-            setLoading(false);
-          },
-        });
+      // If no firebase auth user, clear profile and stop loading
+      if (!user) {
+        setCurrentUser(null);
+        setLoading(false);
+        console.log("Auth State Changed: No user");
+        return;
       }
-      setLoading(false);
-      console.log("Auth State Changed:", user ? `User ${user.uid}` : "No user");
+
+      // For an authenticated firebase user, fetch the app profile from Firestore
+      // and keep loading true until that fetch completes to avoid premature redirects.
+      setLoading(true);
+      getUser(user.uid, {
+        next: (snapshot) => {
+          if (snapshot.exists()) {
+            const userdata = snapshot.data() as UserProfile;
+            setCurrentUser({ ...userdata, uid: user.uid });
+            console.log("Fetched new current user");
+          } else {
+            setCurrentUser(null);
+            console.log("No user profile found in Firestore for", user.uid);
+          }
+          setLoading(false);
+        },
+        error: (error) => {
+          console.error("Error fetching user data:", error);
+          setCurrentUser(null);
+          setLoading(false);
+        },
+      });
+      console.log("Auth State Changed: User", user.uid);
     });
 
     return () => {
