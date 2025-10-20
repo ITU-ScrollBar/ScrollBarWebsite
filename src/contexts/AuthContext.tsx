@@ -53,6 +53,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           },
         });
       }
+      setLoading(false);
       console.log("Auth State Changed:", user ? `User ${user.uid}` : "No user");
     });
 
@@ -81,6 +82,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = async (): Promise<void> => {
     try {
       await signOut(auth);
+      setCurrentUser(null);
       console.log("Logout successful");
     } catch (error) {
       console.error("Logout failed:", error);

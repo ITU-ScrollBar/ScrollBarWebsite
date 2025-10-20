@@ -91,7 +91,7 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
   const avatarMenuItems: MenuItem[] = [
     {
       key: 'logout', 
-      label: <strong onClick={logout}>Logout</strong> 
+      label: <strong onClick={() => {logout(); navigate('/')}}>Logout</strong> 
     },
     {
       key: 'profile',
