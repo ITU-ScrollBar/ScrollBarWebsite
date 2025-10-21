@@ -3,6 +3,7 @@ import useSettings from "../../hooks/useSettings";
 import { Input, InputRef, Switch, Table, TableProps } from "antd";
 import MDEditor from '@uiw/react-md-editor';
 import { Loading } from "../../components/Loading";
+import { useWindowSize } from "../../hooks/useWindowSize";
 
 type Setting = {
     key: string;
@@ -14,7 +15,7 @@ type Setting = {
 const EditableCell = ({ value, inputType, onChange }: { value: Setting["value"], inputType?: Setting["inputType"], onChange: (next: Setting["value"]) => void }) => {
     const [editing, setEditing] = useState(false);
     const inputRef = useRef<InputRef>(null);
-    const [editValue, setEditValue] = useState("Hello, World!");
+    const [editValue, setEditValue] = useState("");
 
     useEffect(() => {
         setEditValue(value as string);
@@ -34,25 +35,26 @@ const EditableCell = ({ value, inputType, onChange }: { value: Setting["value"],
         if (inputType === "textarea") {
             return (
                 <div>
-                    <MDEditor.Markdown source={editValue} style={{ background: 'white', color: 'black' }} />
+                    <MDEditor.Markdown source={editValue} style={{ background: 'white', color: 'black', textWrap: 'wrap' }} />
                     <MDEditor value={editValue} preview="edit" onChange={(text) => setEditValue(text ?? "")} onBlur={() => { onChange(editValue); setEditing(false) }} />
                 </div>);
         }
-        return <Input ref={inputRef} value={value} onBlur={() => setEditing(false)} onChange={(e) => onChange(e.target.value)} />;
+        return <Input ref={inputRef} value={editValue} onBlur={() => { onChange(editValue); setEditing(false); }} onChange={(e) => setEditValue(e.target.value)} />;
     } else {
         if (inputType === "textarea") {
             return (
             <div onClick={() => setEditing(true)}>
-                <MDEditor.Markdown source={value} style={{ background: 'white', color: 'black' }} />
+                <MDEditor.Markdown source={value} style={{ background: 'white', color: 'black', textWrap: 'wrap' }} />
             </div>)
         }
-        return <div tabIndex={0} role="button" onClick={() => setEditing(true)}>{value}</div>;
+        return <div tabIndex={0} style={{ textWrap: "wrap" }} role="button" onClick={() => setEditing(true)}>{value}</div>;
     }
     
 };
 
 const GlobalSettingsPage = () => {
     const { settingsState, updateSetting } = useSettings();
+    const { isMobile } = useWindowSize();
 
     const items: Setting[] = [
         { key: 'hero', inputType: 'text', label: 'Link to hero image', value: settingsState.settings.hero },
@@ -71,7 +73,7 @@ const GlobalSettingsPage = () => {
             title: 'Key',
             dataIndex: 'label',
             key: 'key',
-            width: '15%',
+            width: isMobile ? '40%' : '15%',
         },
         {
             title: 'Value',
@@ -80,6 +82,7 @@ const GlobalSettingsPage = () => {
             render: (value: Setting['value'], record: Setting) => (
                 <EditableCell value={value} inputType={record.inputType} onChange={(next) => updateSetting(record.key, record.label, next)} />
             ),
+            ellipsis: isMobile
         },
     ];
 
