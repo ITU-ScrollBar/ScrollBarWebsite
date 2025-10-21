@@ -7,7 +7,6 @@ import Link from 'antd/es/typography/Link';
 import instagramIcon from '../../assets/images/instagram.png';
 import facebookIcon from '../../assets/images/facebook.png';
 import { useNavigate } from "react-router";
-import { useWindowSize } from '../../hooks/useWindowSize';
 
 
 
@@ -22,9 +21,6 @@ const linkcss = {
 
 
 export default function HeaderBar() {
-  const windowSize = useWindowSize();
-  const [isMobile, setIsMobile] = useState(false);
-
   const items = [
     {
       key: '1',

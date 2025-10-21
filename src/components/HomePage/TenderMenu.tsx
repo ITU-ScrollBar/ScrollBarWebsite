@@ -19,12 +19,7 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
   const [current, setCurrent] = useState('tab');
   const { currentUser, loading, logout } = useAuth();
   const navigate = useNavigate();
-  const windowSize = useWindowSize();
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    setIsMobile(windowSize.width < 768);
-  }, [windowSize]);
+  const { isMobile } = useWindowSize();
 
   if (loading || !currentUser) {
     return <Loading />
