@@ -90,12 +90,22 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
   
   const avatarMenuItems: MenuItem[] = [
     {
-      key: 'logout', 
-      label: <strong onClick={() => {logout(); navigate('/')}}>Logout</strong> 
-    },
-    {
       key: 'profile',
-      label: <strong onClick={() => navigate('/members/profile')}>Profile</strong>
+      label: (
+        <div style={{ display: 'flex' }}>
+          <UserAvatar user={currentUser} size={64} />
+        </div>
+      ),
+      children: [
+        {
+          key: 'logout', 
+          label: <strong onClick={() => {logout(); navigate('/')}}>Logout</strong> 
+        },
+        {
+          key: 'profile',
+          label: <strong onClick={() => navigate('/members/profile')}>Profile</strong>
+        }
+      ]
     }
   ];
 
@@ -106,10 +116,10 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
 
   return (
     <div>
-      <div style={{ backgroundColor: '#2E2E2E', display: "flex", alignItems: "center", justifyContent: "space-between", height: "150px" }}>
+      <div style={{ backgroundColor: '#2E2E2E', display: "flex", alignItems: "center", justifyContent: "space-between", height: "128px" }}>
         <div>
           <a href="/" style={{ display: "inline-block" }}>
-            <img src={logo} alt="Logo" style={{ height: 150 }} />
+            <img src={logo} alt="Logo" style={{ height: 128 }} />
           </a>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 16, padding: '0 16px' }}>
@@ -134,13 +144,12 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
               selectedKeys={[current]}
               mode="horizontal"
             />
-          </ConfigProvider>
-          <Dropdown menu={{ items: avatarMenuItems }}>
-            <UserAvatar
-              size={96}
-              user={currentUser}
+            <Menu
+              items={avatarMenuItems}
+              mode="horizontal"
+              style={{ height: '90px', display: 'flex', alignItems: 'center' }}
             />
-          </Dropdown>
+          </ConfigProvider>
         </div>
       </div>
       {children || <Outlet />}
