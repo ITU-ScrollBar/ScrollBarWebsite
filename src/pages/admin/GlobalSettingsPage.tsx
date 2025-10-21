@@ -31,23 +31,28 @@ const EditableCell = ({ value, inputType, onChange }: { value: Setting["value"],
         return <Switch checked={value} onChange={onChange} />;
     }
 
+    const onBlur = () => {
+        onChange(editValue);
+        setEditing(false);
+    }
+
     if (editing) {
         if (inputType === "textarea") {
             return (
                 <div>
                     <MDEditor.Markdown source={editValue} style={{ background: 'white', color: 'black', textWrap: 'wrap' }} />
-                    <MDEditor value={editValue} preview="edit" onChange={(text) => setEditValue(text ?? "")} onBlur={() => { onChange(editValue); setEditing(false) }} />
+                    <MDEditor value={editValue} preview="edit" onChange={(text) => setEditValue(text ?? "")} onBlur={onBlur} />
                 </div>);
         }
-        return <Input ref={inputRef} value={editValue} onBlur={() => { onChange(editValue); setEditing(false); }} onChange={(e) => setEditValue(e.target.value)} />;
+        return <Input ref={inputRef} value={editValue} onBlur={onBlur} onChange={(e) => setEditValue(e.target.value)} onKeyDown={(e) => {if (e.key === 'Enter') e.currentTarget.blur()}} />;
     } else {
         if (inputType === "textarea") {
             return (
-            <div onClick={() => setEditing(true)}>
+            <div tabIndex={0} onClick={() => setEditing(true)} onKeyDown={(e) => { if (e.key === 'Enter') {e.preventDefault(); setEditing(true);}}}>
                 <MDEditor.Markdown source={value} style={{ background: 'white', color: 'black', textWrap: 'wrap' }} />
             </div>)
         }
-        return <div tabIndex={0} style={{ textWrap: "wrap" }} role="button" onClick={() => setEditing(true)}>{value}</div>;
+        return <div tabIndex={0} style={{ textWrap: "wrap" }} role="button" onClick={() => setEditing(true)} onKeyDown={(e) => { if (e.key === 'Enter') {e.preventDefault(); setEditing(true);}}}>{value}</div>;
     }
     
 };
