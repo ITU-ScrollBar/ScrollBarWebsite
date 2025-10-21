@@ -1,6 +1,6 @@
 import { Path, useNavigate } from "react-router-dom";
 
-import { Layout, Spin } from "antd";
+import { Layout } from "antd";
 import { Content } from "antd/es/layout/layout";
 import Title from "antd/es/typography/Title";
 import { useAuth } from "../../contexts/AuthContext";
@@ -9,6 +9,7 @@ import StudyLinePicker from "./StudyLinePicker";
 import { updateUser } from "../../firebase/api/authentication";
 import { UserAvatarWithUpload } from "../../components/UserAvatar";
 import { CalendarSection } from "../../components/CalendarComponent";
+import { Loading } from "../../components/Loading";
 
 export default function Profile() {
   const navigation = useNavigate();
@@ -35,18 +36,7 @@ export default function Profile() {
   };
 
   if (loading || !currentUser) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <Spin size="large" />
-      </div>
-    );
+    return <Loading />;
   }
 
   const userProfile: UserProfile = {

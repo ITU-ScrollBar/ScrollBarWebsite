@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Button, Col, Divider, Layout, Row, List, Spin } from 'antd'
+import { Button, Col, Divider, Layout, Row, List } from 'antd'
 import Title from 'antd/es/typography/Title'
 import Paragraph from 'antd/es/typography/Paragraph'
 import { Header } from 'antd/es/layout/layout'
@@ -11,6 +11,7 @@ import { UserAvatar } from '../components/UserAvatar'
 import { getTenderDisplayName } from './members/helpers'
 import { StudyLine, Tender } from '../types/types-file'
 import { getStudyLines } from '../firebase/api/authentication'
+import { Loading } from '../components/Loading'
 
 export default function HomePage() {
   const { settingsState } = useSettings();
@@ -20,7 +21,7 @@ export default function HomePage() {
   const boardMembers = tenderState.tenders.filter(t => t.roles?.includes('board'));
 
   if (settingsState.loading) {
-    return <Spin size="large" />
+    return <Loading />;
   }
 
   return (

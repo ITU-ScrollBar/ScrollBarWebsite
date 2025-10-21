@@ -1,13 +1,13 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import type { MenuProps } from 'antd';
-import { Avatar, ConfigProvider, Dropdown, Menu, Spin } from "antd";
+import { ConfigProvider, Dropdown, Menu } from "antd";
 import logo from '../../assets/images/logo.png';
-import avatar from '../../assets/images/avatar.png';
 import { useAuth } from "../../contexts/AuthContext";
 import { MenuOutlined } from '@ant-design/icons'
 import { useWindowSize } from "../../hooks/useWindowSize";
 import { UserAvatar } from "../UserAvatar";
+import { Loading } from "../Loading";
 
 interface TenderMenuProps {
   children?: ReactNode;
@@ -27,7 +27,7 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
   }, [windowSize]);
 
   if (loading || !currentUser) {
-    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><Spin size="large" /></div>;
+    return <Loading />
   }
 
   const items: MenuItem[] = [

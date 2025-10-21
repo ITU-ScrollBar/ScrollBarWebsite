@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import useSettings from "../../hooks/useSettings";
 import { Input, InputRef, Switch, Table, TableProps } from "antd";
 import MDEditor from '@uiw/react-md-editor';
+import { Loading } from "../../components/Loading";
 
 type Setting = {
     key: string;
@@ -83,7 +84,7 @@ const GlobalSettingsPage = () => {
     ];
 
     if (settingsState.loading) {
-        return <div>Loading settings...</div>;
+        return <Loading />;
     }
 
     return (
