@@ -13,7 +13,7 @@ interface RoleProtectedRouteProps {
 
 const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({
   requiredRole,
-  fallbackPath = '/tenders/shifts', // Default fallback to main dashboard
+  fallbackPath = '/members/profile', // Default fallback to main dashboard
   children
 }) => {
   const { currentUser, loading } = useAuth();

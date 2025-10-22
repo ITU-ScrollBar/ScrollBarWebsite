@@ -76,7 +76,6 @@ export default function Profile() {
                         style={{
                           width: 150,
                           height: 150,
-                          overflow: "hidden",
                           borderRadius: "50%",
                           background: "#f0f0f0",
                         }}

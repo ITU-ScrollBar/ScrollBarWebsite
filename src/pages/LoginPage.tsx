@@ -12,7 +12,7 @@ const LoginPage: React.FC = () => {
 
     useEffect(() => {
         if (!loading && currentUser) {
-            navigate('/tenders/shifts', { replace: true }); // Redirect if already logged in
+            navigate('/members/profile', { replace: true }); // Redirect if already logged in
         }
     }, [loading, currentUser, navigate]);
 
