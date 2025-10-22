@@ -1,21 +1,20 @@
 
-import { Col, Divider, Layout, Row, Card, Typography } from 'antd'
+import { Col, Divider, Layout, Row, Card } from 'antd'
 
 import Title from 'antd/es/typography/Title';
+import Text from 'antd/es/typography/Text';
 import Paragraph from 'antd/es/typography/Paragraph';
 import { Header } from 'antd/es/layout/layout';
+
 import HeaderBar from '../components/HomePage/HeaderBar';
 import CountDown from '../components/EventCountDown';
 import './EventsPage.css';
 import useEvents from '../hooks/useEvents';
 
-
-const { Text } = Typography;
-
 export default function EventsPage() {
     const { eventState } = useEvents();
 
-    const DEFAULT_EVENT_IMAGE = "/assets/background-DD5GamNA.png";
+    const DEFAULT_EVENT_IMAGE = "src/assets/images/background.png";
     const EVENT_INFORMATION_LABEL = "Get all the latest Information on the Facebook Event"
     const DEFAULT_FACEBOOK_LINK = "https://www.facebook.com/ScrollBar"
     const events = eventState.isLoaded ? eventState.events

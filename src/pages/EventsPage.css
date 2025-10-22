@@ -19,17 +19,20 @@
 
 .countdownSection {
   position: absolute;
-  top: 37vh;
-  left: 7vw;
-  width: 80vw;
-  max-width: 1200px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-width: 100%;
   text-align: left;
-  padding: 30px 20px;
+  padding: 30px 7vw;
   z-index: 2;
+  box-sizing: border-box;
 }
 
+
 .countdownContent > * {
-  margin-bottom: 2px !important;
+  margin-bottom: 8px !important;
 }
 
 .countdownContent > *:last-child {
@@ -50,6 +53,7 @@
   font-weight: bold;
   font-size: 60px !important;
   line-height: 1.1;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 .countdownDisplay {
@@ -96,6 +100,8 @@
   color: yellow;
   font-size: 32px !important;
   font-weight: bolder;
+  position: relative;
+  top: -5px;
 }
 
 .facebookButton {
@@ -103,9 +109,10 @@
   border-color: rgba(46, 46, 46, 0.6);
   border-width: 1px;
   color: black;
-  margin-top: 50px;
+  margin-top: 8px;
   padding-right: 50px;
   border-radius: 25px;
+  
 }
 
 .heroImage {
@@ -129,6 +136,7 @@
   font-size: large;
   font-weight: bold;
   margin-bottom: 30px;
+  
 }
 
 .eventsGrid {
@@ -194,7 +202,7 @@
   position: relative;
   height: var(--small-overlay-height);
   overflow: hidden;
-
+  box-sizing: border-box;
 }
 
 /* Overlay positioning modifiers */
@@ -203,7 +211,6 @@
   height: var(--featured-overlay-height);
   text-align: left;
 }
-
 
 .eventText {
   line-height: 1.1;
@@ -224,45 +231,81 @@
 .eventText--description {
   color: var(--description-color);
   font-size: var(--description-font-size);
+  margin-top: auto;
+}
+
+@media (max-width: 1500px) {
+  .eventText--date {
+    margin-top: -8px;
+    font-size: 28px;
+  }
+
+  .eventText--title {
+    font-size: 24px;
+  }
 }
 
 /* Mobile responsive styles */
 @media (max-width: 768px) {
+
+  .heroImage {
+    height: 50vh;
+  }
+
   .countdownSection {
-    top: 25vh;
-    left: 5vw;
-    width: 90vw;
-    padding: 15px 10px;
+    padding: 20px 5vw;
+  }
+
+  /* Make featured event look like normal blocks */
+  .eventCard--featured {
+    height: var(--small-height);
+  }
+
+  .eventOverlay--featured {
+    top: 0;
+    height: var(--small-overlay-height);
+    text-align: center;
+    width: 100%;
+    transform: none;
+  }
+
+  .featuredEvent {
+    grid-row: span 1;
+    grid-column: span 1;
   }
 
   .eventTitle {
-    font-size: 40px !important;
+    font-size: 32px !important;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
   }
 
   .countdownDisplay {
-    gap: 4px;
+    gap: 6px;
   }
 
   .countdownBlock {
-    width: 50px;
-    height: 45px;
+    width: 55px;
+    height: 50px;
   }
 
   .countdownNumber {
-    font-size: 16px;
+    font-size: 18px;
   }
 
   .countdownLabel {
-    font-size: 8px;
+    font-size: 9px;
   }
 
   .countdownSeparator {
-    font-size: 24px !important;
+    font-size: 20px !important;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    
   }
 
   .nextEventTag {
     position: relative;
     top: 12px;
+    font-size: 14px;
   }
 
   .facebookButton {
@@ -270,9 +313,6 @@
     font-size: 14px;
   }
 
-  .heroImage {
-    height: 50vh;
-  }
 
   .eventsTitle {
     font-size: medium;
@@ -283,81 +323,90 @@
     gap: 12px;
   }
 
-  .featuredEvent {
-    display: none;
-  }
-
-  .eventOverlay--featured {
-    width: 90%;
-    transform: translateX(-45%);
-  }
-
   .eventText--date {
     font-size: 24px;
   }
 
   .eventText--title {
-    font-size: 16px;
+    font-size: 18px;
   }
 
   .eventText--description {
-    font-size: 8px;
+    font-size: 10px;
+  }
+
+  .eventsTitle {
+    text-align: center;
+    align-self: center;
   }
 }
 
+
+
 /* Extra small mobile styles */
 @media (max-width: 480px) {
+  .eventPage {
+    top: 50vh;
+  }
   .countdownSection {
-    top: 20vh;
-    padding: 10px 5px;
+    padding: 15px 5vw;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 70%, transparent 100%);
+  }
+  
+  .eventTitle {
+    font-size: 26px !important;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.9);
   }
 
-  .eventTitle {
-    font-size: 24px !important;
+  .eventText--date {
+    font-size: 28px;
+  }
+
+  .eventText--title {
+    font-size: 28px;
+  }
+
+  .eventText--description {
+    font-size: 10px;
   }
 
   .countdownBlock {
-    width: 37.5px;
-    height: 35px;
+    width: 42px;
+    height: 38px;
   }
 
- .nextEventTag {
-    font-size: 12px;
-    padding: 5px;
+  .nextEventTag {
+    font-size: 11px;
+    padding: 6px 8px;
     position: relative;
-    top: 8px;
-    }
+  }
+  
   .countdownNumber {
-    font-size: 12px;
+    font-size: 14px;
   }
 
   .countdownLabel {
-    font-size: 6px;
+    font-size: 7px;
   }
 
   .countdownSeparator {
-    font-size: 20px !important;
+    font-size: 16px !important;
   }
 
   .facebookButton {
-    padding-right: 20px;
+    height: auto;
+    padding: 8px 20px;
     font-size: 12px;
   }
 
   .heroImage {
-    height: 40vh;
+    height: 50vh;
   }
+
+
 
   .eventsGrid {
     grid-template-columns: repeat(1, 1fr);
-  }
-
-  .eventText--date {
-    font-size: 18px;
-  }
-
-  .eventText--title {
-    font-size: 16px;
   }
 
   .eventOverlay {
