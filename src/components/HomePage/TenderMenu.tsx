@@ -28,7 +28,7 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
   const items: MenuItem[] = [
     {
       label: 'My shifts',
-      key: 'tenders/shifts',    
+      key: 'members/profile',    
     },
     {
       label: 'All shifts',
