@@ -1,4 +1,8 @@
 import React, { useState, useEffect } from "react";
+import type { MenuProps } from 'antd';
+import { Dropdown, Space, Typography } from 'antd';
+import { DownOutlined } from '@ant-design/icons';
+
 import { StudyLine } from "../../types/types-file";
 import { getStudyLines } from "../../firebase/api/authentication";
 
@@ -20,58 +24,46 @@ export default function StudyLinePicker({ value, onChange, fontSize = 16, bold =
       });
     }, []);
 
-  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    if (onChange) {
-      const selectedStudyLine = event.target.value;
-      setSelectedValue(selectedStudyLine);
-      if (selectedStudyLine) {
-        onChange(selectedStudyLine);
-      }
+  const handleMenuClick: MenuProps['onClick'] = (e) => {
+    const selectedStudyLine = e.key;
+    setSelectedValue(selectedStudyLine);
+    if (onChange && selectedStudyLine) {
+      onChange(selectedStudyLine);
     }
   };
 
-  const arrowSize = Math.max(fontSize * 0.8, 12); // Arrow size scales with font size, minimum 12px
-  const paddingRight = arrowSize + 8; // Dynamic padding based on arrow size
-  
-  // Calculate width based on current selection
-  const estimatedWidth = 17 * (fontSize * 0.6) + paddingRight; // Rough character width estimation
+  const items: MenuProps['items'] = studyLines.map((sl) => ({
+    key: sl.id,
+    label: sl.name,
+  }));
+
+  const selectedStudyLine = studyLines.find(sl => sl.id === selectedValue);
+  const displayText = selectedStudyLine?.name || "Select study line";
 
   return (
-    <select 
-      value={selectedValue} 
-      onChange={handleChange}
-      defaultValue={"Select study line"}
-      style={{
-        border: "none",
-        background: "transparent",
-        fontSize: `${fontSize}px`,
-        fontWeight: bold ? "bold" : "normal",
-        color: "inherit",
-        cursor: "pointer",
-        padding: "0",
-        margin: "0",
-        outline: "none",
-        appearance: "none",
-        WebkitAppearance: "none",
-        MozAppearance: "none",
-        backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e")`,
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "right 4px center",
-        backgroundSize: `${arrowSize}px`,
-        paddingRight: `${paddingRight}px`,
-        width: `${estimatedWidth}px`,
-        minWidth: `${estimatedWidth}px`
+    <Dropdown
+      menu={{
+        items,
+        onClick: handleMenuClick,
+        selectable: true,
+        selectedKeys: selectedValue ? [selectedValue] : [],
       }}
+      trigger={['click']}
     >
-      {studyLines.map((sl) => (
-        <option
-          key={(sl as any).id ?? sl.name} 
-          value={sl.id}
-          label={sl.name}
-        >
-          {sl.name}
-        </option>
-      ))}
-    </select>
+      <Typography.Link
+        style={{
+          fontSize: `${fontSize}px`,
+          fontWeight: bold ? "bold" : "normal",
+          color: "inherit",
+          textDecoration: "none",
+          cursor: "pointer",
+        }}
+      >
+        <Space>
+          {displayText}
+          <DownOutlined />
+        </Space>
+      </Typography.Link>
+    </Dropdown>
   );
 }

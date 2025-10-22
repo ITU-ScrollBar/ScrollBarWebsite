@@ -2,7 +2,8 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Spin, Result } from 'antd';
+import { Result } from 'antd';
+import { Loading } from '../components/Loading';
 
 interface RoleProtectedRouteProps {
   requiredRole?: string;
@@ -12,22 +13,13 @@ interface RoleProtectedRouteProps {
 
 const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({
   requiredRole,
-  fallbackPath = '/tenders/shifts', // Default fallback to main dashboard
+  fallbackPath = '/members/profile', // Default fallback to main dashboard
   children
 }) => {
   const { currentUser, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
-      }}>
-        <Spin size="large" />
-      </div>
-    );
+    return <Loading />;
   }
 
   // If not authenticated, redirect to login

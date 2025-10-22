@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Button, Col, Divider, Layout, Row, List, Avatar, Space, Spin } from 'antd'
+import { Button, Col, Divider, Layout, Row, List } from 'antd'
 import Title from 'antd/es/typography/Title'
 import Paragraph from 'antd/es/typography/Paragraph'
 import { Header } from 'antd/es/layout/layout'
@@ -11,6 +11,7 @@ import { UserAvatar } from '../components/UserAvatar'
 import { getTenderDisplayName } from './members/helpers'
 import { StudyLine, Tender } from '../types/types-file'
 import { getStudyLines } from '../firebase/api/authentication'
+import { Loading } from '../components/Loading'
 
 export default function HomePage() {
   const { settingsState } = useSettings();
@@ -20,7 +21,7 @@ export default function HomePage() {
   const boardMembers = tenderState.tenders.filter(t => t.roles?.includes('board'));
 
   if (settingsState.loading) {
-    return <Spin size="large" />
+    return <Loading />;
   }
 
   return (
@@ -84,6 +85,7 @@ export default function HomePage() {
       {/* White content area below video */}
       <div
         style={{
+          padding: '50px 40px',
           backgroundColor: 'white',
           color: 'black',
           paddingTop: '50px',
@@ -217,7 +219,7 @@ const UserList = ({ users }: { users: Tender[] }) => {
       renderItem={(user) => (
         <List.Item>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <UserAvatar user={user} size={64} />
+            <UserAvatar user={user} size={64} showHats={false} />
             <div style={{ marginTop: 8, textAlign: 'center' }}>{getTenderDisplayName(user)}</div>
             <div style={{ marginTop: 8, textAlign: 'center' }}>{studylines.find(sl => sl.id === user.studyline)?.abbreviation?.toLocaleUpperCase()}</div>
           </div>

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Image, Menu } from 'antd'
 import { MenuOutlined } from '@ant-design/icons'
 
@@ -21,7 +21,6 @@ const linkcss = {
 
 
 export default function HeaderBar() {
-
   const items = [
     {
       key: '1',
@@ -37,7 +36,7 @@ export default function HeaderBar() {
     },
     {
       key: '5',
-      label: <div style={linkcss} onClick={() => navigate("/tenders/shifts")}>TENDER SITE</div>,
+      label: <div style={linkcss} onClick={() => navigate("/members/profile")}>TENDER SITE</div>,
     },
         {
       key: '6',
@@ -70,7 +69,6 @@ return (
       width: '100vw',
       marginTop: '100px',
       backgroundColor: 'transparent',
-      padding: '0 2rem',
     }}
   >
     <Image
@@ -83,11 +81,12 @@ return (
       mode="horizontal"
       overflowedIndicator={<MenuOutlined style={{ color: 'white' }} />}
       style={{
-        flex: 1,
+        flex: 'auto',
         backgroundColor: 'transparent',
         fontWeight: 'bold',
         justifyContent: 'flex-end',
-        width: '100%',
+        minWidth: 0,
+        maxWidth: 'calc(100vw - 270px)',
       }}
       items={items}
     />

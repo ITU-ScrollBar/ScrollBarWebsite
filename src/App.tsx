@@ -20,8 +20,10 @@ import { ShiftFiltering } from "./types/types-file";
 import GlobalSettingsPage from "./pages/admin/GlobalSettingsPage";
 import { UserManagerPage } from "./pages/admin/UserManagerPage";
 import EventsPage from "./pages/EventsPage";
+import { setTwoToneColor } from '@ant-design/icons';
 
 function App() {
+  setTwoToneColor("#FFE600");
   return (
     <BrowserRouter>
       <Layout
@@ -46,12 +48,9 @@ function App() {
               <Route element={<ProtectedRoutes />}>
                 <Route element={<TenderMenu />}>
                   <Route
-                    path="/tenders/shifts"
+                    path="/members/profile"
                     element={
-                      <Shifts
-                        filter={ShiftFiltering.MY_SHIFTS}
-                        title="My Shifts"
-                      />
+                      <Profile />
                     }
                   />
                   <Route

@@ -1,11 +1,17 @@
-import { Row, Col, Typography, Button, Popconfirm, message } from "antd";
+import {
+  Row,
+  Col,
+  Typography,
+  Button,
+  Popconfirm,
+  message,
+  Tooltip,
+} from "antd";
 import {
   dateToHourString,
   getEngagementsForShift,
   getTenderForEngagement,
   getTenderDisplayName,
-  getTenderInitial,
-  handleImageError,
 } from "./helpers";
 import {
   Shift,
@@ -18,6 +24,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useEffect, useState } from "react";
 import useEvents from "../../hooks/useEvents";
 import { useEngagementContext } from "../../contexts/EngagementContext";
+import { UserAvatar } from "../../components/UserAvatar";
 
 const { Title, Paragraph } = Typography;
 
@@ -101,89 +108,65 @@ export function ShiftList({
 
     return (
       <Col key={engagement.id} style={{ minWidth: 56 }}>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 2,
-          }}
-        >
+        <Tooltip title={getTenderDisplayName(tender)}>
           <div
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: "50%",
-              background: isAnchor
-                ? COLORS.ANCHOR_BACKGROUND
-                : COLORS.REGULAR_BACKGROUND,
               display: "flex",
+              flexDirection: "column",
               alignItems: "center",
-              justifyContent: "center",
-              overflow: "hidden",
+              gap: 2,
             }}
           >
-            {tender.photoUrl ? (
-              <img
-                src={tender.photoUrl}
-                alt={getTenderDisplayName(tender)}
-                style={{
-                  width: 36,
-                  height: 36,
-                  objectFit: "cover",
-                  borderRadius: "50%",
-                }}
-                onError={handleImageError}
-              />
-            ) : (
-              <span
-                style={{
-                  color: isAnchor ? COLORS.ANCHOR_TEXT : COLORS.REGULAR_TEXT,
-                  fontWeight: "bold",
-                }}
+            <UserAvatar
+              user={tender}
+              size={50}
+              backgroundColor={
+                isAnchor ? COLORS.ANCHOR_BACKGROUND : COLORS.REGULAR_BACKGROUND
+              }
+            />
+            <span
+              style={{
+                fontSize: "0.85em",
+                textAlign: "center",
+                maxWidth: "56px",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                zIndex: 12,
+                backgroundColor: "rgba(245, 245, 245, 0.5)",
+                backdropFilter: "blur(4px)",
+              }}
+            >
+              {getTenderDisplayName(tender)}
+            </span>
+            {tender.uid !== currentUser?.uid && engagement.upForGrabs && (
+              <Popconfirm
+                title="Are you sure?"
+                description="This action cannot be undone."
+                okText="Yes"
+                okButtonProps={{ color: "yellow" }}
+                onConfirm={() => grabShift(engagement)}
               >
-                {getTenderInitial(tender)}
-              </span>
+                <Button
+                  size="small"
+                  style={{
+                    position: "absolute",
+                    backgroundColor: "#FFE600",
+                    border: "none",
+                    bottom: -10,
+                    zIndex: 13,
+                    marginTop: 6,
+                    padding: "4px 8px",
+                    alignSelf: "center",
+                    color: "#000",
+                  }}
+                >
+                  Grab shift
+                </Button>
+              </Popconfirm>
             )}
           </div>
-          <span
-            style={{
-              fontSize: "0.85em",
-              textAlign: "center",
-              maxWidth: "56px",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {getTenderDisplayName(tender)}
-          </span>
-          {tender.uid !== currentUser?.uid && engagement.upForGrabs && (
-            <Popconfirm
-              title="Are you sure?"
-              description="This action cannot be undone."
-              okText="Yes"
-              okButtonProps={{ color: "yellow" }}
-              onConfirm={() => grabShift(engagement)}
-            >
-              <Button
-                size="small"
-                style={{
-                  position: "absolute",
-                  backgroundColor: "#FFE600",
-                  border: "none",
-                  marginTop: 6,
-                  padding: "4px 8px",
-                  alignSelf: "center",
-                  color: "#000",
-                  bottom: -24,
-                }}
-              >
-                Grab shift
-              </Button>
-            </Popconfirm>
-          )}
-        </div>
+        </Tooltip>
       </Col>
     );
   };
