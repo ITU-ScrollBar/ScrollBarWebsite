@@ -55,7 +55,6 @@ export default function Profile() {
   };
 
   const EXCLUDED_ROLES = ["newbie", "regular_access"];
-  const SHOW_NEWBIE_HAT = true
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
