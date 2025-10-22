@@ -1,14 +1,20 @@
 // src/pages/LoginPage.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext'; // Adjust path
 import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Card, Alert } from 'antd';
 
 const LoginPage: React.FC = () => {
-    const { login } = useAuth();
+    const { login, currentUser } = useAuth();
     const navigate = useNavigate();
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
+
+    useEffect(() => {
+        if (!loading && currentUser) {
+            navigate('/tenders/shifts', { replace: true }); // Redirect if already logged in
+        }
+    }, [loading, currentUser, navigate]);
 
     const handleLogin = async (values: any) => {
         setError(null); // Clear previous errors

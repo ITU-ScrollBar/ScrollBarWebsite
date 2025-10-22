@@ -1,12 +1,13 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import type { MenuProps } from 'antd';
-import { Avatar, ConfigProvider, Dropdown, Menu } from "antd";
+import { ConfigProvider, Dropdown, Menu } from "antd";
 import logo from '../../assets/images/logo.png';
-import avatar from '../../assets/images/avatar.png';
 import { useAuth } from "../../contexts/AuthContext";
 import { MenuOutlined } from '@ant-design/icons'
 import { useWindowSize } from "../../hooks/useWindowSize";
+import { UserAvatar } from "../UserAvatar";
+import { Loading } from "../Loading";
 
 interface TenderMenuProps {
   children?: ReactNode;
@@ -16,14 +17,13 @@ type MenuItem = Required<MenuProps>['items'][number];
 
 export const TenderMenu = ({ children }: TenderMenuProps) => {
   const [current, setCurrent] = useState('tab');
-  const { currentUser, logout } = useAuth();
+  const { currentUser, loading, logout } = useAuth();
   const navigate = useNavigate();
-  const windowSize = useWindowSize();
-  const [isMobile, setIsMobile] = useState(false);
+  const { isMobile } = useWindowSize();
 
-  useEffect(() => {
-    setIsMobile(windowSize.width < 768);
-  }, [windowSize]);
+  if (loading || !currentUser) {
+    return <Loading />
+  }
 
   const items: MenuItem[] = [
     {
@@ -85,12 +85,22 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
   
   const avatarMenuItems: MenuItem[] = [
     {
-      key: 'logout', 
-      label: <strong onClick={logout}>Logout</strong> 
-    },
-    {
       key: 'profile',
-      label: <strong onClick={() => navigate('/members/profile')}>Profile</strong>
+      label: (
+        <div style={{ display: 'flex' }}>
+          <UserAvatar user={currentUser} size={64} />
+        </div>
+      ),
+      children: [
+        {
+          key: 'logout', 
+          label: <strong onClick={() => {logout(); navigate('/')}}>Logout</strong> 
+        },
+        {
+          key: 'profile',
+          label: <strong onClick={() => navigate('/members/profile')}>Profile</strong>
+        }
+      ]
     }
   ];
 
@@ -101,10 +111,10 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
 
   return (
     <div>
-      <div style={{ backgroundColor: '#2E2E2E', display: "flex", alignItems: "center", justifyContent: "space-between", height: "150px" }}>
+      <div style={{ backgroundColor: '#2E2E2E', display: "flex", alignItems: "center", justifyContent: "space-between", height: "128px" }}>
         <div>
           <a href="/" style={{ display: "inline-block" }}>
-            <img src={logo} alt="Logo" style={{ height: 150 }} />
+            <img src={logo} alt="Logo" style={{ height: 128 }} />
           </a>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 16, padding: '0 16px' }}>
@@ -129,14 +139,12 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
               selectedKeys={[current]}
               mode="horizontal"
             />
-          </ConfigProvider>
-          <Dropdown menu={{ items: avatarMenuItems }}>
-            <Avatar
-              size={96}
-              src={currentUser?.photoUrl ? currentUser.photoUrl : avatar}
-              alt={currentUser?.photoUrl && currentUser.displayName ? currentUser.displayName : "default avatar"}
+            <Menu
+              items={avatarMenuItems}
+              mode="horizontal"
+              style={{ height: '90px', display: 'flex', alignItems: 'center' }}
             />
-          </Dropdown>
+          </ConfigProvider>
         </div>
       </div>
       {children || <Outlet />}

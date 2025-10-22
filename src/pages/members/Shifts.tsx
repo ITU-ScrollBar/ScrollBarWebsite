@@ -6,6 +6,7 @@ import { ShiftList } from "./ShiftList";
 import { ShiftFiltering } from "../../types/types-file";
 import { useShiftContext } from "../../contexts/ShiftContext";
 import { useEngagementContext } from "../../contexts/EngagementContext";
+import { Loading } from "../../components/Loading";
 
 interface ShiftsProps {
   filter?: ShiftFiltering;
@@ -21,7 +22,7 @@ function Shifts({ filter = ShiftFiltering.ALL_SHIFTS, title }: ShiftsProps) {
   const BOX_SHADOW = "0 2px 6px rgba(7, 7, 7, 0.5)";
 
   if (shiftState.loading || eventState.loading || engagementState.loading) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
 
   return (

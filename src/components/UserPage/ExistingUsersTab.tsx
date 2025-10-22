@@ -1,4 +1,4 @@
-import { Button, Divider, Drawer, Form, Input, notification, Select, Switch, Table, TableColumnsType, Tooltip, Upload } from "antd"
+import { Button, Divider, Drawer, Form, Input, notification, Select, Switch, Table, TableColumnsType, TableColumnType, Tooltip, Upload } from "antd"
 import { StudyLine, Tender } from "../../types/types-file";
 import useTenders from "../../hooks/useTenders";
 import { Key, useEffect, useState } from "react";
@@ -6,6 +6,7 @@ import { getStudyLines } from "../../firebase/api/authentication";
 import { EditOutlined } from '@ant-design/icons'
 import StudyLinePicker from "../../pages/members/StudyLinePicker";
 import { UserAvatarWithUpload } from "../UserAvatar";
+import { useWindowSize } from "../../hooks/useWindowSize";
 
 export const ExistingUsersTab = () => {
     const { tenderState, updateTender } = useTenders();
@@ -13,6 +14,8 @@ export const ExistingUsersTab = () => {
     const [api] = notification.useNotification();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<Tender | null>(null);
+    const [ columns, setColumns ] = useState<TableColumnsType<Tender>>([]);
+    const { isMobile } = useWindowSize();
 
     useEffect(() => {
         getStudyLines().then((response) => {
@@ -33,12 +36,10 @@ export const ExistingUsersTab = () => {
         }
         return record.roles?.includes(value.toString()) ?? false;
     }
-
-    const columns: TableColumnsType<Tender> = [
-        { title: 'Name', dataIndex: 'displayName', key: 'displayName' },
-        { title: 'Email', dataIndex: 'email', key: 'email' },
-        { title: 'Studyline', dataIndex: 'studyline', key: 'studyline', render: (text: string) => studylines.find((line) => line.id === text)?.abbreviation || 'No studyline'},
-        {
+    const nameColumn = { title: 'Name', dataIndex: 'displayName', key: 'displayName' };
+    const emailColumn = { title: 'Email', dataIndex: 'email', key: 'email' };
+    const studylineColumn = { title: 'Studyline', dataIndex: 'studyline', key: 'studyline', render: (text: string) => studylines.find((line) => line.id === text)?.abbreviation || 'No studyline' };
+    const rolesColumn = {
             title: 'Role',
             dataIndex: 'roles',
             key: 'roles',
@@ -50,8 +51,8 @@ export const ExistingUsersTab = () => {
                 { text: 'Anchors', value: 'anchor' },
             ],
             onFilter: userFilterMatch,
-        },
-        {
+        };
+    const editColumn: TableColumnType<Tender> = {
             title: 'Edit user',
             key: 'edit',
             render: (_text, record) => (
@@ -62,8 +63,15 @@ export const ExistingUsersTab = () => {
                     }} />
                 </Tooltip>
             )
+        };
+
+    useEffect(() => {
+        if (isMobile) {
+            setColumns([nameColumn, emailColumn, editColumn]);
+        } else {
+            setColumns([nameColumn, emailColumn, studylineColumn, rolesColumn, editColumn]);
         }
-    ];
+    }, [isMobile]);
 
     return (<>
         <Table columns={columns} dataSource={tenderState.tenders} rowKey="id" />
