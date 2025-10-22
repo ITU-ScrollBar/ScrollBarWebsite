@@ -46,12 +46,9 @@ function App() {
               <Route element={<ProtectedRoutes />}>
                 <Route element={<TenderMenu />}>
                   <Route
-                    path="/tenders/shifts"
+                    path="/members/profile"
                     element={
-                      <Shifts
-                        filter={ShiftFiltering.MY_SHIFTS}
-                        title="My Shifts"
-                      />
+                      <Profile />
                     }
                   />
                   <Route
