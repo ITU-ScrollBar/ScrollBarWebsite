@@ -414,3 +414,13 @@
     justify-content: center;
   }
 }
+
+
+@media (orientation: portrait) {
+  /* On portrait devices use a shorter hero so the countdown/content is visible */
+  .heroImage {
+    height: 35vh;
+  }
+
+}
+
