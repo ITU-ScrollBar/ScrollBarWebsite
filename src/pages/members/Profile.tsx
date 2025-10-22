@@ -1,4 +1,8 @@
-import { Layout, Typography, Space, Row, Col } from "antd";
+import { Path, useNavigate } from "react-router-dom";
+
+import { Layout, Space, Row, Col } from "antd";
+import Title from "antd/es/typography/Title";
+import Text from "antd/es/typography/Text";
 import { useAuth } from "../../contexts/AuthContext";
 import avatar from "../../assets/images/avatar.png";
 import StudyLinePicker from "./StudyLinePicker";
@@ -9,8 +13,9 @@ import useTenders from "../../hooks/useTenders";
 import useEngagements from "../../hooks/useEngagements";
 import { ShiftList } from "./ShiftList";
 import { ShiftFiltering } from "../../types/types-file";
+import { CalendarSection } from "../../components/CalendarComponent";
+import { Loading } from "../../components/Loading";
 
-const { Title, Text } = Typography;
 
 export default function Profile() {
   const { loading, currentUser } = useAuth();
@@ -20,7 +25,7 @@ export default function Profile() {
 
   const setStudyLine = (studyLine: string) => {
     if (!currentUser) return;
-    updateUser({ id: currentUser.uid, field: 'studyline', value: studyLine });
+    updateUser({ id: currentUser.uid, field: "studyline", value: studyLine });
   };
 
   // TODO
@@ -38,7 +43,7 @@ export default function Profile() {
   };
 
   if (loading || !currentUser) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
 
   const userProfile: UserProfile = {
@@ -60,7 +65,7 @@ export default function Profile() {
     <Layout style={{ minHeight: "100vh" }}>
       <Layout style={{ padding: 32 }}>
         <Layout.Content style={{ padding: 24 }}>
-          <Title level={1} style={{ scrollMarginTop: "135px" }}>
+        <Title level={1} style={{ scrollMarginTop: "135px" }}>
           </Title>
 
           <Row gutter={32}>
@@ -114,21 +119,29 @@ export default function Profile() {
                     Badges TBD
                   </Title>
                 </Space>
+
+                <div>
+                  <CalendarSection />
+                </div>
               </Space>
             </Col>
 
             <Col flex="1">
-              <div>
-                <Title level={3} style={{ marginBottom: 16 }}>
-                  My Shifts
-                </Title>
-                <ShiftList
-                  shifts={shiftState.shifts}
-                  engagements={engagementState.engagements}
-                  tenders={tenderState.tenders}
-                  shiftFiltering={ShiftFiltering.MY_SHIFTS}
-                />
-              </div>
+              <Space direction="vertical" size="large" style={{ width: "100%" }}>
+                <div>
+                  <Title level={3} style={{ marginBottom: 16 }}>
+                    My Shifts
+                  </Title>
+                  <ShiftList
+                    shifts={shiftState.shifts}
+                    engagements={engagementState.engagements}
+                    tenders={tenderState.tenders}
+                    shiftFiltering={ShiftFiltering.MY_SHIFTS}
+                  />
+                </div>
+
+ 
+              </Space>
             </Col>
           </Row>
         </Layout.Content>
