@@ -1,13 +1,16 @@
 import { Path, useNavigate } from "react-router-dom";
 
-import { Layout, Typography, Space, Row, Col } from "antd";
+import { Layout, Space, Row, Col } from "antd";
+import Title from "antd/es/typography/Title";
+import Text from "antd/es/typography/Text";
 import { useAuth } from "../../contexts/AuthContext";
 import avatar from "../../assets/images/avatar.png";
 import StudyLinePicker from "./StudyLinePicker";
 import { updateUser } from "../../firebase/api/authentication";
 import { UserAvatarWithUpload } from "../../components/UserAvatar";
+import { CalendarSection } from "../../components/CalendarComponent";
+import { Loading } from "../../components/Loading";
 
-const { Title, Text } = Typography;
 
 export default function Profile() {
   const navigation = useNavigate();
@@ -16,7 +19,7 @@ export default function Profile() {
 
   const setStudyLine = (studyLine: string) => {
     if (!currentUser) return;
-    updateUser({ id: currentUser.uid, field: 'studyline', value: studyLine });
+    updateUser({ id: currentUser.uid, field: "studyline", value: studyLine });
   };
 
   // TODO
@@ -34,7 +37,7 @@ export default function Profile() {
   };
 
   if (loading || !currentUser) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
 
   const userProfile: UserProfile = {
@@ -56,10 +59,6 @@ export default function Profile() {
     <Layout style={{ minHeight: "100vh" }}>
       <Layout style={{ padding: 32 }}>
         <Layout.Content style={{ padding: 24 }}>
-          <Title level={1} style={{ scrollMarginTop: "135px" }}>
-            {/* {currentUser?.email} */}
-          </Title>
-
           <Space direction="vertical" size="middle" style={{ width: "100%" }}>
             <Row gutter={16} align="middle">
               <Col>
@@ -92,8 +91,7 @@ export default function Profile() {
 
             <Space direction="vertical" size="small" style={{ width: "100%" }}>
               <Text>Email: {userProfile?.email}</Text>
-
-                <Text>Role: {(userProfile?.roles ?? []).filter(role => !EXCLUDED_ROLES.includes(role)).map(role => role.charAt(0).toUpperCase() + role.slice(1)).join(", ")}</Text>
+              <Text>Role: {(userProfile?.roles ?? []).filter(role => !EXCLUDED_ROLES.includes(role)).map(role => role.charAt(0).toUpperCase() + role.slice(1)).join(", ")}</Text>
 
               <Title level={4} style={{ marginTop: 16, marginBottom: 8 }}>
                 Your Data
@@ -106,6 +104,8 @@ export default function Profile() {
               </Title>
             </Space>
           </Space>
+          
+          <CalendarSection />
         </Layout.Content>
       </Layout>
     </Layout>
