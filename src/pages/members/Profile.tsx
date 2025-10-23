@@ -33,7 +33,7 @@ export default function Profile() {
   };
 
   if (loading || !currentUser) {
-    return <Loading />;
+    return <Loading centerOverlay={true} resources={["you"]} />;
   }
 
   const userProfile: UserProfile = {
