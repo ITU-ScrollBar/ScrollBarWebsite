@@ -18,7 +18,14 @@ export const Loading: React.FC<LoadingProps> = ({
   const duration = "1.6s";
 
   const content = (
-    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 12,
+      }}
+    >
       <style>{`
         @keyframes sb-fill-simple { from { transform: translateY(100%); } to { transform: translateY(30%); } }
         @keyframes sb-foam-bubble { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 50% { transform: translate(var(--tx), -40px) scale(1.1); opacity: 0.8; } 100% { transform: translate(var(--tx), -80px) scale(0.5); opacity: 0; } }
@@ -75,7 +82,7 @@ export const Loading: React.FC<LoadingProps> = ({
         </div>
       </div>
 
-      <div style={{ minWidth: 120 }}>
+      <div style={{ textAlign: "center" }}>
         <Text strong style={{ display: "block", marginBottom: 6 }}>
           {message}
         </Text>
