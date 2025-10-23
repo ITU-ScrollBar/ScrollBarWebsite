@@ -6,9 +6,6 @@ import avatar from "../../assets/images/avatar.png";
 import StudyLinePicker from "./StudyLinePicker";
 import { updateUser } from "../../firebase/api/authentication";
 import { UserAvatarWithUpload } from "../../components/UserAvatar";
-import useShifts from "../../hooks/useShifts";
-import useTenders from "../../hooks/useTenders";
-import useEngagements from "../../hooks/useEngagements";
 import { ShiftFiltering } from "../../types/types-file";
 import { CalendarSection } from "../../components/CalendarComponent";
 import { Loading } from "../../components/Loading";
@@ -16,16 +13,12 @@ import Shifts from "./Shifts";
 
 export default function Profile() {
   const { loading, currentUser } = useAuth();
-  const { shiftState } = useShifts();
-  const { tenderState } = useTenders();
-  const { engagementState } = useEngagements();
 
   const setStudyLine = (studyLine: string) => {
     if (!currentUser) return;
     updateUser({ id: currentUser.uid, field: "studyline", value: studyLine });
   };
 
-  // TODO
   type UserProfile = {
     uid: string;
     displayName: string;
