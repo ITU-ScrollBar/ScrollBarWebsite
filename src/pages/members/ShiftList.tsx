@@ -6,6 +6,7 @@ import {
   Popconfirm,
   message,
   Tooltip,
+  Badge,
 } from "antd";
 import {
   dateToHourString,
@@ -25,6 +26,7 @@ import { useEffect, useState } from "react";
 import useEvents from "../../hooks/useEvents";
 import { useEngagementContext } from "../../contexts/EngagementContext";
 import { UserAvatar } from "../../components/UserAvatar";
+import { UpForGrabsBadge } from "../../components/UpForGrabsBadge";
 
 const { Title, Paragraph } = Typography;
 
@@ -106,6 +108,9 @@ export function ShiftList({
     const tender = getTenderForEngagement(engagement, tenders);
     if (!tender) return null;
 
+    const isUpForGrabs =
+      tender.uid !== currentUser?.uid && engagement.upForGrabs;
+
     return (
       <Col key={engagement.id} style={{ minWidth: 56 }}>
         <Tooltip title={getTenderDisplayName(tender)}>
@@ -115,15 +120,27 @@ export function ShiftList({
               flexDirection: "column",
               alignItems: "center",
               gap: 2,
+              position: "relative",
             }}
           >
-            <UserAvatar
-              user={tender}
-              size={50}
-              backgroundColor={
-                isAnchor ? COLORS.ANCHOR_BACKGROUND : COLORS.REGULAR_BACKGROUND
+            <Badge
+              count={
+                <UpForGrabsBadge
+                  isUpForGrabs={isUpForGrabs}
+                  onGrab={() => grabShift(engagement)}
+                />
               }
-            />
+            >
+              <UserAvatar
+                user={tender}
+                size={50}
+                backgroundColor={
+                  isAnchor
+                    ? COLORS.ANCHOR_BACKGROUND
+                    : COLORS.REGULAR_BACKGROUND
+                }
+              />
+            </Badge>
             <span
               style={{
                 fontSize: "0.85em",
@@ -139,32 +156,6 @@ export function ShiftList({
             >
               {getTenderDisplayName(tender)}
             </span>
-            {tender.uid !== currentUser?.uid && engagement.upForGrabs && (
-              <Popconfirm
-                title="Are you sure?"
-                description="This action cannot be undone."
-                okText="Yes"
-                okButtonProps={{ color: "yellow" }}
-                onConfirm={() => grabShift(engagement)}
-              >
-                <Button
-                  size="small"
-                  style={{
-                    position: "absolute",
-                    backgroundColor: "#FFE600",
-                    border: "none",
-                    bottom: -10,
-                    zIndex: 13,
-                    marginTop: 6,
-                    padding: "4px 8px",
-                    alignSelf: "center",
-                    color: "#000",
-                  }}
-                >
-                  Grab shift
-                </Button>
-              </Popconfirm>
-            )}
           </div>
         </Tooltip>
       </Col>
