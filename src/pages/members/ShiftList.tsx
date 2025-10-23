@@ -26,7 +26,7 @@ import { useEffect, useState } from "react";
 import useEvents from "../../hooks/useEvents";
 import { useEngagementContext } from "../../contexts/EngagementContext";
 import { UserAvatar } from "../../components/UserAvatar";
-import { UpForGrabsBadge } from "../../components/UpForGrabsBadge";
+import { UpForGrabsBadge } from "../../badges/UpForGrabsBadge";
 
 const { Title, Paragraph } = Typography;
 
