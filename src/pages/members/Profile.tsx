@@ -9,11 +9,10 @@ import { UserAvatarWithUpload } from "../../components/UserAvatar";
 import useShifts from "../../hooks/useShifts";
 import useTenders from "../../hooks/useTenders";
 import useEngagements from "../../hooks/useEngagements";
-import { ShiftList } from "./ShiftList";
 import { ShiftFiltering } from "../../types/types-file";
 import { CalendarSection } from "../../components/CalendarComponent";
 import { Loading } from "../../components/Loading";
-
+import Shifts from "./Shifts";
 
 export default function Profile() {
   const { loading, currentUser } = useAuth();
@@ -61,14 +60,23 @@ export default function Profile() {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Layout style={{ padding: 32 }}>
-        <Layout.Content style={{ padding: 24 }}>
-        <Title level={1} style={{ scrollMarginTop: "135px" }}>
-          </Title>
+      <Layout style={{ padding: 0 }}>
+        <Layout.Content style={{ padding: 0 }}>
+          <Title level={1} style={{ scrollMarginTop: "135px" }}></Title>
 
           <Row gutter={32}>
-            <Col flex="0 0 auto" style={{ minWidth: 300, maxWidth: 575 }}>
-              <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+            <Col
+              xs={24}
+              sm={24}
+              md={10}
+              lg={8}
+              style={{ minWidth: 260, padding: 32 }}
+            >
+              <Space
+                direction="vertical"
+                size="middle"
+                style={{ width: "100%" }}
+              >
                 <Row gutter={16} align="top">
                   <Col>
                     <Space direction="vertical" size="small" align="center">
@@ -95,16 +103,32 @@ export default function Profile() {
                         {userProfile?.displayName}
                       </Title>
                       <div>
-                        <StudyLinePicker bold value={userProfile?.studyline} onChange={setStudyLine} />
+                        <StudyLinePicker
+                          bold
+                          value={userProfile?.studyline}
+                          onChange={setStudyLine}
+                        />
                       </div>
                     </Space>
                   </Col>
                 </Row>
 
-                <Space direction="vertical" size="small" style={{ width: "100%" }}>
+                <Space
+                  direction="vertical"
+                  size="small"
+                  style={{ width: "100%" }}
+                >
                   <Text>Email: {userProfile?.email}</Text>
 
-                    <Text>Role: {(userProfile?.roles ?? []).filter(role => !EXCLUDED_ROLES.includes(role)).map(role => role.charAt(0).toUpperCase() + role.slice(1)).join(", ")}</Text>
+                  <Text>
+                    Role:{" "}
+                    {(userProfile?.roles ?? [])
+                      .filter((role) => !EXCLUDED_ROLES.includes(role))
+                      .map(
+                        (role) => role.charAt(0).toUpperCase() + role.slice(1)
+                      )
+                      .join(", ")}
+                  </Text>
 
                   <Title level={4} style={{ marginTop: 16, marginBottom: 8 }}>
                     Your Data
@@ -123,21 +147,15 @@ export default function Profile() {
               </Space>
             </Col>
 
-            <Col flex="1">
-              <Space direction="vertical" size="large" style={{ width: "100%" }}>
+            <Col xs={24} sm={24} md={14} lg={16}>
+              <Space
+                direction="vertical"
+                size="large"
+                style={{ width: "100%" }}
+              >
                 <div>
-                  <Title level={3} style={{ marginBottom: 16 }}>
-                    My Shifts
-                  </Title>
-                  <ShiftList
-                    shifts={shiftState.shifts}
-                    engagements={engagementState.engagements}
-                    tenders={tenderState.tenders}
-                    shiftFiltering={ShiftFiltering.MY_SHIFTS}
-                  />
+                  <Shifts filter={ShiftFiltering.MY_SHIFTS} title="My Shifts" />
                 </div>
-
- 
               </Space>
             </Col>
           </Row>

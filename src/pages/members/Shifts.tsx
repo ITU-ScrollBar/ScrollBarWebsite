@@ -29,7 +29,7 @@ function Shifts({ filter = ShiftFiltering.ALL_SHIFTS, title }: ShiftsProps) {
     <Layout
       style={{
         minHeight: "100vh",
-        minWidth: "100vw",
+        width: "100%",
         flexDirection: "column",
         height: "auto",
       }}
