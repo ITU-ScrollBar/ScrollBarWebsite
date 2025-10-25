@@ -1,4 +1,6 @@
 .env
+functions/.credentials.json
+.firebase
 
 # Logs
 logs
@@ -14,6 +16,7 @@ yarn.lock
 node_modules
 dist
 dist-ssr
+lib
 *.local
 
 # Editor directories and files
@@ -26,3 +29,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# To ensure file is not added accidentally
+package-lock.json

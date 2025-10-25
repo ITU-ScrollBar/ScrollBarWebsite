@@ -10,13 +10,15 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
-  User,
+  User
 } from "firebase/auth";
 import { auth } from "../firebase/index";
+import { getUser } from "../firebase/api/authentication";
+import { UserProfile } from "../types/types-file";
 
 // Define and export AuthContextType and AuthProviderProps
 export interface AuthContextType {
-  currentUser: User | null;
+  currentUser: UserProfile | null;
   loading: boolean;
   login: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -30,14 +32,41 @@ export interface AuthProviderProps {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-      setLoading(false);
-      console.log("Auth State Changed:", user ? `User ${user.uid}` : "No user");
+      // If no firebase auth user, clear profile and stop loading
+      if (!user) {
+        setCurrentUser(null);
+        setLoading(false);
+        console.log("Auth State Changed: No user");
+        return;
+      }
+
+      // For an authenticated firebase user, fetch the app profile from Firestore
+      // and keep loading true until that fetch completes to avoid premature redirects.
+      setLoading(true);
+      getUser(user.uid, {
+        next: (snapshot) => {
+          if (snapshot.exists()) {
+            const userdata = snapshot.data() as UserProfile;
+            setCurrentUser({ ...userdata, uid: user.uid });
+            console.log("Fetched new current user");
+          } else {
+            setCurrentUser(null);
+            console.log("No user profile found in Firestore for", user.uid);
+          }
+          setLoading(false);
+        },
+        error: (error) => {
+          console.error("Error fetching user data:", error);
+          setCurrentUser(null);
+          setLoading(false);
+        },
+      });
+      console.log("Auth State Changed: User", user.uid);
     });
 
     return () => {
@@ -57,7 +86,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const setUser = (user: User | null): void => {
-    setCurrentUser(user);
+    setCurrentUser(user as UserProfile | null);
   };
 
 
@@ -65,6 +94,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = async (): Promise<void> => {
     try {
       await signOut(auth);
+      setCurrentUser(null);
       console.log("Logout successful");
     } catch (error) {
       console.error("Logout failed:", error);

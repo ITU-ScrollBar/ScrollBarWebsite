@@ -4,10 +4,13 @@ import { Col, Image, Row, Typography } from 'antd'
 import logo from '../../assets/images/logo.png';
 import Title from 'antd/es/typography/Title';
 import Paragraph from 'antd/es/typography/Paragraph';
+import useSettings from '../../hooks/useSettings';
 
 const { Text, Link } = Typography;
 
 export default function FooterBar() {
+  const { settingsState } = useSettings();
+
   return (
     <>
       <Row
@@ -91,7 +94,7 @@ export default function FooterBar() {
           <Paragraph style={{ color: 'white', marginBottom: '0px' }}>
             <Text>
               <Link
-                href="https://www.google.dk"
+                href={settingsState.settings.constitution}
                 target="_blank"
               >
                 Constitution
@@ -101,7 +104,7 @@ export default function FooterBar() {
           <Paragraph style={{ color: 'white', marginBottom: '0px' }}>
             <Text>
               <Link
-                href="https://www.google.dk"
+                href={settingsState.settings.minutes}
                 target="_blank"
               >
                 Minutes from General Assembly

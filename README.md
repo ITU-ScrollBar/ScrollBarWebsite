@@ -1,4 +1,19 @@
-# React + TypeScript + Vite
+# ScrollBar website
+
+- **Yarn version:** This project requires Yarn v1.x (tested with Yarn 1.22+).  
+  If you don't have it, install via [yarnpkg.com](https://yarnpkg.com/getting-started/install).
+
+- **Run locally:**  
+  ```
+  yarn install
+  yarn run dev
+  ```
+  This will start the Vite development server.
+
+- **UI Library:**  
+  The project uses [Ant Design](https://ant.design/) for UI components.
+
+## React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

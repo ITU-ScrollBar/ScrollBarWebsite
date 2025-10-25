@@ -1,11 +1,29 @@
-import React from 'react'
-import { Button, Col, Divider, Layout, Row, Space } from 'antd'
+import React, { useEffect } from 'react'
+import { Button, Col, Divider, Layout, Row, List } from 'antd'
 import Title from 'antd/es/typography/Title'
 import Paragraph from 'antd/es/typography/Paragraph'
 import { Header } from 'antd/es/layout/layout'
 import HeaderBar from '../components/HomePage/HeaderBar'
+import useSettings from '../hooks/useSettings'
+import MDEditor from '@uiw/react-md-editor'
+import useTenders from '../hooks/useTenders'
+import { UserAvatar } from '../components/UserAvatar'
+import { getTenderDisplayName } from './members/helpers'
+import { StudyLine, Tender } from '../types/types-file'
+import { getStudyLines } from '../firebase/api/authentication'
+import { Loading } from '../components/Loading'
 
 export default function HomePage() {
+  const { settingsState } = useSettings();
+  const { tenderState } = useTenders();
+
+  const activeTenders = tenderState.tenders.filter(t => !t.roles?.includes('passive') && !t.roles?.includes('board'));
+  const boardMembers = tenderState.tenders.filter(t => t.roles?.includes('board'));
+
+  if (settingsState.loading) {
+    return <Loading centerOverlay={true} />;
+  }
+
   return (
     <Layout style={{ minHeight: '100vh', width: '100%', flexDirection: 'column', height: 'auto'}}>
        <Header
@@ -44,7 +62,7 @@ export default function HomePage() {
     }}
   >
     <source
-      src="https://firebasestorage.googleapis.com/v0/b/scrollweb-cc9b4.appspot.com/o/assets%2FheroVideo.mp4?alt=media&token=594c9f7b-2871-43f8-92a6-914eaf4a3c85"
+      src={settingsState.settings.hero}
       type="video/mp4"
     />
   </video>
@@ -67,6 +85,7 @@ export default function HomePage() {
       {/* White content area below video */}
       <div
         style={{
+          padding: '50px 40px',
           backgroundColor: 'white',
           color: 'black',
           paddingTop: '50px',
@@ -84,7 +103,7 @@ export default function HomePage() {
             }}
           >
             <Title id="about" level={2} style={{ scrollMarginTop: '135px' }}>
-              What is ScrollBar?
+              {settingsState.settings.homepageTitle}
             </Title>
             <Paragraph
               style={{
@@ -93,53 +112,51 @@ export default function HomePage() {
                 textAlign: 'center',
               }}
             >
-              ScrollBar is a student-run Friday bar at the IT University of
-              Copenhagen, organized by our dedicated team of volunteer students.
-              Founded in 2004, our goal is to bring ITU students together in a
-              cozy and welcoming atmosphere every Friday in the semester from
-              3PM to 2AM.
-              <br />
-              <br />
-              We regularly host DJs and organize a wide variety of events
-              throughout the semester, including Birthday Parties,
-              Back-to-School, Beerpong Tournaments, Halloween parties, Hand-In
-              celebrations and more. We’re especially proud of our wide
-              selection of beers and drinks, but there’s something for everyone.
-              <br />
-              <br />
-              This covers the basics of ScrollBar, but if you’re curious to
-              learn more, you can check out our constitution at the bottom of
-              the page.
+              {settingsState.settings.homepageDescription}
             </Paragraph>
           </Col>
         </Row>
 
-        <Divider />
+        {settingsState.settings.openForSignups && (
+        <>
+          <Divider />
 
-        <Row justify="center">
-          <Col
-            md={24}
-            lg={12}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-            }}
-          >
-            <Title id="join_scrollbar" level={2} style={{ scrollMarginTop: '135px' }}>
-              Join Scrollbar
-            </Title>
-
-            <Button
-              type="primary"
-              size="large"
-              href={'settings.joinScrollBarLink'}
-              target="_blank"
+          <Row justify="center">
+            <Col
+              md={24}
+              lg={12}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+              }}
             >
-              Apply now!
-            </Button>
-          </Col>
-        </Row>
+              <Title id="join_scrollbar" level={2} style={{ scrollMarginTop: '135px' }}>
+                {settingsState.settings.joinScrollBarTitle}
+              </Title>
+
+              <MDEditor.Markdown
+                style={{
+                  fontSize: '18px',
+                  lineHeight: '36px',
+                  textAlign: 'center',
+                  color: 'black',
+                  background: 'white',
+                }}
+                source={settingsState.settings.joinScrollBarText}
+              />
+
+              <Button
+                type="primary"
+                size="large"
+                href={settingsState.settings.joinScrollBarLink}
+                target="_blank"
+              >
+                Apply now!
+              </Button>
+            </Col>
+          </Row>
+        </>)}
 
         <Divider />
 
@@ -155,14 +172,7 @@ export default function HomePage() {
             <Title level={2} style={{ scrollMarginTop: '135px' }} id="volunteers">
               The Board
             </Title>
-            <Space
-              direction="horizontal"
-              style={{ width: '100%', justifyContent: 'space-around' }}
-              size={16}
-              wrap
-            >
-              alot of board members here
-            </Space>
+            <UserList users={boardMembers} />
           </Col>
         </Row>
 
@@ -180,14 +190,7 @@ export default function HomePage() {
             <Title level={2} style={{ scrollMarginTop: '135px' }} id="volunteers">
               The Volunteers
             </Title>
-            <Space
-              direction="horizontal"
-              style={{ width: '100%', justifyContent: 'space-around' }}
-              size={16}
-              wrap
-            >
-              alot of tenders here
-            </Space>
+            <UserList users={activeTenders} />
           </Col>
         </Row>
 
@@ -196,3 +199,32 @@ export default function HomePage() {
     </Layout>
   )
 }
+
+const UserList = ({ users }: { users: Tender[] }) => {
+  const [studylines, setStudylines] = React.useState<StudyLine[]>([]);
+
+  useEffect(() => {
+    getStudyLines().then((response) => {
+        const studylines: StudyLine[] = response.map((doc: any) => doc as StudyLine);
+        setStudylines(studylines);
+    }).catch((error) => {
+        console.error("Failed to fetch study lines: " + error.message);
+    });
+  }, []);
+
+  return (
+    <List
+      grid={{ gutter: 16, column: 10, xs: 4, sm: 3, md: 5, lg: 8, xl: 10 }}
+      dataSource={users}
+      renderItem={(user) => (
+        <List.Item>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <UserAvatar user={user} size={64} showHats={false} />
+            <div style={{ marginTop: 8, textAlign: 'center' }}>{getTenderDisplayName(user)}</div>
+            <div style={{ marginTop: 8, textAlign: 'center' }}>{studylines.find(sl => sl.id === user.studyline)?.abbreviation?.toLocaleUpperCase()}</div>
+          </div>
+        </List.Item>
+      )}
+    />
+  );
+};

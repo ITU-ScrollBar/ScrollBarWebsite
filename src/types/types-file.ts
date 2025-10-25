@@ -1,5 +1,6 @@
 // User-related types
 export interface UserProfile {
+  uid: string;
   displayName: string;
   email: string;
   studyline: string;
@@ -13,7 +14,7 @@ export interface UserProfile {
 export interface StudyLine {
   id: string;
   name: string;
-  abreviation: string;
+  abbreviation: string;
   Prefix: string;
 }
 
@@ -39,10 +40,35 @@ export interface PasswordResetParams {
   email: string;
 }
 
+// Settings-related types
+export interface Settings {
+  constitution: string;
+  hero: string;
+  homepageTitle: string;
+  homepageDescription: string;
+  joinScrollBarLink: string;
+  joinScrollBarText: string;
+  joinScrollBarTitle: string;
+  minutes: string;
+  openForSignups: boolean;
+}
+
+export interface SettingsUpdateParams {
+  field: string;
+  value: any;
+}
+
+export enum engagementType {
+  ANCHOR = "anchor",
+  TENDER = "tender",
+}
+
 // Engagement-related types
 export interface Engagement {
-  id?: string;
+  id: string;
+  type: engagementType;
   key?: string;
+  shiftId: string;
   shiftEnd: Date;
   userId?: string;
   upForGrabs: boolean;
@@ -62,6 +88,11 @@ export interface Event {
   [id: string]: any;
 }
 
+export interface FirebaseDate {
+  seconds: number;
+  nanoseconds: number;
+}
+
 export type EventCreateParams = {
   start: Date;
   end: Date;
@@ -76,6 +107,12 @@ export interface EventUpdateParams {
   id: string;
   field: string;
   value: any;
+}
+
+export enum ShiftFiltering {
+  MY_SHIFTS = "MY_SHIFTS",
+  UP_FOR_GRABS = "UP_FOR_GRABS",
+  ALL_SHIFTS = "ALL_SHIFTS",
 }
 
 // Shift-related types
@@ -105,11 +142,15 @@ export interface DocumentData {
 
 // Define the types for the tenders and invited tenders
 export type Tender = {
-  id: string;
-  key: string;
+  uid: string;
   // Add any other fields you expect from Firestore, e.g.:
-  name: string;
+  name?: string;
   email: string;
+  displayName?: string;
+  photoUrl?: string;
+  isAdmin: boolean;
+  roles?: string[];
+  studyline?: string;
   // Add other fields here
 };
 
@@ -117,6 +158,7 @@ export type Invite = {
   id: string;
   key: string;
   email: string;
+  registered: boolean;
   // Other invite-related fields here
 };
 

@@ -51,7 +51,7 @@ export const setUpForGrabs = (id: string, status: boolean): Promise<void> => {
  * Deletes an engagement.
  */
 export const deleteEngagement = (engagement: Engagement): Promise<void> => {
-  const docRef = doc(collection(doc(collection(db, 'env'), env), 'engagements'), engagement.id!);
+  const docRef = doc(collection(doc(collection(db, 'env'), env), 'engagements'), engagement.id);
   return deleteDoc(docRef);
 };
 

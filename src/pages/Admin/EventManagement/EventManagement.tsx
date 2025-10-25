@@ -13,7 +13,7 @@ import EventInfo from './EventInfo'
 
 
 
-export default function TestPage() {
+export default function EventManagement() {
     const { addEvent, eventState } = useEvents();
 
 

@@ -9,8 +9,6 @@ import {
 } from '../firebase/api/engagements'; // Adjust the import path as necessary
 import { Engagement, EngagementState } from '../types/types-file'; // Make sure Engagement is defined
 
-
-
 const useEngagements = () => {
   const [engagementState, setEngagementState] = useState<EngagementState>({
     loading: false,

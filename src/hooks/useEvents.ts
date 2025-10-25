@@ -50,8 +50,8 @@ const useEvents = () => {
             ...data,
             id,
             key: id, // `key` is guaranteed to be a string
-            start: data.start.toDate(), // Convert Timestamp to Date
-            end: data.end.toDate(), // Convert Timestamp to Date
+            start: data.start?.toDate(), // Convert Timestamp to Date
+            end: data.end?.toDate(), // Convert Timestamp to Date
           };
         });
 

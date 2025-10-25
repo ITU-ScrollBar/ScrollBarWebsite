@@ -8,11 +8,11 @@ export interface TenderContextType {
   tenderState: {
     loading: boolean;
     isLoaded: boolean;
-    tenders: (Tender & { key: string })[];
+    tenders: (Tender)[];
   };
   invitedTenders: (Invite & { key: string })[];
   addInvite: (email: string) => Promise<void>;
-  removeInvite: (invite: Invite) => Promise<void>;
+  removeInvite: (invite: string) => Promise<void>;
   updateTender: (id: string, field: string, value: any) => Promise<void>;
 }
 

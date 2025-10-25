@@ -1,60 +1,100 @@
 // src/App.tsx
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import HomePage from "./pages/HomePage";
+import LoginPage from "./pages/LoginPage";
+import NotFoundPage from "./pages/NotFoundPage"; // A 404 page
+import ProtectedRoutes from "./routes/ProtectedRoutes";
+import RoleProtectedRoute from "./routes/RoleProtectedRoute";
+import { Layout } from "antd";
+import { Content, Footer } from "antd/es/layout/layout";
 
-
-
-
-import HomePage from './pages/HomePage';
-import LoginPage from './pages/LoginPage';
-import NotFoundPage from './pages/NotFoundPage'; // A 404 page
-import ProtectedRoutes from './routes/ProtectedRoutes';
-import TenderSite from './pages/TenderSite';
-import { Layout } from 'antd';
-import { Content, Footer } from 'antd/es/layout/layout';
-
-import FooterBar from './components/HomePage/FooterBar';
-import EventManagement from './pages/Admin/EventManagement/EventManagement';
-import Register from './pages/Register';
-
-
-
-
-
-
+import FooterBar from "./components/HomePage/FooterBar";
+import Register from "./pages/Register";
+import Shifts from "./pages/members/Shifts";
+import Profile from "./pages/members/Profile";
+import { TenderMenu } from "./components/HomePage/TenderMenu";
+import { ShiftFiltering } from "./types/types-file";
+import EventManagement from "./pages/Admin/EventManagement/EventManagement";
+import GlobalSettingsPage from "./pages/Admin/GlobalSettingsPage";
+import { UserManagerPage } from "./pages/Admin/UserManagerPage";
+import { setTwoToneColor } from '@ant-design/icons';
 
 function App() {
-
-
-
+  setTwoToneColor("#FFE600");
   return (
     <BrowserRouter>
-    
-      <Layout style={{ minHeight: '100vh', minWidth: '100%', flexDirection: 'column', height: 'auto'}}>
-    
+      <Layout
+        style={{
+          minHeight: "100vh",
+          minWidth: "100%",
+          flexDirection: "column",
+          height: "auto",
+        }}
+      >
         <Layout>
-          <Content><Routes>
-        {/* --- Public Routes --- */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<Register />} />
+          <Content>
+            <Routes>
+              {/* --- Public Routes --- */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<Register />} />
+
+              {/* --- Protected Routes --- */}
+              <Route element={<ProtectedRoutes />}>
+                <Route element={<TenderMenu />}>
+                  <Route
+                    path="/members/profile"
+                    element={
+                      <Profile />
+                    }
+                  />
+                  <Route
+                    path="/tenders/allshifts"
+                    element={
+                      <Shifts
+                        filter={ShiftFiltering.ALL_SHIFTS}
+                        title="All Shifts"
+                      />
+                    }
+                  />
+                  <Route
+                    path="/tenders/upforgrabs"
+                    element={
+                      <Shifts
+                        filter={ShiftFiltering.UP_FOR_GRABS}
+                        title="Up for Grabs"
+                      />
+                    }
+                  />
+                  <Route path="/members/profile" element={<Profile />} />
+                  {/* --- Admin Routes --- */}
+                  <Route element={<RoleProtectedRoute />}>
+                    <Route path="admin/settings" element={<GlobalSettingsPage />} />
+                  </Route>
+                  <Route element={<RoleProtectedRoute requiredRole={'event_manager'} />}>
+                    <Route path="admin/events" element={<EventManagement />} />
+                  </Route>
+                  <Route element={<RoleProtectedRoute requiredRole={'shifts_manager'} />}>
+                    <Route path="admin/shifts" element={<div>Manage Shifts Page (to be implemented)</div>} />
+                  </Route>
+                  <Route element={<RoleProtectedRoute requiredRole={'user_manager'} />}>
+                    <Route path="admin/users" element={<UserManagerPage />} />
+                  </Route>
+                </Route>
+              </Route>
 
 
-        {/* --- Protected Routes --- */}
-        <Route element={<ProtectedRoutes />}>
-          <Route path="/tenders" element={<TenderSite />} />
-          <Route path="/admin/events" element={<EventManagement />} />
-        </Route>
-        {/* --- Catch-all Route (404 Not Found) --- */}
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes></Content>
+              {/* --- Catch-all Route (404 Not Found) --- */}
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </Content>
         </Layout>
-        <Footer style={{ backgroundColor: 'black' }}>
-          <FooterBar/>
+        <Footer style={{ backgroundColor: "#FFE600" }}>
+          <FooterBar />
         </Footer>
       </Layout>
-
     </BrowserRouter>
   );
 }

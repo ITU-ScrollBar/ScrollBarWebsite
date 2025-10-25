@@ -22,6 +22,7 @@ import {
   ref,
   uploadBytes,
   getDownloadURL,
+  deleteObject,
 } from 'firebase/storage';
 
 import { auth, db, storage } from '../index';
@@ -58,7 +59,7 @@ interface ResetPasswordPayload {
 }
 
 // User profile type
-interface UserProfile {
+export interface UserProfile {
   displayName: string;
   email: string;
   studyline: string;
@@ -171,6 +172,17 @@ export const uploadProfilePicture = async (
     customMetadata: { uploadedBy: email },
   });
   return await getDownloadURL(storageRef);
+};
+
+// Delete profile picture from storage when new picture is uploaded
+export const deleteFileFromStorage = async (filePath: string): Promise<void> => {
+  try {
+    const storageRef = ref(storage, filePath);
+    await deleteObject(storageRef);
+  } catch (error) {
+    console.error('Error deleting file from storage:', error);
+    throw error;
+  }
 };
 
 // Save user data to Firestore
