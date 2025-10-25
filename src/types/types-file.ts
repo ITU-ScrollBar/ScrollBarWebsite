@@ -56,7 +56,7 @@ export interface Event {
   end: Date;
   description: string;
   displayName: string;
-  where: string;
+  location: string;
   published: boolean;
   internal: boolean;
   [id: string]: any;

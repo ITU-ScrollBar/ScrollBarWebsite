@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Event } from '../../../types/types-file';
 import Title from 'antd/es/typography/Title'
 import useEvents from '../../../hooks/useEvents';
-import { Button, DatePicker, Table, Tabs } from 'antd';
+import { Button, DatePicker, Tabs } from 'antd';
 import dayjs from 'dayjs';
 import TextArea from 'antd/es/input/TextArea';
 import ReactMarkdown from 'react-markdown';
@@ -12,7 +12,7 @@ import ShiftInfo from './ShiftInfo';
 
 export default function EventInfo(props : {event: Event}) {
 
-    const { updateEvent } = useEvents();
+    const { updateEvent,removeEvent } = useEvents();
     const [activeTab, setActiveTab] = useState('edit')
     const {shiftState, updateShift} = useShifts();
 
@@ -31,6 +31,7 @@ export default function EventInfo(props : {event: Event}) {
 
   return (
     <div>
+    <Button type="primary" danger onClick={() => removeEvent(props.event.id)} >Delete Event</Button>
 
     <Title level={3} editable={{onChange: (value) => updateEvent(props.event.id,'displayName',value) }}>{props.event.displayName}</Title>
     <Title level={4} editable={{onChange: (value) => updateEvent(props.event.id,'where',value) }}>{props.event.where}</Title>

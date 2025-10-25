@@ -11,7 +11,7 @@ import {
   Unsubscribe,
 } from 'firebase/firestore';
 import { db } from '..';
-import { Event, EventCreateParams } from '../../types/types-file'; // Assuming you define your Event type here
+import { EventCreateParams } from '../../types/types-file'; // Assuming you define your Event type here
 
 const env =import.meta.env.VITE_APP_ENV as string;
 
@@ -31,8 +31,8 @@ export const createEvent = (event: EventCreateParams): Promise<DocumentData> => 
 /**
  * Deletes an event by ID.
  */
-export const deleteEvent = (event: Event): Promise<void> => {
-  const docRef = doc(getEventsCollection(), event.id!);
+export const deleteEvent = (id: string): Promise<void> => {
+  const docRef = doc(getEventsCollection(), id);
   return deleteDoc(docRef);
 };
 

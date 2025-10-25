@@ -11,8 +11,6 @@ export default function ShiftInfo(props: {
 
 
 
-  console.log(shift)
-
   return (
     <Card title={shift.title} className="mb-4 shadow-sm rounded-lg">
       <div className="space-y-3">
