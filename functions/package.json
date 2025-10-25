@@ -2,17 +2,19 @@
   "name": "functions",
   "private": true,
   "scripts": {
+    "prebuild": "node scripts/copy-shared-types.js",
     "build": "tsc",
     "watch": "tsc -w",
-    "start": "npm run build && npx @google-cloud/functions-framework --target=calendar --source=lib/index.js --port=5001",
-    "emulate": "firebase emulators:start --only functions",
+    "start": "npm run build && npx firebase emulators:start --only functions,firestore",
+    "emulate": "firebase emulators:start --only functions,firestore",
     "deploy": "firebase deploy --only functions"
   },
   "dependencies": {
     "express": "^4.18.2",
     "firebase-admin": "^13.5.0",
-    "firebase-functions": "^4.9.0",
-    "ics": "^2.41.0"
+    "firebase-functions": "^6.6.0",
+    "ics": "^2.41.0",
+    "mailgun.js": "^12.1.1"
   },
   "main": "lib/index.js",
   "engines": {

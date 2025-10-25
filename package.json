@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "start": "npm run build && npx firebase emulators:start",
     "lint": "eslint .",
     "preview": "vite preview",
     "lint:fix": "eslint \"src/**/*.{js,jsx,ts,tsx}\" --fix"

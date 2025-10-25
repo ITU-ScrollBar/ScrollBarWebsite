@@ -31,7 +31,7 @@ export const CalendarSection = () => {
         return; // authentication and loading handled elsewhere
     }
 
-    const calendarUrl = `http://dev.scrollbar.dk/calendar/${currentUser.uid}`;
+    const calendarUrl = `${globalThis.location.origin}/calendar/${currentUser.uid}`;
 
     const googleCalendarUrl = `https://calendar.google.com/calendar/u/0/r?cid=${calendarUrl}`
     const appCalendarUrl = `webcal:${calendarUrl}`;

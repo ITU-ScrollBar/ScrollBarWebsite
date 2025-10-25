@@ -1,5 +1,6 @@
 import express from 'express';
 import * as admin from 'firebase-admin';
+import { Timestamp } from 'firebase-admin/firestore';
 import { createEvents, EventAttributes } from 'ics';
 
 var serviceAccount = require("../.credentials.json");
@@ -105,6 +106,7 @@ app.get('/calendar/:uid', async (req, res) => {
       .doc('dev')
       .collection('engagements')
       .where('userId', '==', uid)
+      .where('shiftEnd', '>=', Timestamp.now())
       .get();
 
     const shiftIds = userEngagementsSnapshot.docs.map(doc => doc.data().shiftId);
@@ -113,7 +115,7 @@ app.get('/calendar/:uid', async (req, res) => {
       .collection('env')
       .doc('dev')
       .collection('shifts')
-      .where(admin.firestore.FieldPath.documentId(), 'in', shiftIds)
+      .where('__name__', 'in', shiftIds)
       .get();
     
     const relatedEngagementsSnapshot = await db
@@ -129,7 +131,7 @@ app.get('/calendar/:uid', async (req, res) => {
       .collection('env')
       .doc('dev')
       .collection('events')
-      .where(admin.firestore.FieldPath.documentId(), 'in', eventIds)
+      .where('__name__', 'in', eventIds)
       .get();
 
     const eventsMap = eventsSnapshot.docs.map(doc => {
