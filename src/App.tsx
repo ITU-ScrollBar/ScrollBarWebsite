@@ -15,7 +15,7 @@ import { Layout } from 'antd';
 import { Content, Footer } from 'antd/es/layout/layout';
 
 import FooterBar from './components/HomePage/FooterBar';
-import TestPage from './pages/Admin/EventManagement/TestPage';
+import EventManagement from './pages/Admin/EventManagement/EventManagement';
 import Register from './pages/Register';
 
 
@@ -38,14 +38,13 @@ function App() {
         {/* --- Public Routes --- */}
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/TestPage" element={<TestPage />} />
         <Route path="/register" element={<Register />} />
 
 
         {/* --- Protected Routes --- */}
         <Route element={<ProtectedRoutes />}>
           <Route path="/tenders" element={<TenderSite />} />
-          <Route path="/admin/events" element={<TestPage />} />
+          <Route path="/admin/events" element={<EventManagement />} />
         </Route>
         {/* --- Catch-all Route (404 Not Found) --- */}
         <Route path="*" element={<NotFoundPage />} />
