@@ -21,7 +21,7 @@ type EventFirebase = {
   start: Timestamp;
   end: Timestamp;
   description: string;
-  title: string;
+  displayName: string;
   location: string;
   published: boolean;
   internal: boolean;
@@ -86,8 +86,8 @@ const addEvent = (event: EventCreateParams) => {
     });
 };
 
-  const removeEvent = (event: Event) => {
-    return deleteEvent(event);
+  const removeEvent = (id: string) => {
+    return deleteEvent(id);
   };
 
   const updateEvent = (id: string, field: string, value: any) => {
