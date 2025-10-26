@@ -10,14 +10,30 @@ import { ShiftFiltering } from "../../types/types-file";
 import { CalendarSection } from "../../components/CalendarComponent";
 import { Loading } from "../../components/Loading";
 import Shifts from "./Shifts";
+import useEngagements from "../../hooks/useEngagements";
+import { useEffect, useState } from "react";
 
 export default function Profile() {
   const { loading, currentUser } = useAuth();
+  const { engagementState, getProfileData } = useEngagements();
+  const [userData, setUserData] = useState<{ firstShift: Date | null, shiftCount: number | null } | null>(null);
+  useEffect(() => {
+    (async () => {
+      if (currentUser) {
+        const data = await getProfileData(currentUser.uid);
+        setUserData(data);
+      }
+    })();
+  }, [currentUser, getProfileData]);
 
   const setStudyLine = (studyLine: string) => {
     if (!currentUser) return;
     updateUser({ id: currentUser.uid, field: "studyline", value: studyLine });
   };
+
+  if (engagementState.loading || !engagementState.isLoaded || !engagementState.engagements) {
+    return <Loading centerOverlay={true} resources={["your shifts"]} />;
+  }
 
   type UserProfile = {
     uid: string;
@@ -45,8 +61,8 @@ export default function Profile() {
     roles: currentUser.roles ?? [],
     active: true,
     photoUrl: currentUser.photoUrl ?? avatar,
-    memberSince: 2004,
-    totalShifts: 5,
+    memberSince: userData?.firstShift ? userData.firstShift.getFullYear() : new Date().getFullYear(),
+    totalShifts: userData?.shiftCount ?? 0,
   };
 
   const EXCLUDED_ROLES = ["newbie", "regular_access"];

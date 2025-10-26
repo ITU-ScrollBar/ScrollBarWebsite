@@ -85,7 +85,7 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
   
   const avatarMenuItems: MenuItem[] = [
     {
-      key: 'profile',
+      key: 'avatar',
       label: (
         <div style={{ display: 'flex' }}>
           <UserAvatar user={currentUser} size={64} />

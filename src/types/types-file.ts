@@ -67,7 +67,7 @@ export enum engagementType {
 export interface Engagement {
   id: string;
   type: engagementType;
-  key?: string;
+  key: string;
   shiftId: string;
   shiftEnd: Date;
   userId?: string;

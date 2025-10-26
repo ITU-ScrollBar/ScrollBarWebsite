@@ -6,6 +6,7 @@ import {
   setUpForGrabs as updateGrabs,
   streamEngagements,
   takeShift as updateShift,
+  getUserEngagementsData,
 } from '../firebase/api/engagements'; // Adjust the import path as necessary
 import { Engagement, EngagementState } from '../types/types-file'; // Make sure Engagement is defined
 
@@ -22,14 +23,15 @@ const useEngagements = () => {
     const unsubscribe = streamEngagements(
       (snapshot) => {
         const updatedEngagements = snapshot.docs.map((doc) => {
-            const data = doc.data() as Engagement;
+            const data = doc.data();
             const id = doc.id;
           
             return {
               ...data,
+              shiftEnd: data.shiftEnd.toDate(), // Convert Firestore Timestamp to JS Date
               id,
               key: id, // key guaranteed to be string
-            };
+            } as Engagement;
           });
           
   
@@ -46,6 +48,10 @@ const useEngagements = () => {
   
     return unsubscribe;
   }, []);
+
+  const getProfileData = (uid: string) => {
+    return getUserEngagementsData(uid);
+  };
 
   const addEngagement = (newEngagement: Engagement) => {
     return createEngagement(newEngagement);
@@ -69,6 +75,7 @@ const useEngagements = () => {
     removeEngagement,
     takeShift,
     setUpForGrabs,
+    getProfileData,
   };
 };
 
