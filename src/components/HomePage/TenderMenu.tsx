@@ -95,10 +95,6 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
         {
           key: 'logout', 
           label: <strong onClick={() => {logout(); navigate('/')}}>Logout</strong> 
-        },
-        {
-          key: 'profile',
-          label: <strong onClick={() => navigate('/members/profile')}>Profile</strong>
         }
       ]
     }
