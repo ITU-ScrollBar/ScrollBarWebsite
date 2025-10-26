@@ -1,5 +1,5 @@
 import { Button, Divider, Drawer, Form, Input, notification, Select, Switch, Table, TableColumnsType, TableColumnType, Tooltip, Upload } from "antd"
-import { StudyLine, Tender } from "../../types/types-file";
+import { Role, StudyLine, Tender } from "../../types/types-file";
 import useTenders from "../../hooks/useTenders";
 import { Key, useEffect, useState } from "react";
 import { getStudyLines } from "../../firebase/api/authentication";
@@ -7,6 +7,8 @@ import { EditOutlined } from '@ant-design/icons'
 import StudyLinePicker from "../../pages/members/StudyLinePicker";
 import { UserAvatarWithUpload } from "../UserAvatar";
 import { useWindowSize } from "../../hooks/useWindowSize";
+import RoleTag from "../RoleTag";
+import { roleToLabel } from "../../pages/members/helpers";
 
 export const ExistingUsersTab = () => {
     const { tenderState, updateTender } = useTenders();
@@ -43,7 +45,7 @@ export const ExistingUsersTab = () => {
             title: 'Role',
             dataIndex: 'roles',
             key: 'roles',
-            render: (roles: string[], record: Tender) => (record.isAdmin ? ['admin', ...roles] : [...roles]).join(', ') || 'No roles',
+            render: (roles: string[], record: Tender) => (record.isAdmin ? ['admin', ...roles] : roles).map(role => <RoleTag key={role} role={role} />) || 'No roles',
             filters: [
                 { text: 'Admins', value: 'admin' },
                 { text: 'Board members', value: 'board' },
@@ -100,21 +102,11 @@ export const ExistingUsersTab = () => {
                 <Form.Item label="Roles">
                     <Select
                         mode="multiple"
-                        options={[
-                            { value: 'regular_access', label: 'Regular Access' },
-                            { value: 'tender', label: 'Tender' },
-                            { value: 'newbie', label: 'Newbie' },
-                            { value: 'anchor', label: 'Anchor' },
-                            { value: 'board', label: 'Board' },
-                            { value: 'tender_manager', label: 'Tender Manager' },
-                            { value: 'shift_manager', label: 'Shift Manager' },
-                            { value: 'user_manager', label: 'User Manager' },
-                            { value: 'event_manager', label: 'Event Manager' },
-                        ]}
-                        value={editingUser?.roles}
+                        options={Object.entries(Role).map(([value, label]) => ({ value, label: roleToLabel(label) }))}
+                        value={editingUser?.roles?.map(role => role as Role) || []}
                         onChange={(value) => {
                             setEditingUser((prev) => prev ? ({ ...prev, roles: value }) : prev);
-                            if (editingUser) updateTender(editingUser.uid, 'roles', value);
+                            if (editingUser) updateTender(editingUser.uid, 'roles', value.map(role => role.toLowerCase()));
                         }}
                     />
                 </Form.Item>

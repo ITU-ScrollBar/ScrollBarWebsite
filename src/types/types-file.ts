@@ -166,3 +166,18 @@ export type EngagementState = {
   isLoaded: boolean;
   engagements: (Engagement & { key: string })[];
 };
+
+export enum Role {
+    ADMIN = "admin",
+    ANCHOR = "anchor",
+    NEWBIE = "newbie",
+    BOARD = "board",
+    USER_MANAGER = "user_manager",
+    SHIFT_MANAGER = "shift_manager",
+    EVENT_MANAGER = "event_manager",
+    REGULAR_ACCESS = "regular_access",
+    PASSIVE = "passive",
+    LEGACY = "legacy",
+    TENDER = "tender",
+}
+

@@ -20,83 +20,85 @@ import { ShiftFiltering } from "./types/types-file";
 import GlobalSettingsPage from "./pages/admin/GlobalSettingsPage";
 import { UserManagerPage } from "./pages/admin/UserManagerPage";
 import { setTwoToneColor } from '@ant-design/icons';
+import { App as AntdApp } from "antd"
 
 function App() {
   setTwoToneColor("#FFE600");
   return (
-    <BrowserRouter>
-      <Layout
-        style={{
-          minHeight: "100vh",
-          minWidth: "100%",
-          flexDirection: "column",
-          height: "auto",
-        }}
-      >
-        <Layout>
-          <Content>
-            <Routes>
-              {/* --- Public Routes --- */}
-              <Route path="/" element={<HomePage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/TestPage" element={<TestPage />} />
-              <Route path="/register" element={<Register />} />
+    <AntdApp>
+      <BrowserRouter>
+        <Layout
+          style={{
+            minHeight: "100vh",
+            minWidth: "100%",
+            flexDirection: "column",
+            height: "auto",
+          }}
+        >
+          <Layout>
+            <Content>
+              <Routes>
+                {/* --- Public Routes --- */}
+                <Route path="/" element={<HomePage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/TestPage" element={<TestPage />} />
+                <Route path="/register" element={<Register />} />
 
-              {/* --- Protected Routes --- */}
-              <Route element={<ProtectedRoutes />}>
-                <Route element={<TenderMenu />}>
-                  <Route
-                    path="/members/profile"
-                    element={
-                      <Profile />
-                    }
-                  />
-                  <Route
-                    path="/tenders/allshifts"
-                    element={
-                      <Shifts
-                        filter={ShiftFiltering.ALL_SHIFTS}
-                        title="All Shifts"
-                      />
-                    }
-                  />
-                  <Route
-                    path="/tenders/upforgrabs"
-                    element={
-                      <Shifts
-                        filter={ShiftFiltering.UP_FOR_GRABS}
-                        title="Up for Grabs"
-                      />
-                    }
-                  />
-                  <Route path="/members/profile" element={<Profile />} />
-                  {/* --- Admin Routes --- */}
-                  <Route element={<RoleProtectedRoute />}>
-                    <Route path="admin/settings" element={<GlobalSettingsPage />} />
-                  </Route>
-                  <Route element={<RoleProtectedRoute requiredRole={'event_manager'} />}>
-                    <Route path="admin/events" element={<div>Manage Events Page (to be implemented)</div>} />
-                  </Route>
-                  <Route element={<RoleProtectedRoute requiredRole={'shifts_manager'} />}>
-                    <Route path="admin/shifts" element={<div>Manage Shifts Page (to be implemented)</div>} />
-                  </Route>
-                  <Route element={<RoleProtectedRoute requiredRole={'user_manager'} />}>
-                    <Route path="admin/users" element={<UserManagerPage />} />
+                {/* --- Protected Routes --- */}
+                <Route element={<ProtectedRoutes />}>
+                  <Route element={<TenderMenu />}>
+                    <Route
+                      path="/members/profile"
+                      element={
+                        <Profile />
+                      }
+                    />
+                    <Route
+                      path="/tenders/allshifts"
+                      element={
+                        <Shifts
+                          filter={ShiftFiltering.ALL_SHIFTS}
+                          title="All Shifts"
+                        />
+                      }
+                    />
+                    <Route
+                      path="/tenders/upforgrabs"
+                      element={
+                        <Shifts
+                          filter={ShiftFiltering.UP_FOR_GRABS}
+                          title="Up for Grabs"
+                        />
+                      }
+                    />
+                    <Route path="/members/profile" element={<Profile />} />
+                    {/* --- Admin Routes --- */}
+                    <Route element={<RoleProtectedRoute />}>
+                      <Route path="admin/settings" element={<GlobalSettingsPage />} />
+                    </Route>
+                    <Route element={<RoleProtectedRoute requiredRole={'event_manager'} />}>
+                      <Route path="admin/events" element={<div>Manage Events Page (to be implemented)</div>} />
+                    </Route>
+                    <Route element={<RoleProtectedRoute requiredRole={'shifts_manager'} />}>
+                      <Route path="admin/shifts" element={<div>Manage Shifts Page (to be implemented)</div>} />
+                    </Route>
+                    <Route element={<RoleProtectedRoute requiredRole={'user_manager'} />}>
+                      <Route path="admin/users" element={<UserManagerPage />} />
+                    </Route>
                   </Route>
                 </Route>
-              </Route>
 
-
-              {/* --- Catch-all Route (404 Not Found) --- */}
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </Content>
+                {/* --- Catch-all Route (404 Not Found) --- */}
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </Content>
+          </Layout>
+          <Footer style={{ backgroundColor: "#FFE600" }}>
+            <FooterBar />
+          </Footer>
         </Layout>
-        <Footer style={{ backgroundColor: "#FFE600" }}>
-          <FooterBar />
-        </Footer>
-      </Layout>
-    </BrowserRouter>
+      </BrowserRouter>
+    </AntdApp>
   );
 }
 
