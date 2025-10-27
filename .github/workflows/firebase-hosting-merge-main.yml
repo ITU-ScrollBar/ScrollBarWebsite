@@ -33,6 +33,7 @@ jobs:
       - name: Run migrations
         env:
           VITE_APP_ENV: 'dev'
+          FIREBASE_SERVICE_ACCOUNT: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_SCROLLBARWEB2 }}'
         run: yarn migrate
 
   build_and_deploy:

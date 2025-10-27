@@ -8,7 +8,7 @@ export type MigrationProps = {
   env: string,
 }
 
-const serviceAccount = JSON.parse(fs.readFileSync("./.credentials.json", "utf8"));
+const serviceAccount =  JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || fs.readFileSync("./.credentials.json", "utf8"));
 
 initializeApp({credential: cert(serviceAccount)});
 
