@@ -13,8 +13,30 @@ on:
       - '.github/**'
       - '.vscode/**'
 jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install deps
+        run: npm ci
+
+      # Write service account JSON from a GitHub secret
+      - name: Write credentials
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_SCROLLBARWEB2 }}' > $HOME/.credentials.json
+
+      - name: Run migrations
+        env:
+          VITE_APP_ENV: 'dev'
+        run: npm run migrate
+
   build_and_deploy:
     runs-on: ubuntu-latest
+    needs: migrate
     env:
       HTTPS: "true"
       FIREBASE_API_KEY: '${{ secrets.FIREBASE_API_KEY }}'

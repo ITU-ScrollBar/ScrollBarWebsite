@@ -13,7 +13,7 @@ Small, focused Firebase Cloud Functions that power the Calendar backend for the 
 
 2. Configure firebase project by navigating to [Firebase Service accounts](https://console.firebase.google.com/u/0/project/_/settings/serviceaccounts/adminsdk)
 
-3. Generate new private key and save it in `./functions/.credentials.json` - make sure not to expose this to anyone else.
+3. Generate new private key and save it in `./.credentials.json` (root of repository) - make sure not to expose this to anyone else.
 
 4. Deploy functions
     ```bash

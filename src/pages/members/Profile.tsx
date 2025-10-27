@@ -12,6 +12,7 @@ import { Loading } from "../../components/Loading";
 import Shifts from "./Shifts";
 import useEngagements from "../../hooks/useEngagements";
 import { useEffect, useState } from "react";
+import RoleTag from "../../components/RoleTag";
 
 export default function Profile() {
   const { loading, currentUser } = useAuth();
@@ -130,13 +131,12 @@ export default function Profile() {
                   <Text>Email: {userProfile?.email}</Text>
 
                   <Text>
-                    Role:{" "}
+                    {(userProfile?.roles ?? []).length > 1 ? "Roles: " : "Role: "}
                     {(userProfile?.roles ?? [])
                       .filter((role) => !EXCLUDED_ROLES.includes(role))
                       .map(
-                        (role) => role.charAt(0).toUpperCase() + role.slice(1)
-                      )
-                      .join(", ")}
+                        (role) => <RoleTag key={role} role={role} />
+                      )}
                   </Text>
 
                   <Title level={4} style={{ marginTop: 16, marginBottom: 8 }}>

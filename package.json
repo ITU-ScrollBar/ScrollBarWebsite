@@ -9,7 +9,8 @@
     "start": "npm run build && npx firebase emulators:start",
     "lint": "eslint .",
     "preview": "vite preview",
-    "lint:fix": "eslint \"src/**/*.{js,jsx,ts,tsx}\" --fix"
+    "lint:fix": "eslint \"src/**/*.{js,jsx,ts,tsx}\" --fix",
+    "migrate": "node ./migrations/migration-runner.ts"
   },
   "dependencies": {
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
@@ -17,6 +18,7 @@
     "@uiw/react-md-editor": "^4.0.8",
     "antd": "^5.27.6",
     "firebase": "^12.4.0",
+    "firebase-admin": "^13.5.0",
     "prettier": "^3.6.2",
     "prettier-eslint": "^16.4.2",
     "react": "^19.2.0",
