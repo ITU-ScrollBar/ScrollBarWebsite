@@ -26,10 +26,6 @@ jobs:
       - name: Install deps
         run: yarn install
 
-      # Write service account JSON from a GitHub secret
-      - name: Write credentials
-        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_SCROLLBARWEB2 }}' > $HOME/.credentials.json
-
       - name: Run migrations
         env:
           VITE_APP_ENV: 'dev'
