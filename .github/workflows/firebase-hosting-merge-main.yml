@@ -24,7 +24,7 @@ jobs:
           node-version: 22
 
       - name: Install deps
-        run: npm ci
+        run: yarn install
 
       # Write service account JSON from a GitHub secret
       - name: Write credentials
@@ -33,7 +33,7 @@ jobs:
       - name: Run migrations
         env:
           VITE_APP_ENV: 'dev'
-        run: npm run migrate
+        run: yarn migrate
 
   build_and_deploy:
     runs-on: ubuntu-latest
