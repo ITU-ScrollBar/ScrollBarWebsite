@@ -81,7 +81,7 @@ export interface Event {
   start: Date;
   end: Date;
   description: string;
-  title: string;
+  displayName: string;
   location: string;
   published: boolean;
   internal: boolean;
@@ -97,8 +97,8 @@ export type EventCreateParams = {
   start: Date;
   end: Date;
   description: string;
-  title: string;
-  location: string;
+  displayName: string;
+  where: string;
   published: boolean;
   internal: boolean;
 };
@@ -118,12 +118,13 @@ export enum ShiftFiltering {
 // Shift-related types
 export interface Shift {
   id: string;
-  key?: string;
-  start: FirebaseDate;
-  end: FirebaseDate;
   eventId: string;
-  title: string;
   location: string;
+  title: string;
+  tenders: number;
+  anchors: number;
+  start: Date;
+  end: Date;
 }
 
 export interface ShiftUpdateParams {
