@@ -1,5 +1,5 @@
 .env
-functions/.credentials.json
+.credentials.json
 .firebase
 
 # Type-file copied to functions project

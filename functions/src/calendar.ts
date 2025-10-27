@@ -3,7 +3,7 @@ import * as admin from 'firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 import { createEvents, EventAttributes } from 'ics';
 
-var serviceAccount = require("../.credentials.json");
+var serviceAccount = require("../../.credentials.json");
 
 // Safe admin init (prevents multiple inits during local tests)
 if (!admin.apps.length) {
