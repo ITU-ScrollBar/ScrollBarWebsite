@@ -81,12 +81,8 @@ const addInternalEvent = (internalEvent: InternalEventCreateParams) => {
     return deleteInternalEvent(internalEvent);
   };
 
-  const updateInternalEvent = (id: string, field: string, value: any) => {
-    return updateInternalEventInDb({
-      id,
-      field,
-      value,
-    });
+  const updateInternalEvent = (internalEvent: InternalEvent) => {
+    return updateInternalEventInDb(internalEvent);
   };
 
   return { internalEventState, addInternalEvent, removeInternalEvent, updateInternalEvent };

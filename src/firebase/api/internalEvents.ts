@@ -32,7 +32,7 @@ export const createInternalEvent = (internalEvent: InternalEventCreateParams): P
  * Deletes an internal event by ID.
  */
 export const deleteInternalEvent = (internalEvent: InternalEvent): Promise<void> => {
-  const docRef = doc(getInternalEventsCollection(), internalEvent.id!);
+  const docRef = doc(getInternalEventsCollection(), internalEvent.id);
   return deleteDoc(docRef);
 };
 
@@ -41,11 +41,14 @@ export const deleteInternalEvent = (internalEvent: InternalEvent): Promise<void>
  */
 export const updateInternalEvent = ({
   id,
-  field,
-  value,
-}: InternalEventUpdateParams): Promise<void> => {
+  description,
+  end,
+  start,
+  location,
+  title,
+}: InternalEvent): Promise<void> => {
   const docRef = doc(getInternalEventsCollection(), id);
-  return updateDoc(docRef, { [field]: value });
+  return updateDoc(docRef, { description, end, start, location, title });
 };
 
 /**
