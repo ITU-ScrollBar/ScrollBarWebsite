@@ -84,7 +84,6 @@ export interface Event {
   title: string;
   location: string;
   published: boolean;
-  internal: boolean;
   [id: string]: any;
 }
 
@@ -181,3 +180,25 @@ export enum Role {
     TENDER = "tender",
 }
 
+export type InternalEvent = {
+    id: string;
+    title: string;
+    description: string;
+    start: Date;
+    end: Date;
+    location: string;
+}
+
+export type InternalEventCreateParams = {
+  start: Date;
+  end: Date;
+  description: string;
+  title: string;
+  location: string;
+};
+
+export interface InternalEventUpdateParams {
+  id: string;
+  field: string;
+  value: any;
+}
