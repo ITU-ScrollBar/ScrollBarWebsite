@@ -8,6 +8,7 @@ import { MenuOutlined } from '@ant-design/icons'
 import { useWindowSize } from "../../hooks/useWindowSize";
 import { UserAvatar } from "../UserAvatar";
 import { Loading } from "../Loading";
+import { Role } from "../../types/types-file";
 
 interface TenderMenuProps {
   children?: ReactNode;
@@ -45,6 +46,7 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
     || currentUser?.roles.includes('tender_manager')
     || currentUser?.roles.includes('shift_manager')
     || currentUser?.roles.includes('user_manager')
+    || currentUser?.roles.includes('board_member')
   ) {
     const adminItems = [];
     if (currentUser?.isAdmin || currentUser?.roles.includes('tender_manager')) {
@@ -63,6 +65,12 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
       adminItems.push({
         label: 'Manage Users',
         key: 'admin/users',
+      });
+    }
+    if (currentUser?.isAdmin || currentUser?.roles.includes(Role.BOARD)) {
+      adminItems.push({
+        label: 'Manage Internal Events',
+        key: 'admin/internalEvents',
       });
     }
     if (currentUser?.isAdmin) {
