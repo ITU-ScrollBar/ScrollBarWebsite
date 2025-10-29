@@ -152,6 +152,7 @@ export type Tender = {
   isAdmin: boolean;
   roles?: string[];
   studyline?: string;
+  teamIds?: string[];
   // Add other fields here
 };
 
@@ -199,3 +200,12 @@ export interface InternalEventUpdateParams {
   field: string;
   value: any;
 }
+
+export type Team = {
+  id: string;
+  name: string;
+};
+
+export type TeamCreateParams = {
+  name: string;
+};
