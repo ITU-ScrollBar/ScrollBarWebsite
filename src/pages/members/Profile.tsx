@@ -13,11 +13,15 @@ import Shifts from "./Shifts";
 import useEngagements from "../../hooks/useEngagements";
 import { useEffect, useState } from "react";
 import RoleTag from "../../components/RoleTag";
+import useInternalEvents from "../../hooks/useInternalEvents";
+import { renderInternalEvent } from "../admin/InternalEventsPage";
 
 export default function Profile() {
   const { loading, currentUser } = useAuth();
   const { engagementState, getProfileData } = useEngagements();
   const [userData, setUserData] = useState<{ firstShift: Date | null, shiftCount: number | null } | null>(null);
+  const { internalEventState } = useInternalEvents();
+
   useEffect(() => {
     (async () => {
       if (currentUser) {
@@ -163,6 +167,9 @@ export default function Profile() {
                 style={{ width: "100%" }}
               >
                 <div>
+                  {internalEventState.internalEvents.map((internalEvent) => (
+                    renderInternalEvent({ internalEvent })
+                  ))}
                   <Shifts filter={ShiftFiltering.MY_SHIFTS} title="My Shifts" />
                 </div>
               </Space>

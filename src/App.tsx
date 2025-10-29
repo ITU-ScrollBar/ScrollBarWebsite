@@ -21,6 +21,7 @@ import GlobalSettingsPage from "./pages/admin/GlobalSettingsPage";
 import { UserManagerPage } from "./pages/admin/UserManagerPage";
 import { setTwoToneColor } from '@ant-design/icons';
 import { App as AntdApp } from "antd"
+import { InternalEventsPage } from "./pages/admin/InternalEventsPage";
 
 function App() {
   setTwoToneColor("#FFE600");
@@ -78,6 +79,9 @@ function App() {
                     </Route>
                     <Route element={<RoleProtectedRoute requiredRole={'event_manager'} />}>
                       <Route path="admin/events" element={<div>Manage Events Page (to be implemented)</div>} />
+                    </Route>
+                    <Route element={<RoleProtectedRoute requiredRole={'board_member'} />}>
+                      <Route path="admin/internalEvents" element={<InternalEventsPage />} />
                     </Route>
                     <Route element={<RoleProtectedRoute requiredRole={'shifts_manager'} />}>
                       <Route path="admin/shifts" element={<div>Manage Shifts Page (to be implemented)</div>} />

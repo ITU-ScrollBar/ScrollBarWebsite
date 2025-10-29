@@ -76,17 +76,19 @@ export interface Engagement {
 }
 
 // Event-related types
-export interface Event {
-  id: string;
-  start: Date;
-  end: Date;
-  description: string;
-  title: string;
-  location: string;
-  published: boolean;
-  internal: boolean;
-  [id: string]: any;
+export interface BaseEvent {
+    id: string;
+    title: string;
+    description: string;
+    start: Date;
+    end: Date;
+    location: string;
 }
+
+export type Event = {
+  published: boolean;
+  [id: string]: any;
+} & BaseEvent;
 
 export interface FirebaseDate {
   seconds: number;
@@ -181,3 +183,19 @@ export enum Role {
     TENDER = "tender",
 }
 
+export type InternalEvent = {
+} & BaseEvent;
+
+export type InternalEventCreateParams = {
+  start: Date;
+  end: Date;
+  description: string;
+  title: string;
+  location: string;
+};
+
+export interface InternalEventUpdateParams {
+  id: string;
+  field: string;
+  value: any;
+}
