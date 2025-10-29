@@ -20,6 +20,7 @@ type InternalEventFirebase = {
   start: Timestamp;
   end: Timestamp;
   description: string;
+  scope: string;
   title: string;
   location: string;
 };

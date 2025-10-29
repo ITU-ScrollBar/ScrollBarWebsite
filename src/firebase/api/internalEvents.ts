@@ -45,10 +45,11 @@ export const updateInternalEvent = ({
   end,
   start,
   location,
+  scope,
   title,
 }: InternalEvent): Promise<void> => {
   const docRef = doc(getInternalEventsCollection(), id);
-  return updateDoc(docRef, { description, end, start, location, title });
+  return updateDoc(docRef, { description, end, start, location, scope, title });
 };
 
 /**

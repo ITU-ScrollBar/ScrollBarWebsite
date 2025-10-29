@@ -1,14 +1,15 @@
 import { Content } from "antd/es/layout/layout";
 import Loading from "../../components/Loading";
 import useInternalEvents from "../../hooks/useInternalEvents";
-import { Button, Card, Form, DatePicker, Input, Modal, Typography, Popconfirm } from "antd";
-import { InternalEvent, InternalEventCreateParams } from "../../types/types-file";
+import { Button, Card, Form, DatePicker, Input, Modal, Typography, Popconfirm, Select } from "antd";
+import { InternalEvent, InternalEventCreateParams, scopeOptions, Team } from "../../types/types-file";
 import { useEffect, useState } from "react";
 import type { Dayjs } from "dayjs";
 import { DeleteOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { deleteInternalEvent, updateInternalEvent } from "../../firebase/api/internalEvents";
 import { useWindowSize } from "../../hooks/useWindowSize";
+import useTeams from "../../hooks/useTeams";
 
 export const InternalEventsPage = () => {
     const { internalEventState, addInternalEvent } = useInternalEvents();
@@ -16,6 +17,8 @@ export const InternalEventsPage = () => {
     const [editingEvent, setEditingEvent] = useState<InternalEvent | null>(null);
     const [internalEvents, setInternalEvents] = useState<InternalEvent[]>([]);
     const { isMobile } = useWindowSize();
+    const { teamState } = useTeams();
+
 
     useEffect(() => {
         setInternalEvents(internalEventState.internalEvents.sort((a, b) => a.start.getTime() - b.start.getTime()));
@@ -44,7 +47,7 @@ export const InternalEventsPage = () => {
         </div>
         {isModalVisible && <CreateOrEditModal isOpen={isModalVisible} onSave={handleSave} onCancel={() => {setIsModalVisible(false); setEditingEvent(null)}} initialValues={editingEvent ? toFormValues(editingEvent) : undefined} />}
         <Content>
-            {internalEvents.map((internalEvent) => renderInternalEvent({internalEvent, onEdit: (editedEvent) => {
+            {internalEvents.map((internalEvent) => renderInternalEvent({internalEvent, teams: teamState.teams, onEdit: (editedEvent) => {
                 setEditingEvent(editedEvent);
                 setIsModalVisible(true);
             }}))}
@@ -52,7 +55,7 @@ export const InternalEventsPage = () => {
     </div>;
 };
 
-export const renderInternalEvent = ({ internalEvent, onEdit }: {internalEvent: InternalEvent, onEdit?: (internalEvent: InternalEvent) => void}) => {
+export const renderInternalEvent = ({ internalEvent, teams, onEdit }: {internalEvent: InternalEvent, teams: Team[], onEdit?: (internalEvent: InternalEvent) => void}) => {
     const actions = onEdit ? [
             <Button key="edit" type="link" onClick={() => {
                 onEdit(internalEvent);
@@ -70,12 +73,18 @@ export const renderInternalEvent = ({ internalEvent, onEdit }: {internalEvent: I
             </Popconfirm>,
         ] : [];
 
+    const team = teams.find((team) => team.id === internalEvent.scope);
+    const scopeText = (team
+        ? team.name
+        : internalEvent.scope as string);
+
     return (
         <Card key={internalEvent.id} style={{ marginBottom: 24, boxShadow: "inset 0 1px 3px rgba(7, 7, 7, 0.3)" }} actions={actions}>
             <Typography.Title style={{ marginTop: 0 }} level={4}>{internalEvent.title}</Typography.Title>
             <Typography.Text strong>Location: {internalEvent.location}</Typography.Text><br />
             {/* Format date depending on multi-day or single-day event */}
             <Typography.Text strong>Date: {formatDate(internalEvent.start, internalEvent.end)}</Typography.Text><br />
+            {onEdit && <> <Typography.Text strong>Relevant for: {scopeText.charAt(0).toUpperCase() + scopeText.slice(1)}</Typography.Text><br /></>}
             <Typography.Paragraph>{internalEvent.description}</Typography.Paragraph>
         </Card>
     );
@@ -96,12 +105,19 @@ type InternalEventFormValues = {
     id?: string;
     title: string;
     location: string;
+    scope: string;
     date: [Dayjs, Dayjs];
-    description: string;
+    description?: string;
 };
 
 const CreateOrEditModal = ({ isOpen, onSave, onCancel, initialValues }: { isOpen: boolean; onSave: (values: InternalEventFormValues) => void; onCancel: () => void; initialValues?: InternalEventFormValues }) => {
     const [form] = Form.useForm<InternalEventFormValues>();
+    const { teamState } = useTeams();
+    const [availableScopes, setAvailableScopes] = useState<(Team | typeof scopeOptions[number])[]>([]);
+
+    useEffect(() => {
+        setAvailableScopes([...scopeOptions, ...teamState.teams]);
+    }, [teamState.teams]);
 
     if (initialValues) {
         form.setFieldsValue(initialValues);
@@ -146,6 +162,13 @@ const CreateOrEditModal = ({ isOpen, onSave, onCancel, initialValues }: { isOpen
                 <Form.Item label="Date and time" name="date" rules={[{ required: true, message: 'Please select a date and time' }]}>
                     <DatePicker.RangePicker showTime showSecond={false} />
                 </Form.Item>
+                <Form.Item label="Scope" name="scope" rules={[{ required: true, message: 'Please select a scope' }]}>
+                    <Select
+                        options={availableScopes.map(e => (typeof e === 'string' ? { label: e, value: e } : { label: e.name, value: e.id }))}
+                        optionRender={e => e.label && typeof e.label === 'string' ? e.label.charAt(0).toUpperCase() + e.label.slice(1) : ''}
+                        labelRender={e => e.label && typeof e.label === 'string' ? e.label.charAt(0).toUpperCase() + e.label.slice(1) : ''}
+                    />
+                </Form.Item>
                 <Form.Item label="Description" name="description">
                     <Input.TextArea />
                 </Form.Item>
@@ -159,6 +182,7 @@ const toFormValues = (event: InternalEvent): InternalEventFormValues => {
         id: event.id,
         title: event.title,
         location: event.location,
+        scope: event.scope,
         date: [dayjs(event.start), dayjs(event.end)],
         description: event.description,
     };
@@ -171,6 +195,7 @@ const toCreateParams = (values: InternalEventFormValues): InternalEventCreatePar
         start: values.date[0].toDate(),
         end: values.date[1].toDate(),
         description: values.description,
+        scope: values.scope,
     };
 };
 

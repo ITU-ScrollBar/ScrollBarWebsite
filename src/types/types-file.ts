@@ -79,7 +79,7 @@ export interface Engagement {
 export interface BaseEvent {
     id: string;
     title: string;
-    description: string;
+    description?: string;
     start: Date;
     end: Date;
     location: string;
@@ -185,15 +185,19 @@ export enum Role {
     TENDER = "tender",
 }
 
+export const scopeOptions = [Role.BOARD, Role.ANCHOR, Role.TENDER]
+
 export type InternalEvent = {
+  scope: string;
 } & BaseEvent;
 
 export type InternalEventCreateParams = {
   start: Date;
   end: Date;
-  description: string;
+  description?: string;
   title: string;
   location: string;
+  scope: string;
 };
 
 export interface InternalEventUpdateParams {

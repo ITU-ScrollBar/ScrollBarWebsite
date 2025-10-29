@@ -6,7 +6,7 @@ import avatar from "../../assets/images/avatar.png";
 import StudyLinePicker from "./StudyLinePicker";
 import { updateUser } from "../../firebase/api/authentication";
 import { UserAvatarWithUpload } from "../../components/UserAvatar";
-import { ShiftFiltering, Tender } from "../../types/types-file";
+import { InternalEvent, Role, ShiftFiltering, Tender } from "../../types/types-file";
 import { CalendarSection } from "../../components/CalendarComponent";
 import { Loading } from "../../components/Loading";
 import Shifts from "./Shifts";
@@ -23,7 +23,7 @@ export default function Profile() {
   const [userData, setUserData] = useState<{ firstShift: Date | null, shiftCount: number | null } | null>(null);
   const { internalEventState } = useInternalEvents();
   const { teamState } = useTeams();
-  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
+  const [internalEvents, setInternalEvents] = useState<InternalEvent[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -34,15 +34,17 @@ export default function Profile() {
     })();
   }, [currentUser, getProfileData]);
 
-  let userProfile: Tender & { memberSince: number; totalShifts: number };
-
   useEffect(() => {
-    if (currentUser?.teamIds) {
-      userProfile.teamIds = currentUser.teamIds;
-      setSelectedTeams(currentUser.teamIds);
+    if (internalEventState.internalEvents) {
+      const relevantInternalEvents = internalEventState.internalEvents.filter(event => {
+        return currentUser?.roles?.includes(event.scope) ||
+              currentUser?.teamIds?.includes(event.scope);
+      });
+      setInternalEvents(relevantInternalEvents);
     }
-  }, [currentUser]);
+  }, [internalEventState, currentUser?.teamIds, currentUser?.roles]);
 
+  let userProfile: Tender & { memberSince: number; totalShifts: number };
 
   const setStudyLine = (studyLine: string) => {
     if (!currentUser) return;
@@ -72,7 +74,6 @@ export default function Profile() {
   };
 
   const updateTeams = (teamIds: string[]) => {
-    console.log("new team ids:", teamIds);
     if (!currentUser) return;
     updateUser({ id: currentUser.uid, field: "teamIds", value: teamIds });
     notification.success({
@@ -190,8 +191,8 @@ export default function Profile() {
                 style={{ width: "100%" }}
               >
                 <div>
-                  {internalEventState.internalEvents.map((internalEvent) => (
-                    renderInternalEvent({ internalEvent })
+                  {internalEvents.map((internalEvent) => (
+                    renderInternalEvent({ internalEvent, teams: teamState.teams ?? []})
                   ))}
                   <Shifts filter={ShiftFiltering.MY_SHIFTS} title="My Shifts" />
                 </div>
