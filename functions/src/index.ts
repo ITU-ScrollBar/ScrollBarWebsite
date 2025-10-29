@@ -3,7 +3,7 @@ import calendarApp from './calendar';
 import * as mailservice from './mailservice';
 
 // Export the express app as the `calendar` HTTPS function.
-export const calendar = functions.https.onRequest(calendarApp as any);
+export const calendar = functions.https.onRequest({invoker: "public", region: "europe-west1"}, calendarApp as any);
 
 // Export mail service functions individually so the emulator can detect them.
 export const sendEmailInvite = mailservice.sendEmailInvite;

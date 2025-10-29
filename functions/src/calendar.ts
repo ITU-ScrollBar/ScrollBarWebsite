@@ -7,7 +7,7 @@ import { InternalEvent, Tender } from './types/types-file';
 
 // Safe admin init (prevents multiple inits during local tests)
 if (!admin.apps.length) {
-  const serviceAccount =  JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT ?? '');
+  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) : null;
   admin.initializeApp(serviceAccount ? {credential: admin.credential.cert(serviceAccount)} : {});
 }
 const db = admin.firestore();
