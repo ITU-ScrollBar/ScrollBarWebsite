@@ -1,4 +1,4 @@
-import { Layout, Space, Row, Col } from "antd";
+import { Layout, Space, Row, Col, Select, notification } from "antd";
 import Title from "antd/es/typography/Title";
 import Text from "antd/es/typography/Text";
 import { useAuth } from "../../contexts/AuthContext";
@@ -6,7 +6,7 @@ import avatar from "../../assets/images/avatar.png";
 import StudyLinePicker from "./StudyLinePicker";
 import { updateUser } from "../../firebase/api/authentication";
 import { UserAvatarWithUpload } from "../../components/UserAvatar";
-import { ShiftFiltering } from "../../types/types-file";
+import { ShiftFiltering, Tender } from "../../types/types-file";
 import { CalendarSection } from "../../components/CalendarComponent";
 import { Loading } from "../../components/Loading";
 import Shifts from "./Shifts";
@@ -15,12 +15,15 @@ import { useEffect, useState } from "react";
 import RoleTag from "../../components/RoleTag";
 import useInternalEvents from "../../hooks/useInternalEvents";
 import { renderInternalEvent } from "../admin/InternalEventsPage";
+import useTeams from "../../hooks/useTeams";
 
 export default function Profile() {
   const { loading, currentUser } = useAuth();
   const { engagementState, getProfileData } = useEngagements();
   const [userData, setUserData] = useState<{ firstShift: Date | null, shiftCount: number | null } | null>(null);
   const { internalEventState } = useInternalEvents();
+  const { teamState } = useTeams();
+  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -31,6 +34,16 @@ export default function Profile() {
     })();
   }, [currentUser, getProfileData]);
 
+  let userProfile: Tender & { memberSince: number; totalShifts: number };
+
+  useEffect(() => {
+    if (currentUser?.teamIds) {
+      userProfile.teamIds = currentUser.teamIds;
+      setSelectedTeams(currentUser.teamIds);
+    }
+  }, [currentUser]);
+
+
   const setStudyLine = (studyLine: string) => {
     if (!currentUser) return;
     updateUser({ id: currentUser.uid, field: "studyline", value: studyLine });
@@ -40,28 +53,16 @@ export default function Profile() {
     return <Loading centerOverlay={true} resources={["your shifts"]} />;
   }
 
-  type UserProfile = {
-    uid: string;
-    displayName: string;
-    email: string;
-    studyline?: string;
-    isAdmin: boolean;
-    roles: string[];
-    active: boolean;
-    photoUrl: string;
-    memberSince: number;
-    totalShifts: number;
-  };
-
   if (loading || !currentUser) {
     return <Loading centerOverlay={true} resources={["you"]} />;
   }
-
-  const userProfile: UserProfile = {
+  
+  userProfile = {
     uid: currentUser.uid,
     displayName: currentUser.displayName ?? "Lorem",
     email: currentUser.email ?? "test",
     studyline: currentUser.studyline,
+    teamIds: currentUser.teamIds ?? [],
     isAdmin: false,
     roles: currentUser.roles ?? [],
     active: true,
@@ -69,6 +70,17 @@ export default function Profile() {
     memberSince: userData?.firstShift ? userData.firstShift.getFullYear() : new Date().getFullYear(),
     totalShifts: userData?.shiftCount ?? 0,
   };
+
+  const updateTeams = (teamIds: string[]) => {
+    console.log("new team ids:", teamIds);
+    if (!currentUser) return;
+    updateUser({ id: currentUser.uid, field: "teamIds", value: teamIds });
+    notification.success({
+      message: "Teams updated",
+      description: "Your team memberships have been updated.",
+      placement: "top",
+    });
+  }
 
   const EXCLUDED_ROLES = ["newbie", "regular_access"];
 
@@ -142,6 +154,17 @@ export default function Profile() {
                         (role) => <RoleTag key={role} role={role} />
                       )}
                   </Text>
+                  <div >
+                    <Text>Teams: </Text>
+                    <Select
+                      style={{ minWidth: 200 }}
+                      mode="multiple"
+                      options={teamState.teams.map(team => ({ label: team.name, value: team.id }))}
+                      filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
+                      value={userProfile?.teamIds || []}
+                      onChange={updateTeams}
+                      />
+                  </div>
 
                   <Title level={4} style={{ marginTop: 16, marginBottom: 8 }}>
                     Your Data

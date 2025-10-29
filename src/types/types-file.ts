@@ -146,6 +146,7 @@ export type Tender = {
   uid: string;
   // Add any other fields you expect from Firestore, e.g.:
   name?: string;
+  active: boolean;
   email: string;
   displayName?: string;
   photoUrl?: string;
