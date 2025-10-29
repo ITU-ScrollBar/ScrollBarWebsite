@@ -6,7 +6,6 @@ import {
   streamTeams,
   updateTeam as updateTeamInDb,
 } from '../firebase/api/teams'; // Adjust the import path as necessary
-import { Timestamp } from 'firebase/firestore';
 import { Team, TeamCreateParams } from '../types/types-file';
 
 type TeamState = {

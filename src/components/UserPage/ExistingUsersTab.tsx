@@ -1,7 +1,7 @@
 import { Button, Divider, Drawer, Form, Input, notification, Select, Switch, Table, TableColumnsType, TableColumnType, Tooltip, Upload } from "antd"
-import { Role, StudyLine, Tender } from "../../types/types-file";
+import { Role, StudyLine, Team, Tender } from "../../types/types-file";
 import useTenders from "../../hooks/useTenders";
-import { Key, useEffect, useState } from "react";
+import { Key, useEffect, useRef, useState } from "react";
 import { getStudyLines } from "../../firebase/api/authentication";
 import { EditOutlined } from '@ant-design/icons'
 import StudyLinePicker from "../../pages/members/StudyLinePicker";
@@ -9,15 +9,19 @@ import { UserAvatarWithUpload } from "../UserAvatar";
 import { useWindowSize } from "../../hooks/useWindowSize";
 import RoleTag from "../RoleTag";
 import { roleToLabel } from "../../pages/members/helpers";
+import useTeams from "../../hooks/useTeams";
+import { Loading } from "../Loading";
 
 export const ExistingUsersTab = () => {
     const { tenderState, updateTender } = useTenders();
+    const { teamState } = useTeams();
     const [studylines, setStudylines] = useState<StudyLine[]>([]);
     const [api] = notification.useNotification();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<Tender | null>(null);
     const [ columns, setColumns ] = useState<TableColumnsType<Tender>>([]);
     const { isMobile } = useWindowSize();
+    const [data, setData] = useState<(Tender & { teams: Team[] })[]>([]);
 
     useEffect(() => {
         getStudyLines().then((response) => {
@@ -32,6 +36,15 @@ export const ExistingUsersTab = () => {
         });
     }, []);
 
+    useEffect(() => {
+        const updatedData = tenderState.tenders.map(tender => {
+            const teams = teamState.teams.filter(team => tender.teamIds?.includes(team.id));
+            const studyline = studylines.find(line => line.id === tender.studyline)?.name || 'No studyline';
+            return { ...tender, teams, studyline };
+        });
+        setData(updatedData);
+    }, [tenderState.tenders, teamState.teams, studylines]);
+
     const userFilterMatch = (value: boolean | Key, record: Tender) => {
         if (value.toString() === 'admin') {
             return record.isAdmin;
@@ -40,7 +53,10 @@ export const ExistingUsersTab = () => {
     }
     const nameColumn = { title: 'Name', dataIndex: 'displayName', key: 'displayName' };
     const emailColumn = { title: 'Email', dataIndex: 'email', key: 'email' };
-    const studylineColumn = { title: 'Studyline', dataIndex: 'studyline', key: 'studyline', render: (text: string) => studylines.find((line) => line.id === text)?.abbreviation || 'No studyline' };
+    const teamsColumn = { title: 'Teams', dataIndex: 'teams', key: 'teams', render: (teams: Team[]) => {
+        return teams.map(team => team.name).join(', ') || 'No teams';
+    }};
+    const studylineColumn = { title: 'Studyline', dataIndex: 'studyline', key: 'studyline' };
     const rolesColumn = {
             title: 'Role',
             dataIndex: 'roles',
@@ -71,12 +87,12 @@ export const ExistingUsersTab = () => {
         if (isMobile) {
             setColumns([nameColumn, emailColumn, editColumn]);
         } else {
-            setColumns([nameColumn, emailColumn, studylineColumn, rolesColumn, editColumn]);
+            setColumns([nameColumn, emailColumn, teamsColumn, studylineColumn, rolesColumn, editColumn]);
         }
     }, [isMobile]);
 
     return (<>
-        <Table columns={columns} dataSource={tenderState.tenders} rowKey="id" />
+        <Table columns={columns} dataSource={data} rowKey="id" />
         <Drawer title="Edit User" open={isModalOpen} onClose={() => {setIsModalOpen(false); setEditingUser(null)}}>
             {editingUser && <Form>
                 <UserAvatarWithUpload user={editingUser} onChange={(url) => {
@@ -92,6 +108,19 @@ export const ExistingUsersTab = () => {
                 <Divider />
                 <Form.Item label="Email">
                     {editingUser?.email}
+                </Form.Item>
+                <Form.Item label="Teams">
+                    <Select
+                        mode="multiple"
+                        options={teamState.teams.map(team => ({ label: team.name, value: team.id }))}
+                        filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
+                        value={editingUser?.teamIds || []}
+                        onChange={(value) => {
+                            setEditingUser((prev) => prev ? ({ ...prev, teamIds: value }) : prev);
+                            if (editingUser) updateTender(editingUser.uid, 'teamIds', value);
+                        }}
+                    />
+
                 </Form.Item>
                 <Form.Item label="Studyline">
                     <StudyLinePicker value={editingUser?.studyline} fontSize={14} onChange={(value) => {
