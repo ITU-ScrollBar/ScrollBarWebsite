@@ -28,7 +28,7 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({
   }
 
   // Check admin access
-  if (!currentUser.isAdmin && (!requiredRole || !currentUser.roles.includes(requiredRole))) {
+  if (!currentUser.isAdmin && (!requiredRole || !currentUser.roles?.includes(requiredRole))) {
     return (
       <Result
         status="403"

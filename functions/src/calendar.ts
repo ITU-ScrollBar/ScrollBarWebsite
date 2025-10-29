@@ -2,13 +2,13 @@ import express from 'express';
 import * as admin from 'firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 import { createEvents, EventAttributes } from 'ics';
-import { InternalEvent } from './types/types-file';
+import { InternalEvent, Tender } from './types/types-file';
 
-var serviceAccount = require("../../.credentials.json");
 
 // Safe admin init (prevents multiple inits during local tests)
 if (!admin.apps.length) {
-  admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+  const serviceAccount =  JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT ?? '');
+  admin.initializeApp(serviceAccount ? {credential: admin.credential.cert(serviceAccount)} : {});
 }
 const db = admin.firestore();
 
@@ -202,13 +202,22 @@ const handleInternalEvents = async (uid: string): Promise<EventAttributes[]> => 
     .where('end', '>=', Timestamp.now())
     .get();
 
+  const currentUser = (await db.collection('users').doc(uid).get()).data() as Tender;
+
+  if (!currentUser) return [];
+
   const internalEvents: EventAttributes[] = [];
   internalEventsSnapshot.forEach(doc => {
-    const data = doc.data() as InternalEvent;
+    const data = doc.data() as InternalEvent;    
 
     const start = toDate(data.start);
     const end = toDate(data.end);
     if (!start || !end) return;
+
+    if (!currentUser.roles?.includes(data.scope) &&
+        !currentUser.teamIds?.includes(data.scope)) {
+      return;
+    }
 
     const calEvent: Partial<EventAttributes> & { end?: any } = {
       start: toIcsArray(start),
