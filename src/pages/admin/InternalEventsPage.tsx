@@ -44,7 +44,7 @@ export const InternalEventsPage = () => {
         </div>
         {isModalVisible && <CreateOrEditModal isOpen={isModalVisible} onSave={handleSave} onCancel={() => {setIsModalVisible(false); setEditingEvent(null)}} initialValues={editingEvent ? toFormValues(editingEvent) : undefined} />}
         <Content>
-            {internalEvents.map((event) => renderInternalEvent({event, onEdit: (editedEvent) => {
+            {internalEvents.map((internalEvent) => renderInternalEvent({internalEvent, onEdit: (editedEvent) => {
                 setEditingEvent(editedEvent);
                 setIsModalVisible(true);
             }}))}
@@ -52,29 +52,31 @@ export const InternalEventsPage = () => {
     </div>;
 };
 
-const renderInternalEvent = ({ event, onEdit }: {event: InternalEvent, onEdit: (event: InternalEvent) => void}) => {
-    return (
-        <Card key={event.id} style={{ marginBottom: 24 }} actions={[
+export const renderInternalEvent = ({ internalEvent, onEdit }: {internalEvent: InternalEvent, onEdit?: (internalEvent: InternalEvent) => void}) => {
+    const actions = onEdit ? [
             <Button key="edit" type="link" onClick={() => {
-                onEdit(event);
+                onEdit(internalEvent);
             }}>Edit Event</Button>,
             <Popconfirm
                 key="delete"
                 title="Are you sure to delete this internal event?"
                 onConfirm={() => {
-                    deleteInternalEvent(event);
+                    deleteInternalEvent(internalEvent);
                 }}
                 okText="Yes"
                 cancelText="No"
             >
                 <Button icon={<DeleteOutlined />} type="link" danger>Delete Event</Button>
             </Popconfirm>,
-        ]}>
-            <Typography.Title style={{ marginTop: 0 }} level={4}>{event.title}</Typography.Title>
-            <Typography.Text strong>Location: {event.location}</Typography.Text><br />
+        ] : [];
+
+    return (
+        <Card key={internalEvent.id} style={{ marginBottom: 24, boxShadow: "inset 0 1px 3px rgba(7, 7, 7, 0.3)" }} actions={actions}>
+            <Typography.Title style={{ marginTop: 0 }} level={4}>{internalEvent.title}</Typography.Title>
+            <Typography.Text strong>Location: {internalEvent.location}</Typography.Text><br />
             {/* Format date depending on multi-day or single-day event */}
-            <Typography.Text strong>Date: {formatDate(event.start, event.end)}</Typography.Text><br />
-            <Typography.Paragraph>{event.description}</Typography.Paragraph>
+            <Typography.Text strong>Date: {formatDate(internalEvent.start, internalEvent.end)}</Typography.Text><br />
+            <Typography.Paragraph>{internalEvent.description}</Typography.Paragraph>
         </Card>
     );
 }
