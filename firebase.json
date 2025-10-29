@@ -15,7 +15,10 @@
     "rewrites": [
       {
         "source": "/calendar/**",
-        "function": "calendar"
+        "function": {
+          "functionId": "calendar",
+          "region": "europe-west1"
+        }
       },
       {
         "source": "**",
