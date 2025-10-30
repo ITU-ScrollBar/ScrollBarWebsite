@@ -194,7 +194,7 @@ export default function Profile() {
                   {internalEvents.map((internalEvent) => (
                     renderInternalEvent({ internalEvent, teams: teamState.teams ?? []})
                   ))}
-                  <Shifts filter={ShiftFiltering.MY_SHIFTS} title="My Shifts" />
+                  <Shifts filter={ShiftFiltering.MY_SHIFTS} title="My Events" />
                 </div>
               </Space>
             </Col>
