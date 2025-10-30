@@ -18,14 +18,10 @@ function Shifts({ filter = ShiftFiltering.ALL_SHIFTS, title }: ShiftsProps) {
   const { eventState } = useEvents();
   const { engagementState } = useEngagementContext();
   const { tenderState } = useTenders();
-  const BACKGROUND = "#F5F5F5";
+  const BACKGROUND = "#FFF";
   const BOX_SHADOW = "0 2px 6px rgba(7, 7, 7, 0.5)";
 
-  if (
-    shiftState.loading ||
-    eventState.loading ||
-    engagementState.loading
-  ) {
+  if (shiftState.loading || eventState.loading || engagementState.loading) {
     const resources: string[] = [];
     if (shiftState.loading) resources.push("shifts");
     if (eventState.loading) resources.push("events");
@@ -56,12 +52,12 @@ function Shifts({ filter = ShiftFiltering.ALL_SHIFTS, title }: ShiftsProps) {
               marginBottom: 28,
             }}
           >
-          <ShiftList
-                shifts={shiftState.shifts}
-                engagements={engagementState.engagements}
-                tenders={tenderState.tenders}
-                shiftFiltering={filter}
-              />
+            <ShiftList
+              shifts={shiftState.shifts}
+              engagements={engagementState.engagements}
+              tenders={tenderState.tenders}
+              shiftFiltering={filter}
+            />
           </div>
         </Layout.Content>
       </Layout>

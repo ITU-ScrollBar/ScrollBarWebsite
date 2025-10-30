@@ -148,12 +148,8 @@ export function ShiftList({
   const normalizedInternalEvents = useMemo(() => {
     return internalEventsAll.map((ie) => ({
       ...ie,
-      start: asDate(
-        (ie as unknown as { start?: Parameters<typeof asDate>[0] }).start
-      ),
-      end: asDate(
-        (ie as unknown as { end?: Parameters<typeof asDate>[0] }).end
-      ),
+      start: asDate(ie.start),
+      end: asDate(ie.end),
     }));
   }, [internalEventsAll]);
 
@@ -193,7 +189,7 @@ export function ShiftList({
         out.push({
           type: "internal",
           event: iv,
-          start: (iv as { start: Date }).start,
+          start: iv.start,
         });
         ii++;
       } else if (!iv && ev) {
@@ -201,7 +197,7 @@ export function ShiftList({
         ei++;
       } else if (ev && iv) {
         if (
-          asDate(ev.start).getTime() <= (iv as { start: Date }).start.getTime()
+          asDate(ev.start).getTime() <= iv.start.getTime()
         ) {
           out.push({ type: "event", id: ev.id, start: asDate(ev.start) });
           ei++;
@@ -209,7 +205,7 @@ export function ShiftList({
           out.push({
             type: "internal",
             event: iv,
-            start: (iv as { start: Date }).start,
+            start: iv.start,
           });
           ii++;
         }
