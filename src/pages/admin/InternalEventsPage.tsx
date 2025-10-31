@@ -58,7 +58,7 @@ export const InternalEventsPage = () => {
 };
 
 export const renderInternalEvent = ({ internalEvent, teams, onEdit }: {internalEvent: InternalEvent, teams: Team[], onEdit?: (internalEvent: InternalEvent) => void}) => {
-    const BOX_SHADOW = "0 2px 6px rgba(7, 7, 7, 0.5)";
+    const BOX_SHADOW = "inset 0 1px 3px rgba(7, 7, 7, 0.3)";
 
     const actions = onEdit ? [
             <Button key="edit" type="link" onClick={() => {
