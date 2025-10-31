@@ -47,15 +47,19 @@ export const InternalEventsPage = () => {
         </div>
         {isModalVisible && <CreateOrEditModal isOpen={isModalVisible} onSave={handleSave} onCancel={() => {setIsModalVisible(false); setEditingEvent(null)}} initialValues={editingEvent ? toFormValues(editingEvent) : undefined} />}
         <Content>
-            {internalEvents.map((internalEvent) => renderInternalEvent({internalEvent, teams: teamState.teams, onEdit: (editedEvent) => {
-                setEditingEvent(editedEvent);
-                setIsModalVisible(true);
-            }}))}
+                <Card>
+                    {internalEvents.map((internalEvent) => renderInternalEvent({internalEvent, teams: teamState.teams, onEdit: (editedEvent) => {
+                        setEditingEvent(editedEvent);
+                        setIsModalVisible(true);
+                    }}))}
+                </Card>
         </Content>
     </div>;
 };
 
 export const renderInternalEvent = ({ internalEvent, teams, onEdit }: {internalEvent: InternalEvent, teams: Team[], onEdit?: (internalEvent: InternalEvent) => void}) => {
+    const BOX_SHADOW = "0 2px 6px rgba(7, 7, 7, 0.5)";
+
     const actions = onEdit ? [
             <Button key="edit" type="link" onClick={() => {
                 onEdit(internalEvent);
@@ -76,17 +80,20 @@ export const renderInternalEvent = ({ internalEvent, teams, onEdit }: {internalE
     const team = teams.find((team) => team.id === internalEvent.scope);
     const scopeText = (team
         ? team.name
-        : internalEvent.scope as string);
+        : internalEvent.scope);
 
     return (
-        <Card key={internalEvent.id} style={{ marginBottom: 24, boxShadow: "inset 0 1px 3px rgba(7, 7, 7, 0.3)" }} actions={actions}>
-            <Typography.Title style={{ marginTop: 0 }} level={4}>{internalEvent.title}</Typography.Title>
+        <>
+        <Typography.Title level={2} style={{ marginBottom: 12 }}>
+            {internalEvent.title} <Typography.Text italic>({scopeText.charAt(0).toUpperCase() + scopeText.slice(1)})</Typography.Text>
+        </Typography.Title>
+        <Card key={internalEvent.id} style={{ marginBottom: 24, boxShadow: BOX_SHADOW }} actions={actions}>
             <Typography.Text strong>Location: {internalEvent.location}</Typography.Text><br />
             {/* Format date depending on multi-day or single-day event */}
             <Typography.Text strong>Date: {formatDate(internalEvent.start, internalEvent.end)}</Typography.Text><br />
-            {onEdit && <> <Typography.Text strong>Relevant for: {scopeText.charAt(0).toUpperCase() + scopeText.slice(1)}</Typography.Text><br /></>}
             <Typography.Paragraph>{internalEvent.description}</Typography.Paragraph>
         </Card>
+        </>
     );
 }
 
@@ -114,6 +121,7 @@ const CreateOrEditModal = ({ isOpen, onSave, onCancel, initialValues }: { isOpen
     const [form] = Form.useForm<InternalEventFormValues>();
     const { teamState } = useTeams();
     const [availableScopes, setAvailableScopes] = useState<(Team | typeof scopeOptions[number])[]>([]);
+    const { isMobile } = useWindowSize();
 
     useEffect(() => {
         setAvailableScopes([...scopeOptions, ...teamState.teams]);
@@ -127,6 +135,7 @@ const CreateOrEditModal = ({ isOpen, onSave, onCancel, initialValues }: { isOpen
         <Modal
             style={{ margin: '0 24px', maxWidth: '90vw' }} 
             open={isOpen}
+            centered={!isMobile}
             onOk={() => {
                 form.validateFields().then((values) => {
                     onSave(values);

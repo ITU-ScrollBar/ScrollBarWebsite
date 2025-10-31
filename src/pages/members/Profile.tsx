@@ -6,24 +6,23 @@ import avatar from "../../assets/images/avatar.png";
 import StudyLinePicker from "./StudyLinePicker";
 import { updateUser } from "../../firebase/api/authentication";
 import { UserAvatarWithUpload } from "../../components/UserAvatar";
-import { InternalEvent, Role, ShiftFiltering, Tender } from "../../types/types-file";
+import { ShiftFiltering } from "../../types/types-file";
 import { CalendarSection } from "../../components/CalendarComponent";
 import { Loading } from "../../components/Loading";
 import Shifts from "./Shifts";
 import useEngagements from "../../hooks/useEngagements";
 import { useEffect, useState } from "react";
 import RoleTag from "../../components/RoleTag";
-import useInternalEvents from "../../hooks/useInternalEvents";
-import { renderInternalEvent } from "../admin/InternalEventsPage";
 import useTeams from "../../hooks/useTeams";
 
 export default function Profile() {
   const { loading, currentUser } = useAuth();
   const { engagementState, getProfileData } = useEngagements();
-  const [userData, setUserData] = useState<{ firstShift: Date | null, shiftCount: number | null } | null>(null);
-  const { internalEventState } = useInternalEvents();
+  const [userData, setUserData] = useState<{
+    firstShift: Date | null;
+    shiftCount: number | null;
+  } | null>(null);
   const { teamState } = useTeams();
-  const [internalEvents, setInternalEvents] = useState<InternalEvent[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -34,32 +33,24 @@ export default function Profile() {
     })();
   }, [currentUser, getProfileData]);
 
-  useEffect(() => {
-    if (internalEventState.internalEvents) {
-      const relevantInternalEvents = internalEventState.internalEvents.filter(event => {
-        return currentUser?.roles?.includes(event.scope) ||
-              currentUser?.teamIds?.includes(event.scope);
-      });
-      setInternalEvents(relevantInternalEvents);
-    }
-  }, [internalEventState, currentUser?.teamIds, currentUser?.roles]);
-
-  let userProfile: Tender & { memberSince: number; totalShifts: number };
-
   const setStudyLine = (studyLine: string) => {
     if (!currentUser) return;
     updateUser({ id: currentUser.uid, field: "studyline", value: studyLine });
   };
 
-  if (engagementState.loading || !engagementState.isLoaded || !engagementState.engagements) {
+  if (
+    engagementState.loading ||
+    !engagementState.isLoaded ||
+    !engagementState.engagements
+  ) {
     return <Loading centerOverlay={true} resources={["your shifts"]} />;
   }
 
   if (loading || !currentUser) {
     return <Loading centerOverlay={true} resources={["you"]} />;
   }
-  
-  userProfile = {
+
+  const userProfile = {
     uid: currentUser.uid,
     displayName: currentUser.displayName ?? "Lorem",
     email: currentUser.email ?? "test",
@@ -69,7 +60,9 @@ export default function Profile() {
     roles: currentUser.roles ?? [],
     active: true,
     photoUrl: currentUser.photoUrl ?? avatar,
-    memberSince: userData?.firstShift ? userData.firstShift.getFullYear() : new Date().getFullYear(),
+    memberSince: userData?.firstShift
+      ? userData.firstShift.getFullYear()
+      : new Date().getFullYear(),
     totalShifts: userData?.shiftCount ?? 0,
   };
 
@@ -81,7 +74,7 @@ export default function Profile() {
       description: "Your team memberships have been updated.",
       placement: "top",
     });
-  }
+  };
 
   const EXCLUDED_ROLES = ["newbie", "regular_access"];
 
@@ -148,23 +141,32 @@ export default function Profile() {
                   <Text>Email: {userProfile?.email}</Text>
 
                   <Text>
-                    {(userProfile?.roles ?? []).length > 1 ? "Roles: " : "Role: "}
+                    {(userProfile?.roles ?? []).length > 1
+                      ? "Roles: "
+                      : "Role: "}
                     {(userProfile?.roles ?? [])
                       .filter((role) => !EXCLUDED_ROLES.includes(role))
-                      .map(
-                        (role) => <RoleTag key={role} role={role} />
-                      )}
+                      .map((role) => (
+                        <RoleTag key={role} role={role} />
+                      ))}
                   </Text>
-                  <div >
+                  <div>
                     <Text>Teams: </Text>
                     <Select
                       style={{ minWidth: 200 }}
                       mode="multiple"
-                      options={teamState.teams.map(team => ({ label: team.name, value: team.id }))}
-                      filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
+                      options={teamState.teams.map((team) => ({
+                        label: team.name,
+                        value: team.id,
+                      }))}
+                      filterOption={(input, option) =>
+                        (option?.label ?? "")
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                      }
                       value={userProfile?.teamIds || []}
                       onChange={updateTeams}
-                      />
+                    />
                   </div>
 
                   <Title level={4} style={{ marginTop: 16, marginBottom: 8 }}>
@@ -190,12 +192,7 @@ export default function Profile() {
                 size="large"
                 style={{ width: "100%" }}
               >
-                <div>
-                  {internalEvents.map((internalEvent) => (
-                    renderInternalEvent({ internalEvent, teams: teamState.teams ?? []})
-                  ))}
-                  <Shifts filter={ShiftFiltering.MY_SHIFTS} title="My Shifts" />
-                </div>
+                <Shifts filter={ShiftFiltering.MY_SHIFTS} title="My Events" />
               </Space>
             </Col>
           </Row>
