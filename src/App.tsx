@@ -21,6 +21,7 @@ import UserManagerPage from "./pages/admin/UserManagerPage";
 import { setTwoToneColor } from "@ant-design/icons";
 import { App as AntdApp } from "antd";
 import { InternalEventsPage } from "./pages/admin/InternalEventsPage";
+import ShiftManagement from "./pages/admin/ShiftManagement/ShiftManagement";
 
 function App() {
   setTwoToneColor("#FFE600");
@@ -100,9 +101,7 @@ function App() {
                     >
                       <Route
                         path="admin/shifts"
-                        element={
-                          <div>Manage Shifts Page (to be implemented)</div>
-                        }
+                        element={<ShiftManagement />}
                       />
                     </Route>
                     <Route
