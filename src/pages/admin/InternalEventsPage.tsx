@@ -157,15 +157,14 @@ export const renderInternalEvent = ({
         actions={actions}
       >
         <Typography.Text strong>
-          Location: {internalEvent.location}
+          Location: {internalEvent.location} - <Typography.Text italic>({scopeText.charAt(0).toUpperCase() + scopeText.slice(1)})</Typography.Text>
         </Typography.Text>
         <br />
-        {/* Format date depending on multi-day or single-day event */}
         <Typography.Text strong>
           Date: {formatDate(internalEvent.start, internalEvent.end)}
         </Typography.Text>
         <br />
-        <Typography.Paragraph>{internalEvent.description}</Typography.Paragraph>
+        <Typography.Text>{internalEvent.description}</Typography.Text>
       </Card>
     </>
   );
