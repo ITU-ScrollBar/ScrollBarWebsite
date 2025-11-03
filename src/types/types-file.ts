@@ -77,12 +77,12 @@ export interface Engagement {
 
 // Event-related types
 export interface BaseEvent {
-    id: string;
-    title: string;
-    description?: string;
-    start: Date;
-    end: Date;
-    location: string;
+  id: string;
+  title: string;
+  description?: string;
+  start: Date;
+  end: Date;
+  location: string;
 }
 
 export type Event = {
@@ -100,7 +100,7 @@ export type EventCreateParams = {
   end: Date;
   description: string;
   title: string;
-  location: string;
+  where: string;
   published: boolean;
   internal: boolean;
 };
@@ -120,12 +120,13 @@ export enum ShiftFiltering {
 // Shift-related types
 export interface Shift {
   id: string;
-  key?: string;
-  start: FirebaseDate;
-  end: FirebaseDate;
   eventId: string;
-  title: string;
   location: string;
+  title: string;
+  tenders: number;
+  anchors: number;
+  start: Date;
+  end: Date;
 }
 
 export interface ShiftUpdateParams {

@@ -11,14 +11,14 @@ import { Layout } from "antd";
 import { Content, Footer } from "antd/es/layout/layout";
 
 import FooterBar from "./components/HomePage/FooterBar";
-import TestPage from "./pages/TestPage";
 import Register from "./pages/Register";
 import Shifts from "./pages/members/Shifts";
 import Profile from "./pages/members/Profile";
 import { TenderMenu } from "./components/HomePage/TenderMenu";
 import { ShiftFiltering } from "./types/types-file";
-import GlobalSettingsPage from "./pages/admin/GlobalSettingsPage";
-import { UserManagerPage } from "./pages/admin/UserManagerPage";
+import EventManagement from "./pages/Admin/EventManagement/EventManagement";
+import GlobalSettingsPage from "./pages/Admin/GlobalSettingsPage";
+import { UserManagerPage } from "./pages/Admin/UserManagerPage";
 import { setTwoToneColor } from '@ant-design/icons';
 import { App as AntdApp } from "antd"
 import { InternalEventsPage } from "./pages/admin/InternalEventsPage";
@@ -42,7 +42,6 @@ function App() {
                 {/* --- Public Routes --- */}
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />
-                <Route path="/TestPage" element={<TestPage />} />
                 <Route path="/register" element={<Register />} />
 
                 {/* --- Protected Routes --- */}
@@ -78,7 +77,7 @@ function App() {
                       <Route path="admin/settings" element={<GlobalSettingsPage />} />
                     </Route>
                     <Route element={<RoleProtectedRoute requiredRole={'event_manager'} />}>
-                      <Route path="admin/events" element={<div>Manage Events Page (to be implemented)</div>} />
+                      <Route path="admin/events" element={<EventManagement />} />
                     </Route>
                     <Route element={<RoleProtectedRoute requiredRole={'board_member'} />}>
                       <Route path="admin/internalEvents" element={<InternalEventsPage />} />

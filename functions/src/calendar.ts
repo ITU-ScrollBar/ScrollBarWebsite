@@ -40,7 +40,7 @@ type User = {
 
 type Event = {
   id: string;
-  displayName: string;
+  title: string;
   description: string;
   where: string;
 }
@@ -87,7 +87,7 @@ function mapDocToIcsEvent({shift, event, shiftMembers}: MapToIcsEventProps): Eve
   const calEvent: Partial<EventAttributes> & { end?: any } = {
     start: toIcsArray(start),
     end: toIcsArray(end),
-    title: `${event?.displayName} - ${shift.title}`,
+    title: `${event?.title} - ${shift.title}`,
     startInputType: 'utc',
     description: description,
     location: `${event?.where} ${shift.location}`,
