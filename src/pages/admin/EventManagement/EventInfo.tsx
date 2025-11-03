@@ -296,7 +296,7 @@ export default function EventInfo(props: { event: Event }) {
               showTime
               value={dayjs(customShiftStart)}
               onChange={(value) =>
-                setCustomShiftStart(value?.toDate())
+                setCustomShiftStart(value?.toDate() || new Date(props.event.start))
               }
               style={{ width: "100%" }}
             />
