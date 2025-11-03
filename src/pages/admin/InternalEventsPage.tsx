@@ -112,6 +112,8 @@ export const renderInternalEvent = ({
   onEdit?: (internalEvent: InternalEvent) => void;
 }) => {
   const BOX_SHADOW = "inset 0 1px 3px rgba(7, 7, 7, 0.3)";
+  const LIGHT_GRAY = "#e1e1e1ff";
+  const GRAY_TEXT = "#555555ff";
 
   const actions = onEdit
     ? [
@@ -145,26 +147,35 @@ export const renderInternalEvent = ({
 
   return (
     <>
-      <Typography.Title level={2} style={{ marginBottom: 12 }}>
-        {internalEvent.title}{" "}{formatDateShort(internalEvent.start)}
-        <Typography.Text italic>
-          {/* ({scopeText.charAt(0).toUpperCase() + scopeText.slice(1)}) */}
-        </Typography.Text>
+      <Typography.Title
+        level={2}
+        style={{ marginBottom: 12, color: GRAY_TEXT }}
+      >
+        {internalEvent.title} {formatDateShort(internalEvent.start)}
       </Typography.Title>
       <Card
         key={internalEvent.id}
-        style={{ marginBottom: 24, boxShadow: BOX_SHADOW }}
+        style={{
+          backgroundColor: LIGHT_GRAY,
+          marginBottom: 24,
+          boxShadow: BOX_SHADOW,
+        }}
         actions={actions}
       >
-        <Typography.Text strong>
-          Location: {internalEvent.location} - <Typography.Text italic>({scopeText.charAt(0).toUpperCase() + scopeText.slice(1)})</Typography.Text>
+        <Typography.Text strong style={{ color: GRAY_TEXT }}>
+          Location: {internalEvent.location} -{" "}
+          <Typography.Text italic style={{ color: GRAY_TEXT }}>
+            ({scopeText.charAt(0).toUpperCase() + scopeText.slice(1)})
+          </Typography.Text>
         </Typography.Text>
         <br />
-        <Typography.Text strong>
+        <Typography.Text strong style={{ color: GRAY_TEXT }}>
           Date: {formatDate(internalEvent.start, internalEvent.end)}
         </Typography.Text>
         <br />
-        <Typography.Text>{internalEvent.description}</Typography.Text>
+        <Typography.Text style={{ color: GRAY_TEXT }}>
+          {internalEvent.description}
+        </Typography.Text>
       </Card>
     </>
   );
@@ -177,7 +188,7 @@ const formatDateShort = (start: Date) => {
     day: "numeric",
   };
   return `(${start.toLocaleDateString(locale, options)})`;
-}
+};
 
 const formatDate = (start: Date, end: Date) => {
   const locale = "en-GB";

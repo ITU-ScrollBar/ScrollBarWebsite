@@ -156,12 +156,14 @@ export function ShiftList({
   const internalEvents = useMemo(() => {
     if (shiftFiltering !== ShiftFiltering.MY_SHIFTS) return [];
 
-    return normalizedInternalEvents.filter((ie) => {
-      return (
-        currentUser?.roles?.includes(ie.scope) ||
-        currentUser?.teamIds?.includes(ie.scope)
-      );
-    }).sort((a, b) => a.start.getTime() - b.start.getTime());
+    return normalizedInternalEvents
+      .filter((ie) => {
+        return (
+          currentUser?.roles?.includes(ie.scope) ||
+          currentUser?.teamIds?.includes(ie.scope)
+        );
+      })
+      .sort((a, b) => a.start.getTime() - b.start.getTime());
   }, [
     currentUser?.roles,
     currentUser?.teamIds,
@@ -196,9 +198,7 @@ export function ShiftList({
         out.push({ type: "event", id: ev.id, start: asDate(ev.start) });
         ei++;
       } else if (ev && iv) {
-        if (
-          asDate(ev.start).getTime() <= iv.start.getTime()
-        ) {
+        if (asDate(ev.start).getTime() <= iv.start.getTime()) {
           out.push({ type: "event", id: ev.id, start: asDate(ev.start) });
           ei++;
         } else {
@@ -264,7 +264,7 @@ export function ShiftList({
             >
               <UserAvatar
                 user={tender}
-                size={50}
+                size={60}
                 backgroundColor={
                   isAnchor
                     ? COLORS.ANCHOR_BACKGROUND
@@ -276,12 +276,12 @@ export function ShiftList({
               style={{
                 fontSize: "0.85em",
                 textAlign: "center",
-                maxWidth: "56px",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
+                maxWidth: "80px",
+                overflow: "inline-block",
+                whiteSpace: "normal",
+                wordBreak: "break-word",
                 zIndex: 12,
-                backgroundColor: "rgba(245, 245, 245, 0.5)",
+                backgroundColor: "rgba(255, 255, 255, 0.5)",
                 backdropFilter: "blur(4px)",
               }}
             >
