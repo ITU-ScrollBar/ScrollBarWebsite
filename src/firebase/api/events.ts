@@ -12,6 +12,7 @@ import {
   limit,
   where,
   Timestamp,
+  orderBy,
 } from 'firebase/firestore';
 import { db } from '..';
 import { EventCreateParams } from '../../types/types-file'; // Assuming you define your Event type here
