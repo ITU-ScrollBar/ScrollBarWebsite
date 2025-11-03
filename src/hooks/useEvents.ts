@@ -4,10 +4,11 @@ import {
   createEvent,
   deleteEvent,
   streamEvents,
+  streamNextEvent,
   updateEvent as updateEventInDb,
 } from '../firebase/api/events'; // Adjust the import path as necessary
 import { Event, EventCreateParams } from '../types/types-file'; // Ensure you have Event type defined
-import { Timestamp } from 'firebase/firestore';
+import { loadBundle, Timestamp } from 'firebase/firestore';
 
 type EventState = {
   loading: boolean;
@@ -99,6 +100,46 @@ const addEvent = (event: EventCreateParams) => {
   };
 
   return { eventState, addEvent, removeEvent, updateEvent };
+};
+
+export const useNextEvent = () => {
+  const [nextEvent, setNextEvent] = useState<(Event & { key: string }) | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+
+    const unsubscribe = streamNextEvent({
+      next: (snapshot) => {
+        if (snapshot.docs.length > 0) {
+          const doc = snapshot.docs[0];
+          const data = doc.data() as EventFirebase;
+          const id = doc.id;
+
+          const event = {
+            ...data,
+            id,
+            key: id,
+            start: data.start?.toDate(),
+            end: data.end?.toDate(),
+          };
+
+          setNextEvent(event);
+        } else {
+          setNextEvent(null);
+        }
+        setLoading(false);
+      },
+      error: (error: Error) => {
+        message.error('An error occurred: ' + error.message);
+        setLoading(false);
+      },
+    });
+
+    return unsubscribe;
+  }, []);
+
+  return { nextEvent, loading };
 };
 
 export default useEvents;

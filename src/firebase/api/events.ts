@@ -9,6 +9,10 @@ import {
   QuerySnapshot,
   DocumentData,
   Unsubscribe,
+  orderBy,
+  limit,
+  where,
+  Timestamp,
 } from 'firebase/firestore';
 import { db } from '..';
 import { EventCreateParams } from '../../types/types-file'; // Assuming you define your Event type here
@@ -61,5 +65,22 @@ export const streamEvents = (observer: { next: (snapshot: QuerySnapshot<Document
   const q = query(eventsRef); // Add any additional filters or ordering as needed
 
   // Return the unsubscribe function from onSnapshot
+  return onSnapshot(q, observer.next, observer.error);
+};
+
+/**
+ * Streams only the most recent/next upcoming event ordered by start date.
+ */
+export const streamNextEvent = (observer: { next: (snapshot: QuerySnapshot<DocumentData>) => void; error: (error: Error) => void }): Unsubscribe => {
+  // console.log('streamNextEvent')
+  const eventsRef = collection(db, 'env', env, 'events');
+  const now = Timestamp.now();
+  const q = query(
+    eventsRef,
+    where('start', '>', now),
+    where('published', '==', true),
+    limit(1)
+  );
+  // console.log(q)
   return onSnapshot(q, observer.next, observer.error);
 };

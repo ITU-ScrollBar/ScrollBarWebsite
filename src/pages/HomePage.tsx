@@ -12,18 +12,23 @@ import { getTenderDisplayName } from './members/helpers'
 import { StudyLine, Tender } from '../types/types-file'
 import { getStudyLines } from '../firebase/api/authentication'
 import { Loading } from '../components/Loading'
+import CountDown from '../components/EventCountDown'
+import {useNextEvent}  from '../hooks/useEvents'
 
 export default function HomePage() {
   const { settingsState } = useSettings();
   const { tenderState } = useTenders();
-
+  const { nextEvent, loading: eventLoading } = useNextEvent();
   const activeTenders = tenderState.tenders.filter(t => !t.roles?.includes('passive') && !t.roles?.includes('board') && t?.active);
   const boardMembers = tenderState.tenders.filter(t => t.roles?.includes('board'));
-
+  
   if (settingsState.loading) {
     return <Loading centerOverlay={true} />;
   }
 
+
+  console.log('nextEvent', nextEvent)
+  console.log('eventLoading', eventLoading)
   return (
     <Layout style={{ minHeight: '100vh', width: '100%', flexDirection: 'column', height: 'auto'}}>
        <Header
@@ -92,6 +97,11 @@ export default function HomePage() {
           paddingBottom: '50px',
         }}
       >
+        {!eventLoading && <CountDown nextEvent={nextEvent ? {
+          title: nextEvent.title,
+          start: nextEvent.start,
+          event_url: nextEvent.facebook_link,
+        } : null} />}
         <Row justify="center">
           <Col
             md={24}
