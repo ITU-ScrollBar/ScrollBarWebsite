@@ -1,16 +1,35 @@
-import { Card, InputNumber, Input, DatePicker } from "antd";
+import { Card, InputNumber, Input, DatePicker, Button, Popconfirm, Space } from "antd";
+import { DeleteOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { Shift } from "../../../types/types-file";
 
 export default function ShiftInfo(props: {
   shift: Shift;
-  updateShift: (id: string, field: string, value: any) => void;
+  updateShift: (id: string, field: string, value: unknown) => void;
+  removeShift: (shift: Shift) => void;
 }) {
-  const { shift, updateShift } = props;
+  const { shift, updateShift, removeShift } = props;
 
   return (
-    <Card title={shift.title} className="mb-4 shadow-sm rounded-lg">
-      <div className="space-y-3">
+    <Card 
+      title={shift.title} 
+      className="mb-4 shadow-sm rounded-lg"
+      extra={
+        <Popconfirm
+          title="Delete this shift?"
+          description="This will permanently delete the shift. Engagements will remain."
+          onConfirm={() => removeShift(shift)}
+          okText="Delete"
+          cancelText="Cancel"
+          okButtonProps={{ danger: true }}
+        >
+          <Button type="text" danger icon={<DeleteOutlined />}>
+            Delete
+          </Button>
+        </Popconfirm>
+      }
+    >
+      <Space direction="vertical" style={{ width: "100%" }} size="middle">
         {/* Title */}
         <Input
           value={shift.title}
@@ -61,7 +80,7 @@ export default function ShiftInfo(props: {
             placeholder="Tenders"
           />
         </div>
-      </div>
+      </Space>
     </Card>
   );
 }
