@@ -8,6 +8,7 @@ import { MenuOutlined } from '@ant-design/icons'
 import { useWindowSize } from "../../hooks/useWindowSize";
 import { UserAvatar } from "../UserAvatar";
 import { Loading } from "../Loading";
+import { Role } from "../../types/types-file";
 
 interface TenderMenuProps {
   children?: ReactNode;
@@ -42,27 +43,34 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
 
   if (
     currentUser?.isAdmin 
-    || currentUser?.roles.includes('tender_manager')
-    || currentUser?.roles.includes('shift_manager')
-    || currentUser?.roles.includes('user_manager')
+    || currentUser?.roles?.includes('tender_manager')
+    || currentUser?.roles?.includes('shift_manager')
+    || currentUser?.roles?.includes('user_manager')
+    || currentUser?.roles?.includes('board_member')
   ) {
     const adminItems = [];
-    if (currentUser?.isAdmin || currentUser?.roles.includes('tender_manager')) {
+    if (currentUser?.isAdmin || currentUser?.roles?.includes('tender_manager')) {
       adminItems.push({
         label: 'Manage Events',
         key: 'admin/events',
       });
     }
-    if (currentUser?.isAdmin || currentUser?.roles.includes('shift_manager')) {
+    if (currentUser?.isAdmin || currentUser?.roles?.includes('shift_manager')) {
       adminItems.push({
         label: 'Manage Shifts',
         key: 'admin/shifts',
       });
     }
-    if (currentUser?.isAdmin || currentUser?.roles.includes('user_manager')) {
+    if (currentUser?.isAdmin || currentUser?.roles?.includes('user_manager')) {
       adminItems.push({
         label: 'Manage Users',
         key: 'admin/users',
+      });
+    }
+    if (currentUser?.isAdmin || currentUser?.roles?.includes(Role.BOARD)) {
+      adminItems.push({
+        label: 'Manage Internal Events',
+        key: 'admin/internalEvents',
       });
     }
     if (currentUser?.isAdmin) {
@@ -85,7 +93,7 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
   
   const avatarMenuItems: MenuItem[] = [
     {
-      key: 'profile',
+      key: 'avatar',
       label: (
         <div style={{ display: 'flex' }}>
           <UserAvatar user={currentUser} size={64} />
@@ -95,10 +103,6 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
         {
           key: 'logout', 
           label: <strong onClick={() => {logout(); navigate('/')}}>Logout</strong> 
-        },
-        {
-          key: 'profile',
-          label: <strong onClick={() => navigate('/members/profile')}>Profile</strong>
         }
       ]
     }

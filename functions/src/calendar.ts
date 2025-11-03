@@ -1,12 +1,14 @@
 import express from 'express';
 import * as admin from 'firebase-admin';
+import { Timestamp } from 'firebase-admin/firestore';
 import { createEvents, EventAttributes } from 'ics';
+import { InternalEvent, Tender } from './types/types-file';
 
-var serviceAccount = require("../.credentials.json");
 
 // Safe admin init (prevents multiple inits during local tests)
 if (!admin.apps.length) {
-  admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) : null;
+  admin.initializeApp(serviceAccount ? {credential: admin.credential.cert(serviceAccount)} : {});
 }
 const db = admin.firestore();
 
@@ -49,22 +51,22 @@ type MapToIcsEventProps = {
   shiftMembers: Array<{ type: "anchor" | "tender"; name: string }>;
 }
 
+const toDate = (v: any): Date | null => {
+  if (!v) return null;
+  if (v instanceof Date) return v;
+  if (v && typeof v.toDate === 'function') return v.toDate();
+  if (typeof v === 'number') return new Date(v);
+  if (v && typeof v.seconds === 'number') return new Date(v.seconds * 1000);
+  const parsed = new Date(v);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
 function toIcsArray(d: Date): [number, number, number, number, number] {
   return [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes()];
 }
 
 function mapDocToIcsEvent({shift, event, shiftMembers}: MapToIcsEventProps): EventAttributes | null {
   if (!shift || !event) return null;
-
-  const toDate = (v: any): Date | null => {
-    if (!v) return null;
-    if (v instanceof Date) return v;
-    if (v && typeof v.toDate === 'function') return v.toDate();
-    if (typeof v === 'number') return new Date(v);
-    if (v && typeof v.seconds === 'number') return new Date(v.seconds * 1000);
-    const parsed = new Date(v);
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
-  };
 
   const start = toDate(shift.start);
   const end = toDate(shift.end);
@@ -100,11 +102,36 @@ app.get('/calendar/:uid', async (req, res) => {
     const uid = req.params.uid;
     if (!uid) return res.status(400).send('Missing uid');
 
-    const userEngagementsSnapshot = await db
+    const shiftEvents = await handleShifts(uid);
+
+    const internalEvents = await handleInternalEvents(uid);
+
+    const { error, value } = createEvents(shiftEvents.concat(internalEvents));
+    if (error) {
+      console.error('ICS generation error', error);
+      return res.status(500).send('Failed to create calendar');
+    }
+
+    const filename = `calendar-${uid}.ics`;
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+    res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=3600');
+
+    return res.status(200).send(value);
+  } catch (err) {
+    console.error('Calendar error', err);
+    return res.status(500).send('Server error');
+  }
+});
+
+const handleShifts = async (uid: string): Promise<EventAttributes[]> => {
+  // Handle shifts for the user
+  const userEngagementsSnapshot = await db
       .collection('env')
       .doc('dev')
       .collection('engagements')
       .where('userId', '==', uid)
+      .where('shiftEnd', '>=', Timestamp.now())
       .get();
 
     const shiftIds = userEngagementsSnapshot.docs.map(doc => doc.data().shiftId);
@@ -113,7 +140,7 @@ app.get('/calendar/:uid', async (req, res) => {
       .collection('env')
       .doc('dev')
       .collection('shifts')
-      .where(admin.firestore.FieldPath.documentId(), 'in', shiftIds)
+      .where('__name__', 'in', shiftIds)
       .get();
     
     const relatedEngagementsSnapshot = await db
@@ -129,7 +156,7 @@ app.get('/calendar/:uid', async (req, res) => {
       .collection('env')
       .doc('dev')
       .collection('events')
-      .where(admin.firestore.FieldPath.documentId(), 'in', eventIds)
+      .where('__name__', 'in', eventIds)
       .get();
 
     const eventsMap = eventsSnapshot.docs.map(doc => {
@@ -163,23 +190,48 @@ app.get('/calendar/:uid', async (req, res) => {
       const e = mapDocToIcsEvent({ shift: d, event, shiftMembers });
       if (e) events.push(e);
     }
+    return events;
+};
 
-    const { error, value } = createEvents(events);
-    if (error) {
-      console.error('ICS generation error', error);
-      return res.status(500).send('Failed to create calendar');
+const handleInternalEvents = async (uid: string): Promise<EventAttributes[]> => {
+  // Handle internal events for the user
+  const internalEventsSnapshot = await db
+    .collection('env')
+    .doc('dev')  
+    .collection('internalEvents')
+    .where('end', '>=', Timestamp.now())
+    .get();
+
+  const currentUser = (await db.collection('users').doc(uid).get()).data() as Tender;
+
+  if (!currentUser) return [];
+
+  const internalEvents: EventAttributes[] = [];
+  internalEventsSnapshot.forEach(doc => {
+    const data = doc.data() as InternalEvent;    
+
+    const start = toDate(data.start);
+    const end = toDate(data.end);
+    if (!start || !end) return;
+
+    if (!currentUser.roles?.includes(data.scope) &&
+        !currentUser.teamIds?.includes(data.scope)) {
+      return;
     }
 
-    const filename = `calendar-${uid}.ics`;
-    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
-    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
-    res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=3600');
+    const calEvent: Partial<EventAttributes> & { end?: any } = {
+      start: toIcsArray(start),
+      end: toIcsArray(end),
+      title: data.title,
+      startInputType: 'utc',
+      description: data.description,
+      location: data.location,
+      uid: data.id,
+    };
 
-    return res.status(200).send(value);
-  } catch (err) {
-    console.error('Calendar error', err);
-    return res.status(500).send('Server error');
-  }
-});
+    if (calEvent) internalEvents.push(calEvent as EventAttributes);
+  });
+  return internalEvents;
+};
 
 export default app;

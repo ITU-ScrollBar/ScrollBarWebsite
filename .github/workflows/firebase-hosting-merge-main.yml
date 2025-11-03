@@ -14,8 +14,27 @@ on:
       - '.github/**'
       - '.vscode/**'
 jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install deps
+        run: yarn install
+
+      - name: Run migrations
+        env:
+          VITE_APP_ENV: 'dev'
+          FIREBASE_SERVICE_ACCOUNT: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_SCROLLBARWEB2 }}'
+        run: yarn migrate
+
   build_and_deploy:
     runs-on: ubuntu-latest
+    needs: migrate
     env:
       HTTPS: "true"
       VITE_APP_FIREBASE_API_KEY: '${{ secrets.FIREBASE_API_KEY }}'

@@ -11,6 +11,9 @@ import {
   QuerySnapshot,
   DocumentData,
   Unsubscribe,
+  limit,
+  getDocs,
+  getCountFromServer,
 } from 'firebase/firestore';
 import { Engagement } from '../../types/types-file'; // Define your Engagement type separately
 import { db } from '../index';
@@ -28,6 +31,21 @@ export const streamEngagements = (
   const engagementsRef = collection(doc(collection(db, 'env'), env), 'engagements');
   const q = query(engagementsRef, where('shiftEnd', '>=', new Date()), orderBy('shiftEnd', 'asc'));
   return onSnapshot(q, onNext, onError);
+};
+
+export const getUserEngagementsData = async (
+  uid: string
+): Promise<{ firstShift: Date, shiftCount: number } | null> => {
+  const engagementsRef = collection(doc(collection(db, 'env'), env), 'engagements');
+  const firstShiftQuery = query(engagementsRef, where('userId', '==', uid), orderBy('shiftEnd', 'asc'), limit(1));
+  const shiftCountQuery = query(engagementsRef, where('userId', '==', uid));
+  const joinYear = await getDocs(firstShiftQuery);
+  const count = await getCountFromServer(shiftCountQuery);
+  if (!joinYear.empty && count.data().count) {
+    return { firstShift: joinYear.docs[0].data().shiftEnd.toDate(), shiftCount: count.data().count };
+  } else {
+    return null;
+  }
 };
 
 

@@ -14,8 +14,6 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_APP_FIREBASE_APP_ID
 };
 
-console.log("Firebase Config:", firebaseConfig); // Log the config to ensure it's loaded correctly
-
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);

@@ -4,6 +4,7 @@ import { InvitedUsersTab } from "../../components/UserPage/InvitedUsersTab";
 import { ExistingUsersTab } from "../../components/UserPage/ExistingUsersTab";
 import { useWindowSize } from "../../hooks/useWindowSize";
 import { useEffect, useState } from "react";
+import { TeamsTab } from "../../components/UserPage/TeamsTab";
 
 export const UserManagerPage = () => {
     const { isMobile } = useWindowSize();
@@ -26,6 +27,7 @@ export const UserManagerPage = () => {
                 items={[
                     { key: 'existingUsers', label: 'Existing Users', children: <ExistingUsersTab /> },
                     { key: 'invitedUsers', label: 'Invited Users', children: <InvitedUsersTab /> },
+                    { key: 'teams', label: 'Teams', children: <TeamsTab /> },
                 ]}
             />
         </Layout>
