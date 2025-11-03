@@ -67,7 +67,7 @@ export enum engagementType {
 export interface Engagement {
   id: string;
   type: engagementType;
-  key?: string;
+  key: string;
   shiftId: string;
   shiftEnd: Date;
   userId?: string;
@@ -76,17 +76,19 @@ export interface Engagement {
 }
 
 // Event-related types
-export interface Event {
+export interface BaseEvent {
   id: string;
+  title: string;
+  description?: string;
   start: Date;
   end: Date;
-  description: string;
-  title: string;
   location: string;
-  published: boolean;
-  internal: boolean;
-  [id: string]: any;
 }
+
+export type Event = {
+  published: boolean;
+  [id: string]: any;
+} & BaseEvent;
 
 export interface FirebaseDate {
   seconds: number;
@@ -98,7 +100,7 @@ export type EventCreateParams = {
   end: Date;
   description: string;
   title: string;
-  location: string;
+  where: string;
   published: boolean;
   internal: boolean;
 };
@@ -118,12 +120,13 @@ export enum ShiftFiltering {
 // Shift-related types
 export interface Shift {
   id: string;
-  key?: string;
-  start: FirebaseDate;
-  end: FirebaseDate;
   eventId: string;
-  title: string;
   location: string;
+  title: string;
+  tenders: number;
+  anchors: number;
+  start: Date;
+  end: Date;
 }
 
 export interface ShiftUpdateParams {
@@ -144,12 +147,14 @@ export type Tender = {
   uid: string;
   // Add any other fields you expect from Firestore, e.g.:
   name?: string;
+  active: boolean;
   email: string;
   displayName?: string;
   photoUrl?: string;
   isAdmin: boolean;
   roles?: string[];
   studyline?: string;
+  teamIds?: string[];
   // Add other fields here
 };
 
@@ -165,4 +170,48 @@ export type EngagementState = {
   loading: boolean;
   isLoaded: boolean;
   engagements: (Engagement & { key: string })[];
+};
+
+export enum Role {
+  ADMIN = "admin",
+  ANCHOR = "anchor",
+  NEWBIE = "newbie",
+  BOARD = "board",
+  USER_MANAGER = "user_manager",
+  SHIFT_MANAGER = "shift_manager",
+  EVENT_MANAGER = "event_manager",
+  REGULAR_ACCESS = "regular_access",
+  PASSIVE = "passive",
+  LEGACY = "legacy",
+  TENDER = "tender",
+}
+
+export const scopeOptions = [Role.BOARD, Role.ANCHOR, Role.TENDER];
+
+export type InternalEvent = {
+  scope: string;
+} & BaseEvent;
+
+export type InternalEventCreateParams = {
+  start: Date;
+  end: Date;
+  description?: string;
+  title: string;
+  location: string;
+  scope: string;
+};
+
+export interface InternalEventUpdateParams {
+  id: string;
+  field: string;
+  value: any;
+}
+
+export type Team = {
+  id: string;
+  name: string;
+};
+
+export type TeamCreateParams = {
+  name: string;
 };

@@ -18,18 +18,22 @@ function Shifts({ filter = ShiftFiltering.ALL_SHIFTS, title }: ShiftsProps) {
   const { eventState } = useEvents();
   const { engagementState } = useEngagementContext();
   const { tenderState } = useTenders();
-  const BACKGROUND = "#F5F5F5";
+  const BACKGROUND = "#FFF";
   const BOX_SHADOW = "0 2px 6px rgba(7, 7, 7, 0.5)";
 
   if (shiftState.loading || eventState.loading || engagementState.loading) {
-    return <Loading />;
+    const resources: string[] = [];
+    if (shiftState.loading) resources.push("shifts");
+    if (eventState.loading) resources.push("events");
+    if (engagementState.loading) resources.push("engagements");
+    return <Loading resources={resources} centerOverlay={true} />;
   }
 
   return (
     <Layout
       style={{
         minHeight: "100vh",
-        minWidth: "100vw",
+        width: "100%",
         flexDirection: "column",
         height: "auto",
       }}
@@ -48,17 +52,12 @@ function Shifts({ filter = ShiftFiltering.ALL_SHIFTS, title }: ShiftsProps) {
               marginBottom: 28,
             }}
           >
-            {eventState.events.sort((a, b) => a.start.getTime() - b.start.getTime()).map((event) => (
-              <section key={event.id} style={{ marginBottom: 32 }}>
-                <ShiftList
-                  shifts={shiftState.shifts}
-                  engagements={engagementState.engagements}
-                  tenders={tenderState.tenders}
-                  eventId={event.id}
-                  shiftFiltering={filter}
-                />
-              </section>
-            ))}
+            <ShiftList
+              shifts={shiftState.shifts}
+              engagements={engagementState.engagements}
+              tenders={tenderState.tenders}
+              shiftFiltering={filter}
+            />
           </div>
         </Layout.Content>
       </Layout>

@@ -1,6 +1,9 @@
 .env
-functions/.credentials.json
+.credentials.json
 .firebase
+
+# Type-file copied to functions project
+*/src/types/types-file.ts
 
 # Logs
 logs

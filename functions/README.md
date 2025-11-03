@@ -13,7 +13,7 @@ Small, focused Firebase Cloud Functions that power the Calendar backend for the 
 
 2. Configure firebase project by navigating to [Firebase Service accounts](https://console.firebase.google.com/u/0/project/_/settings/serviceaccounts/adminsdk)
 
-3. Generate new private key and save it in `./functions/.credentials.json` - make sure not to expose this to anyone else.
+3. Generate new private key and save it in `./.credentials.json` (root of repository) - make sure not to expose this to anyone else.
 
 4. Deploy functions
     ```bash
@@ -29,3 +29,13 @@ Small, focused Firebase Cloud Functions that power the Calendar backend for the 
 ## Local testing
 
 Once the setup guide is followed, you can test the function locally by accessing `http://localhost:5001/calendar/<uid>` where `<uid>` is a user id. This will download an `.ics` file that can be imported in modern calendar apps.
+
+# Mailgun service
+
+## Quick setup
+
+1. Generate a sending key on app.eu.mailgun.net and store in as `MAILGUN_API_KEY` in `.env`
+
+2. Set up `MAILGUN_DOMAIN`
+
+3. Run pre-build script `yarn run prebuild` to ensure types are available in this project.

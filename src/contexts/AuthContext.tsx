@@ -14,11 +14,11 @@ import {
 } from "firebase/auth";
 import { auth } from "../firebase/index";
 import { getUser } from "../firebase/api/authentication";
-import { UserProfile } from "../types/types-file";
+import { Tender } from "../types/types-file";
 
 // Define and export AuthContextType and AuthProviderProps
 export interface AuthContextType {
-  currentUser: UserProfile | null;
+  currentUser: Tender | null;
   loading: boolean;
   login: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -32,7 +32,7 @@ export interface AuthProviderProps {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [currentUser, setCurrentUser] = useState<Tender | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       getUser(user.uid, {
         next: (snapshot) => {
           if (snapshot.exists()) {
-            const userdata = snapshot.data() as UserProfile;
+            const userdata = snapshot.data() as Tender;
             setCurrentUser({ ...userdata, uid: user.uid });
             console.log("Fetched new current user");
           } else {
@@ -86,7 +86,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const setUser = (user: User | null): void => {
-    setCurrentUser(user as UserProfile | null);
+    setCurrentUser(user as Tender | null);
   };
 
 

@@ -86,8 +86,8 @@ const addEvent = (event: EventCreateParams) => {
     });
 };
 
-  const removeEvent = (event: Event) => {
-    return deleteEvent(event);
+  const removeEvent = (id: string) => {
+    return deleteEvent(id);
   };
 
   const updateEvent = (id: string, field: string, value: any) => {

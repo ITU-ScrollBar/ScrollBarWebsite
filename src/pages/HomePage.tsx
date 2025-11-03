@@ -21,7 +21,7 @@ export default function HomePage() {
   const boardMembers = tenderState.tenders.filter(t => t.roles?.includes('board'));
 
   if (settingsState.loading) {
-    return <Loading />;
+    return <Loading centerOverlay={true} />;
   }
 
   return (

@@ -1,25 +1,4 @@
-import { FirebaseDate, Tender, Engagement } from "../../types/types-file";
-
-/**
- * Converts a FirebaseDate object to a number representing the hour.
- * @param date - The FirebaseDate object to convert.
- * @returns A number representing the hour.
- */
-export const dateToHour = (date: FirebaseDate): number => {
-  const jsDate = new Date(
-    (date.seconds || 0) * 1000 + Math.floor((date.nanoseconds || 0) / 1e6)
-  );
-  return jsDate.getHours();
-};
-
-/**
- * Converts a FirebaseDate object to a string representing the hour.
- * @param date - The FirebaseDate object to convert.
- * @returns A string representing the hour.
- */
-export const dateToHourString = (date: FirebaseDate): string => {
-  return dateToHour(date).toString();
-};
+import { Tender, Engagement, Role } from "../../types/types-file";
 
 /**
  * Gets all engagements for a specific shift
@@ -78,5 +57,63 @@ export const handleImageError = (
   const fallbackDiv = imgElement.nextElementSibling as HTMLElement;
   if (fallbackDiv) {
     fallbackDiv.style.display = "flex";
+  }
+};
+
+export const roleToColor = (role: Role): string => {
+  switch (role) {
+    case Role.ADMIN:
+      return "volcano";
+    case Role.ANCHOR:
+      return "purple";
+    case Role.NEWBIE:
+      return "green";
+    case Role.BOARD:
+      return "blue";
+    case Role.USER_MANAGER:
+      return "orange";
+    case Role.SHIFT_MANAGER:
+      return "cyan";
+    case Role.EVENT_MANAGER:
+      return "magenta";
+    case Role.REGULAR_ACCESS:
+      return "geekblue";
+    case Role.PASSIVE:
+      return "gold";
+    case Role.LEGACY:
+      return "lime";
+    case Role.TENDER:
+      return "pink";
+    default:
+      return "default";
+  }
+};
+
+export const roleToLabel = (role: Role): string => {
+  switch (role) {
+    case Role.ADMIN:
+      return "Admin";
+    case Role.ANCHOR:
+      return "Anchor";
+    case Role.NEWBIE:
+      return "Newbie";
+    case Role.BOARD:
+      return "Board";
+    case Role.USER_MANAGER:
+      return "User Manager";
+    case Role.SHIFT_MANAGER:
+      return "Shift Manager";
+    case Role.EVENT_MANAGER:
+      return "Event Manager";
+    case Role.REGULAR_ACCESS:
+      return "Regular Access";
+    case Role.PASSIVE:
+      return "Passive";
+    case Role.LEGACY:
+      return "Legacy";
+    case Role.TENDER:
+      return "Tender";
+    default:
+      return "Unknown";
   }
 };
