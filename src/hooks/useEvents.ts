@@ -8,7 +8,7 @@ import {
   updateEvent as updateEventInDb,
 } from '../firebase/api/events'; // Adjust the import path as necessary
 import { Event, EventCreateParams } from '../types/types-file'; // Ensure you have Event type defined
-import { loadBundle, Timestamp } from 'firebase/firestore';
+import { Timestamp } from 'firebase/firestore';
 
 type EventState = {
   loading: boolean;

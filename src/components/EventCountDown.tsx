@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 
-import { Button, Space, Tag } from 'antd'
+import { Button, Space } from 'antd'
 
 import Title from 'antd/es/typography/Title';
 import Text from 'antd/es/typography/Text';

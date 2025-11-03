@@ -30,8 +30,6 @@ export default function HomePage() {
   }
 
 
-  console.log('nextEvent', nextEvent)
-  console.log('eventLoading', eventLoading)
   return (
     <Layout style={{ minHeight: '100vh', width: '100%', flexDirection: 'column', height: 'auto'}}>
        <Header

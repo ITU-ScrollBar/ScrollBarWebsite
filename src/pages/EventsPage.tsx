@@ -18,6 +18,7 @@ export default function EventsPage() {
     const events = eventState.isLoaded ? eventState.events
         .filter(event => event.published && !event.internal)
         .map(event => ({
+            id: event.id,
             title: event.title,
             image: event.picture ?? DEFAULT_EVENT_IMAGE,
             start: event.start,
@@ -120,31 +121,30 @@ export default function EventsPage() {
     };
 
   return (
-    <>
-      <Layout 
+    <Layout 
+      style={{
+        minHeight: '100vh',
+        minWidth: '100vw',
+        display: 'flex',
+        flexDirection: 'column',
+        height: 'auto',
+      }}
+    >
+      <Header 
         style={{
-          minHeight: '100vh',
-          minWidth: '100vw',
+          position: 'absolute',
+          top: 0,
+          width: '100%',
+          backgroundColor: 'transparent',
+          boxShadow: 'none',
+          zIndex: 3,
           display: 'flex',
-          flexDirection: 'column',
-          height: 'auto',
+          alignItems: 'center',
+          color: '#fff',
         }}
       >
-        <Header 
-          style={{
-            position: 'absolute',
-            top: 0,
-            width: '100%',
-            backgroundColor: 'transparent',
-            boxShadow: 'none',
-            zIndex: 3,
-            display: 'flex',
-            alignItems: 'center',
-            color: '#fff',
-          }}
-        >
-          <HeaderBar />
-        </Header>
+        <HeaderBar />
+      </Header>
 
         <div 
           style={{
@@ -181,64 +181,63 @@ export default function EventsPage() {
           {nextEvent && <CountDown nextEvent={nextEvent} />}
         </div>
 
-        <Row justify="center">
-          <Col
-            md={24}
-            lg={20}
+      <Row justify="center">
+        <Col
+          md={24}
+          lg={20}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+        >
+          <Title 
+            level={2} 
             style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
+              textAlign: isMobile ? 'center' : 'left',
+              alignSelf: isMobile ? 'center' : 'flex-start',
+              fontSize: isMobile ? 'medium' : 'large',
+              fontWeight: 'bold',
+              marginBottom: '30px',
             }}
           >
-            <Title 
-              level={2} 
-              style={{
-                textAlign: isMobile ? 'center' : 'left',
-                alignSelf: isMobile ? 'center' : 'flex-start',
-                fontSize: isMobile ? 'medium' : 'large',
-                fontWeight: 'bold',
-                marginBottom: '30px',
-              }}
-            >
-              Our Events This Semester
-            </Title>
+            Our Events This Semester
+          </Title>
 
-            {events.length > 0 ? (() => {
-              const featuredEvent = events[0];
-              const otherEvents = events.slice(1);
-              return (
+          {events.length > 0 ? (() => {
+            const featuredEvent = events[0];
+            const otherEvents = events.slice(1);
+            return (
+              <div 
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: isMobile ? 'repeat(1, 1fr)' : 'repeat(4, 1fr)',
+                  gap: isMobile ? '12px' : '16px',
+                  width: '100%',
+                }}
+              >
                 <div 
                   style={{
-                    display: 'grid',
-                    gridTemplateColumns: isMobile ? 'repeat(1, 1fr)' : 'repeat(4, 1fr)',
-                    gap: isMobile ? '12px' : '16px',
-                    width: '100%',
+                    gridRow: isMobile ? 'span 1' : 'span 2',
+                    gridColumn: 'span 1',
                   }}
                 >
-                  <div 
-                    style={{
-                      gridRow: isMobile ? 'span 1' : 'span 2',
-                      gridColumn: 'span 1',
-                    }}
-                  >
-                    {renderEventCard(featuredEvent, true)}
-                  </div>
-                  {otherEvents.map((event) => (
-                    <div key={event.title}>
-                      {renderEventCard(event, false)}
-                    </div>
-                  ))}
+                  {renderEventCard(featuredEvent, true)}
                 </div>
-              );
-            })() : (
-              <Paragraph style={{ textAlign: "center" }}>No upcoming events at the moment.</Paragraph>
-            )}
-          </Col>
-        </Row>
-        <Divider />   
-      </Layout>
-    </>
+                {otherEvents.map((event) => (
+                  <div key={event.id}>
+                    {renderEventCard(event, false)}
+                  </div>
+                ))}
+              </div>
+            );
+          })() : (
+            <Paragraph style={{ textAlign: "center" }}>No upcoming events at the moment.</Paragraph>
+          )}
+        </Col>
+      </Row>
+      <Divider />   
+    </Layout>
   )
 }
    
