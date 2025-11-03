@@ -8,6 +8,7 @@ import { useWindowSize } from "../hooks/useWindowSize";
 import HeaderBar from '../components/HomePage/HeaderBar';
 import CountDown from '../components/EventCountDown';
 import useEvents from '../hooks/useEvents';
+import React from 'react';
 
 export default function EventsPage() {
     const { eventState } = useEvents();
@@ -27,7 +28,7 @@ export default function EventsPage() {
     const nextEvent = events.length > 0 ? events[0] : null;
 
     // Common styles
-    const baseCardStyle = {
+    const baseCardStyle: React.CSSProperties = {
       position: 'relative',
       display: 'flex',
       flexDirection: 'column',
@@ -36,7 +37,7 @@ export default function EventsPage() {
       backgroundPosition: 'center',
     };
 
-    const baseOverlayStyle = {
+    const baseOverlayStyle: React.CSSProperties = {
       zIndex: 2,
       backgroundColor: 'rgba(46, 46, 46, 0.8)',
       padding: '20px',
@@ -79,13 +80,13 @@ export default function EventsPage() {
       const overlayAlign = isFeatured ? (isMobile ? 'center' : 'left') : 'center';
       const overlayJustify = isMobile && isSmall ? 'center' : 'flex-start';
 
-      const cardStyle = {
+      const cardStyle: React.CSSProperties = {
         ...baseCardStyle,
         height: cardHeight,
         backgroundImage: `url(${event.image})`,
       };
 
-      const overlayStyle = {
+      const overlayStyle: React.CSSProperties = {
         ...baseOverlayStyle,
         margin: overlayMargin,
         textAlign: overlayAlign,
