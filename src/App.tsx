@@ -108,7 +108,7 @@ function App() {
                     </Route>
                     <Route
                       element={
-                        <RoleProtectedRoute requiredRole={"user_manager"} />
+                        <RoleProtectedRoute requiredRole={"tender_manager"} />
                       }
                     >
                       <Route path="admin/users" element={<UserManagerPage />} />

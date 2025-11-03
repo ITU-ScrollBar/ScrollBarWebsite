@@ -17,7 +17,7 @@ export default function HomePage() {
   const { settingsState } = useSettings();
   const { tenderState } = useTenders();
 
-  const activeTenders = tenderState.tenders.filter(t => !t.roles?.includes('passive') && !t.roles?.includes('board'));
+  const activeTenders = tenderState.tenders.filter(t => !t.roles?.includes('passive') && !t.roles?.includes('board') && t?.active);
   const boardMembers = tenderState.tenders.filter(t => t.roles?.includes('board'));
 
   if (settingsState.loading) {

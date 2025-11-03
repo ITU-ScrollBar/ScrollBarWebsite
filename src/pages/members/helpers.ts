@@ -70,7 +70,7 @@ export const roleToColor = (role: Role): string => {
       return "green";
     case Role.BOARD:
       return "blue";
-    case Role.USER_MANAGER:
+    case Role.TENDER_MANAGER:
       return "orange";
     case Role.SHIFT_MANAGER:
       return "cyan";
@@ -99,8 +99,8 @@ export const roleToLabel = (role: Role): string => {
       return "Newbie";
     case Role.BOARD:
       return "Board";
-    case Role.USER_MANAGER:
-      return "User Manager";
+    case Role.TENDER_MANAGER:
+      return "Tender Manager";
     case Role.SHIFT_MANAGER:
       return "Shift Manager";
     case Role.EVENT_MANAGER:
