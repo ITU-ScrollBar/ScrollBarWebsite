@@ -161,7 +161,7 @@ export function ShiftList({
         currentUser?.roles?.includes(ie.scope) ||
         currentUser?.teamIds?.includes(ie.scope)
       );
-    });
+    }).sort((a, b) => a.start.getTime() - b.start.getTime());
   }, [
     currentUser?.roles,
     currentUser?.teamIds,
