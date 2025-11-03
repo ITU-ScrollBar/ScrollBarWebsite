@@ -8,12 +8,12 @@ import { useWindowSize } from "../hooks/useWindowSize";
 import HeaderBar from '../components/HomePage/HeaderBar';
 import CountDown from '../components/EventCountDown';
 import useEvents from '../hooks/useEvents';
+import DEFAULT_EVENT_IMAGE from '../assets/images/background.png';
 import React from 'react';
 
 export default function EventsPage() {
     const { eventState } = useEvents();
     const { isMobile } = useWindowSize();
-    const DEFAULT_EVENT_IMAGE = "src/assets/images/background.png";
     const EVENT_INFORMATION_LABEL = "Get all the latest Information on the Facebook Event"
     const events = eventState.isLoaded ? eventState.events
         .filter(event => event.published && !event.internal)
