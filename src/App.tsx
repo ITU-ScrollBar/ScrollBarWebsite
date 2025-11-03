@@ -15,12 +15,12 @@ import Shifts from "./pages/members/Shifts";
 import Profile from "./pages/members/Profile";
 import { TenderMenu } from "./components/HomePage/TenderMenu";
 import { ShiftFiltering } from "./types/types-file";
-import EventManagement from "./pages/shit/EventManagement/EventManagement";
-import GlobalSettingsPage from "./pages/shit/GlobalSettingsPage";
-import UserManagerPage from "./pages/shit/UserManagerPage";
+import EventManagement from "./pages/admin/EventManagement/EventManagement";
+import GlobalSettingsPage from "./pages/admin/GlobalSettingsPage";
+import UserManagerPage from "./pages/admin/UserManagerPage";
 import { setTwoToneColor } from "@ant-design/icons";
 import { App as AntdApp } from "antd";
-import { InternalEventsPage } from "./pages/shit/InternalEventsPage";
+import { InternalEventsPage } from "./pages/admin/InternalEventsPage";
 
 function App() {
   setTwoToneColor("#FFE600");
