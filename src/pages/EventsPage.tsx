@@ -151,12 +151,22 @@ export default function EventsPage() {
             position: 'relative',
             width: '100vw',
             height: isMobile ? '50vh' : '70vh',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundAttachment: 'fixed',
-            backgroundImage: `url(${nextEvent ? nextEvent.image : DEFAULT_EVENT_IMAGE})`,
+            overflow: 'hidden',
           }}
         >
+          <img
+            src={nextEvent ? nextEvent.image : DEFAULT_EVENT_IMAGE}
+            alt="Event background"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center',
+            }}
+          />
           {nextEvent && <CountDown nextEvent={nextEvent} />}
         </div>
 
