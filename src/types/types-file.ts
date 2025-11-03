@@ -177,7 +177,7 @@ export enum Role {
   ANCHOR = "anchor",
   NEWBIE = "newbie",
   BOARD = "board",
-  USER_MANAGER = "user_manager",
+  TENDER_MANAGER = "tender_manager",
   SHIFT_MANAGER = "shift_manager",
   EVENT_MANAGER = "event_manager",
   REGULAR_ACCESS = "regular_access",
