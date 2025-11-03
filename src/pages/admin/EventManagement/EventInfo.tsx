@@ -311,8 +311,9 @@ export default function EventInfo(props: { event: Event }) {
               showTime
               value={dayjs(customShiftEnd)}
               onChange={(value) =>
-                setCustomShiftEnd(value?.toDate())
-              }
+                setCustomShiftEnd(
+                  value?.toDate() || new Date(props.event.start.getTime() + 5 * 60 * 60 * 1000)
+                )
               style={{ width: "100%" }}
             />
           </div>
