@@ -45,7 +45,6 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
     currentUser?.isAdmin 
     || currentUser?.roles?.includes('tender_manager')
     || currentUser?.roles?.includes('shift_manager')
-    || currentUser?.roles?.includes('user_manager')
     || currentUser?.roles?.includes('board_member')
   ) {
     const adminItems = [];
@@ -61,7 +60,7 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
         key: 'admin/shifts',
       });
     }
-    if (currentUser?.isAdmin || currentUser?.roles?.includes('user_manager')) {
+    if (currentUser?.isAdmin || currentUser?.roles?.includes('tender_manager')) {
       adminItems.push({
         label: 'Manage Users',
         key: 'admin/users',
