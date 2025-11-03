@@ -96,10 +96,12 @@ export default function HeaderBar() {
         backgroundColor: "transparent",
       }}
     >
-      <img
+      <a href="/">
+        <img
         style={{ width: "250px", height: "auto", cursor: "pointer" }}
         src={logo}
       />
+      </a>
       <Menu
         theme="dark"
         mode="horizontal"
