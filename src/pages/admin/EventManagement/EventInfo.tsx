@@ -314,6 +314,7 @@ export default function EventInfo(props: { event: Event }) {
                 setCustomShiftEnd(
                   value?.toDate() || new Date(props.event.start.getTime() + 5 * 60 * 60 * 1000)
                 )
+              }
               style={{ width: "100%" }}
             />
           </div>
