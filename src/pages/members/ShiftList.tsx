@@ -29,7 +29,7 @@ import { UpForGrabsBadge } from "../../badges/UpForGrabsBadge";
 import useInternalEvents from "../../hooks/useInternalEvents";
 import useTeams from "../../hooks/useTeams";
 import Loading from "../../components/Loading";
-import { renderInternalEvent } from "../../pages/admin/InternalEventsPage";
+import { renderInternalEvent } from "../admin/InternalEventsPage";
 
 const { Title, Paragraph } = Typography;
 

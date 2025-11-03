@@ -7,31 +7,39 @@ import { useEffect, useState } from "react";
 import { TeamsTab } from "../../components/UserPage/TeamsTab";
 
 const UserManagerPage = () => {
-    const { isMobile } = useWindowSize();
-    const [ sidePadding, setSidePadding ] = useState<number>(96);
+  const { isMobile } = useWindowSize();
+  const [sidePadding, setSidePadding] = useState<number>(96);
 
-    useEffect(() => {
-        if (isMobile) {
-            setSidePadding(16);
-        } else {
-            setSidePadding(96);
-        }
-    }, [isMobile])
+  useEffect(() => {
+    if (isMobile) {
+      setSidePadding(16);
+    } else {
+      setSidePadding(96);
+    }
+  }, [isMobile]);
 
-    return (
-        <Layout style={{ margin: `24px ${sidePadding}px 0px ${sidePadding}px` }}>
-            <Title>User Manager</Title>
-            <Tabs
-                tabPosition={isMobile ? "top" : "left" }
-                defaultActiveKey="existingUsers"
-                items={[
-                    { key: 'existingUsers', label: 'Existing Users', children: <ExistingUsersTab /> },
-                    { key: 'invitedUsers', label: 'Invited Users', children: <InvitedUsersTab /> },
-                    { key: 'teams', label: 'Teams', children: <TeamsTab /> },
-                ]}
-            />
-        </Layout>
-    );
+  return (
+    <Layout style={{ margin: `24px ${sidePadding}px 0px ${sidePadding}px` }}>
+      <Title>User Manager</Title>
+      <Tabs
+        tabPosition={isMobile ? "top" : "left"}
+        defaultActiveKey="existingUsers"
+        items={[
+          {
+            key: "existingUsers",
+            label: "Existing Users",
+            children: <ExistingUsersTab />,
+          },
+          {
+            key: "invitedUsers",
+            label: "Invited Users",
+            children: <InvitedUsersTab />,
+          },
+          { key: "teams", label: "Teams", children: <TeamsTab /> },
+        ]}
+      />
+    </Layout>
+  );
 };
 
 export default UserManagerPage;

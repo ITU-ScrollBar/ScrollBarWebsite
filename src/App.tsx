@@ -1,5 +1,4 @@
 // src/App.tsx
-import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import HomePage from "./pages/HomePage";
@@ -19,8 +18,8 @@ import { ShiftFiltering } from "./types/types-file";
 import EventManagement from "./pages/admin/EventManagement/EventManagement";
 import GlobalSettingsPage from "./pages/admin/GlobalSettingsPage";
 import UserManagerPage from "./pages/admin/UserManagerPage";
-import { setTwoToneColor } from '@ant-design/icons';
-import { App as AntdApp } from "antd"
+import { setTwoToneColor } from "@ant-design/icons";
+import { App as AntdApp } from "antd";
 import { InternalEventsPage } from "./pages/admin/InternalEventsPage";
 
 function App() {
@@ -47,12 +46,7 @@ function App() {
                 {/* --- Protected Routes --- */}
                 <Route element={<ProtectedRoutes />}>
                   <Route element={<TenderMenu />}>
-                    <Route
-                      path="/members/profile"
-                      element={
-                        <Profile />
-                      }
-                    />
+                    <Route path="/members/profile" element={<Profile />} />
                     <Route
                       path="/tenders/allshifts"
                       element={
@@ -74,18 +68,48 @@ function App() {
                     <Route path="/members/profile" element={<Profile />} />
                     {/* --- Admin Routes --- */}
                     <Route element={<RoleProtectedRoute />}>
-                      <Route path="admin/settings" element={<GlobalSettingsPage />} />
+                      <Route
+                        path="admin/settings"
+                        element={<GlobalSettingsPage />}
+                      />
                     </Route>
-                    <Route element={<RoleProtectedRoute requiredRole={'event_manager'} />}>
-                      <Route path="admin/events" element={<EventManagement />} />
+                    <Route
+                      element={
+                        <RoleProtectedRoute requiredRole={"event_manager"} />
+                      }
+                    >
+                      <Route
+                        path="admin/events"
+                        element={<EventManagement />}
+                      />
                     </Route>
-                    <Route element={<RoleProtectedRoute requiredRole={'board_member'} />}>
-                      <Route path="admin/internalEvents" element={<InternalEventsPage />} />
+                    <Route
+                      element={
+                        <RoleProtectedRoute requiredRole={"board_member"} />
+                      }
+                    >
+                      <Route
+                        path="admin/internalEvents"
+                        element={<InternalEventsPage />}
+                      />
                     </Route>
-                    <Route element={<RoleProtectedRoute requiredRole={'shifts_manager'} />}>
-                      <Route path="admin/shifts" element={<div>Manage Shifts Page (to be implemented)</div>} />
+                    <Route
+                      element={
+                        <RoleProtectedRoute requiredRole={"shifts_manager"} />
+                      }
+                    >
+                      <Route
+                        path="admin/shifts"
+                        element={
+                          <div>Manage Shifts Page (to be implemented)</div>
+                        }
+                      />
                     </Route>
-                    <Route element={<RoleProtectedRoute requiredRole={'user_manager'} />}>
+                    <Route
+                      element={
+                        <RoleProtectedRoute requiredRole={"user_manager"} />
+                      }
+                    >
                       <Route path="admin/users" element={<UserManagerPage />} />
                     </Route>
                   </Route>
