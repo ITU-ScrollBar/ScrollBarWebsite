@@ -11,7 +11,12 @@ import {
   Divider,
 } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
-import { Shift, Engagement, Tender, engagementType } from "../../../types/types-file";
+import {
+  Shift,
+  Engagement,
+  Tender,
+  engagementType,
+} from "../../../types/types-file";
 import { useEngagementContext } from "../../../contexts/EngagementContext";
 import useTenders from "../../../hooks/useTenders";
 
@@ -22,15 +27,20 @@ interface ShiftInfoProps {
 }
 
 export default function ShiftInfo({ shift }: ShiftInfoProps) {
-  const { engagementState, addEngagement, removeEngagement } = useEngagementContext();
+  const { engagementState, addEngagement, removeEngagement } =
+    useEngagementContext();
   const { tenderState } = useTenders();
 
   const shiftEngagements = engagementState.engagements.filter(
     (e) => e.shiftId === shift.id
   );
 
-  const anchors = shiftEngagements.filter((e) => e.type === engagementType.ANCHOR);
-  const tenders = shiftEngagements.filter((e) => e.type === engagementType.TENDER);
+  const anchors = shiftEngagements.filter(
+    (e) => e.type === engagementType.ANCHOR
+  );
+  const tenders = shiftEngagements.filter(
+    (e) => e.type === engagementType.TENDER
+  );
 
   const availableTenders = tenderState.tenders.filter(
     (t) => t.active && !shiftEngagements.some((e) => e.userId === t.uid)
@@ -56,7 +66,9 @@ export default function ShiftInfo({ shift }: ShiftInfoProps) {
       upForGrabs: false,
     };
 
-    addEngagement(engagement).catch(() => message.error("Failed to add tender"));
+    addEngagement(engagement).catch(() =>
+      message.error("Failed to add tender")
+    );
   };
 
   const handleAddAnchor = (userId: string) => {
@@ -72,7 +84,9 @@ export default function ShiftInfo({ shift }: ShiftInfoProps) {
       upForGrabs: false,
     };
 
-    addEngagement(engagement).catch(() => message.error("Failed to add anchor"));
+    addEngagement(engagement).catch(() =>
+      message.error("Failed to add anchor")
+    );
   };
 
   const handleRemove = (engagement: Engagement) => {
@@ -137,7 +151,10 @@ export default function ShiftInfo({ shift }: ShiftInfoProps) {
           }}
         />
       ) : (
-        <Text type="secondary" style={{ display: "block", padding: "12px", textAlign: "center" }}>
+        <Text
+          type="secondary"
+          style={{ display: "block", padding: "12px", textAlign: "center" }}
+        >
           No {title.toLowerCase()} assigned
         </Text>
       )}

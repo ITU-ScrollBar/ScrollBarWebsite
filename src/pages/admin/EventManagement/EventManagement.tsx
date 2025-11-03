@@ -5,7 +5,7 @@ import { PlusOutlined } from "@ant-design/icons";
 import useEvents from "../../../hooks/useEvents";
 import EventInfo from "./EventInfo";
 
-const { Sider, Content } = Layout;
+const { Content } = Layout;
 
 export default function EventManagement() {
   const { addEvent, eventState } = useEvents();

@@ -4,7 +4,6 @@ import { TeamOutlined } from "@ant-design/icons";
 import useEvents from "../../../hooks/useEvents";
 import { useShiftContext } from "../../../contexts/ShiftContext";
 import ShiftInfo from "./ShiftInfo";
-
 const { Content } = Layout;
 
 export default function ShiftManagement() {
@@ -16,7 +15,34 @@ export default function ShiftManagement() {
     (a, b) => a.start.getTime() - b.start.getTime()
   );
 
-  const currentEvent = sortedEvents.find((e) => e.id === selectedEventId) || sortedEvents[0];
+  if (sortedEvents.length === 0) {
+    return (
+      <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
+        <Content style={{ padding: "24px" }}>
+          <div
+            style={{
+              background: "white",
+              borderRadius: "8px",
+              padding: "24px",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+            }}
+          >
+            <h1 style={{ fontSize: "24px", fontWeight: 600, marginBottom: "16px" }}>
+              <TeamOutlined style={{ marginRight: "12px" }} />
+              Shift Management
+            </h1>
+            <Empty
+              style={{ margin: "60px 0" }}
+              description="No events available. Please create an event first."
+            />
+          </div>
+        </Content>
+      </Layout>
+    );
+  }
+
+  const currentEvent =
+    sortedEvents.find((e) => e.id === selectedEventId) || sortedEvents[0];
 
   const shiftsForEvent = shiftState.shifts.filter(
     (shift) => shift.eventId === currentEvent?.id
@@ -51,7 +77,13 @@ export default function ShiftManagement() {
             style={{ width: "100%", marginBottom: "24px" }}
             size="large"
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
               <h1 style={{ margin: 0, fontSize: "24px", fontWeight: 600 }}>
                 <TeamOutlined style={{ marginRight: "12px" }} />
                 Shift Management
@@ -59,7 +91,13 @@ export default function ShiftManagement() {
             </div>
 
             <div>
-              <label style={{ display: "block", marginBottom: "8px", fontWeight: 500 }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "8px",
+                  fontWeight: 500,
+                }}
+              >
                 Select Event
               </label>
               <Select
@@ -71,7 +109,8 @@ export default function ShiftManagement() {
               >
                 {sortedEvents.map((event) => (
                   <Select.Option key={event.id} value={event.id}>
-                    {event.displayName || event.title} - {event.start.toLocaleDateString()}
+                    {event.displayName || event.title} -{" "}
+                    {event.start.toLocaleDateString()}
                   </Select.Option>
                 ))}
               </Select>
@@ -98,8 +137,6 @@ export default function ShiftManagement() {
       </Content>
     </Layout>
   ) : (
-    <div style={{ textAlign: "center", padding: "60px 24px" }}>
-      Loading...
-    </div>
+    <div style={{ textAlign: "center", padding: "60px 24px" }}>Loading...</div>
   );
 }

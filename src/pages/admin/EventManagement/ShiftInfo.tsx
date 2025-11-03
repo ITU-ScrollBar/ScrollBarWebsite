@@ -51,7 +51,7 @@ export default function ShiftInfo(props: {
             format="DD-MM-YYYY HH:mm"
             showTime
             value={dayjs(shift.start)}
-            onChange={(value) => updateShift(shift.id, "start", value?.toDate())}
+            onChange={(value) => updateShift(shift.id, "start", value.toDate())}
           />
 
           <span>To</span>
@@ -59,7 +59,7 @@ export default function ShiftInfo(props: {
             format="DD-MM-YYYY HH:mm"
             showTime
             value={dayjs(shift.end)}
-            onChange={(value) => updateShift(shift.id, "end", value?.toDate())}
+            onChange={(value) => updateShift(shift.id, "end", value.toDate())}
           />
         </div>
 

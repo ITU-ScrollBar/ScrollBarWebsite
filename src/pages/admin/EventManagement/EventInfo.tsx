@@ -2,7 +2,16 @@ import React, { useState } from "react";
 import { Event } from "../../../types/types-file";
 import Title from "antd/es/typography/Title";
 import useEvents from "../../../hooks/useEvents";
-import { Button, DatePicker, Tabs, Space, message, Modal, Input, InputNumber } from "antd";
+import {
+  Button,
+  DatePicker,
+  Tabs,
+  Space,
+  message,
+  Modal,
+  Input,
+  InputNumber,
+} from "antd";
 import dayjs from "dayjs";
 import TextArea from "antd/es/input/TextArea";
 import ReactMarkdown from "react-markdown";
@@ -17,9 +26,15 @@ export default function EventInfo(props: { event: Event }) {
   const { shiftState, updateShift, addShift, removeShift } = useShifts();
   const [isCustomShiftModalOpen, setIsCustomShiftModalOpen] = useState(false);
   const [customShiftTitle, setCustomShiftTitle] = useState("");
-  const [customShiftLocation, setCustomShiftLocation] = useState(props.event.where || "Main bar");
-  const [customShiftStart, setCustomShiftStart] = useState<Date>(new Date(props.event.start));
-  const [customShiftEnd, setCustomShiftEnd] = useState<Date>(new Date(props.event.start.getTime() + 5 * 60 * 60 * 1000));
+  const [customShiftLocation, setCustomShiftLocation] = useState(
+    props.event.where || "Main bar"
+  );
+  const [customShiftStart, setCustomShiftStart] = useState<Date>(
+    new Date(props.event.start)
+  );
+  const [customShiftEnd, setCustomShiftEnd] = useState<Date>(
+    new Date(props.event.start.getTime() + 5 * 60 * 60 * 1000)
+  );
   const [customShiftAnchors, setCustomShiftAnchors] = useState(1);
   const [customShiftTenders, setCustomShiftTenders] = useState(4);
 
@@ -36,15 +51,15 @@ export default function EventInfo(props: { event: Event }) {
   const addDefaultShifts = () => {
     const eventStart = new Date(props.event.start);
     const eventEnd = new Date(props.event.end);
-    
+
     // Calculate opening shift (event start time to start + 5 hours)
     const openingEnd = new Date(eventStart.getTime() + 5 * 60 * 60 * 1000);
-    
+
     // Calculate middle shift (opening end to middle end + 4 hours)
     const middleEnd = new Date(openingEnd.getTime() + 4 * 60 * 60 * 1000);
-    
+
     // Calculate closing shift (middle end to event end)
-    
+
     const defaultShifts = [
       {
         id: "",
@@ -78,7 +93,7 @@ export default function EventInfo(props: { event: Event }) {
       },
     ];
 
-    Promise.all(defaultShifts.map(shift => addShift(shift)))
+    Promise.all(defaultShifts.map((shift) => addShift(shift)))
       .then(() => message.success("Default shifts added successfully"))
       .catch(() => message.error("Failed to add shifts"));
   };
@@ -86,12 +101,12 @@ export default function EventInfo(props: { event: Event }) {
   const addBigPartyShifts = () => {
     const eventStart = new Date(props.event.start);
     const eventEnd = new Date(props.event.end);
-    
+
     // Opening: event start to start + 5 hours
     const openingEnd = new Date(eventStart.getTime() + 5 * 60 * 60 * 1000);
-    
+
     // Closing: opening end to event end
-    
+
     const bigPartyShifts = [
       {
         id: "",
@@ -115,7 +130,7 @@ export default function EventInfo(props: { event: Event }) {
       },
     ];
 
-    Promise.all(bigPartyShifts.map(shift => addShift(shift)))
+    Promise.all(bigPartyShifts.map((shift) => addShift(shift)))
       .then(() => message.success("Big party shifts added successfully"))
       .catch(() => message.error("Failed to add shifts"));
   };
@@ -144,7 +159,9 @@ export default function EventInfo(props: { event: Event }) {
         setCustomShiftTitle("");
         setCustomShiftLocation(props.event.where || "Main bar");
         setCustomShiftStart(new Date(props.event.start));
-        setCustomShiftEnd(new Date(props.event.start.getTime() + 5 * 60 * 60 * 1000));
+        setCustomShiftEnd(
+          new Date(props.event.start.getTime() + 5 * 60 * 60 * 1000)
+        );
         setCustomShiftAnchors(1);
         setCustomShiftTenders(4);
       })
@@ -219,28 +236,27 @@ export default function EventInfo(props: { event: Event }) {
       />
       <Title level={4}>Shifts</Title>
       <Space style={{ marginBottom: "16px" }}>
-        <Button 
-          icon={<PlusOutlined />} 
+        <Button
+          icon={<PlusOutlined />}
           onClick={addDefaultShifts}
           disabled={shifts.length > 0}
         >
           Add default 3 shifts
         </Button>
-        <Button 
-          icon={<PlusOutlined />} 
+        <Button
+          icon={<PlusOutlined />}
           onClick={() => setIsCustomShiftModalOpen(true)}
         >
           Add custom shift
         </Button>
-        <Button 
-          icon={<PlusOutlined />} 
+        <Button
+          icon={<PlusOutlined />}
           onClick={addBigPartyShifts}
           disabled={shifts.length > 0}
         >
           Add default Big Party Shifts
         </Button>
       </Space>
-
       <Modal
         title="Add Custom Shift"
         open={isCustomShiftModalOpen}
@@ -250,16 +266,20 @@ export default function EventInfo(props: { event: Event }) {
       >
         <Space direction="vertical" style={{ width: "100%" }} size="middle">
           <div>
-            <label style={{ display: "block", marginBottom: "4px" }}>Title</label>
+            <label style={{ display: "block", marginBottom: "4px" }}>
+              Title
+            </label>
             <Input
               placeholder="Shift title"
               value={customShiftTitle}
               onChange={(e) => setCustomShiftTitle(e.target.value)}
             />
           </div>
-          
+
           <div>
-            <label style={{ display: "block", marginBottom: "4px" }}>Location</label>
+            <label style={{ display: "block", marginBottom: "4px" }}>
+              Location
+            </label>
             <Input
               placeholder="Location"
               value={customShiftLocation}
@@ -268,30 +288,40 @@ export default function EventInfo(props: { event: Event }) {
           </div>
 
           <div>
-            <label style={{ display: "block", marginBottom: "4px" }}>Start Time</label>
+            <label style={{ display: "block", marginBottom: "4px" }}>
+              Start Time
+            </label>
             <DatePicker
               format="DD-MM-YYYY HH:mm"
               showTime
               value={dayjs(customShiftStart)}
-              onChange={(value) => setCustomShiftStart(value?.toDate() || new Date())}
+              onChange={(value) =>
+                setCustomShiftStart(value?.toDate())
+              }
               style={{ width: "100%" }}
             />
           </div>
 
           <div>
-            <label style={{ display: "block", marginBottom: "4px" }}>End Time</label>
+            <label style={{ display: "block", marginBottom: "4px" }}>
+              End Time
+            </label>
             <DatePicker
               format="DD-MM-YYYY HH:mm"
               showTime
               value={dayjs(customShiftEnd)}
-              onChange={(value) => setCustomShiftEnd(value?.toDate() || new Date())}
+              onChange={(value) =>
+                setCustomShiftEnd(value?.toDate())
+              }
               style={{ width: "100%" }}
             />
           </div>
 
           <div style={{ display: "flex", gap: "16px" }}>
             <div style={{ flex: 1 }}>
-              <label style={{ display: "block", marginBottom: "4px" }}>Anchors</label>
+              <label style={{ display: "block", marginBottom: "4px" }}>
+                Anchors
+              </label>
               <InputNumber
                 min={0}
                 value={customShiftAnchors}
@@ -300,7 +330,9 @@ export default function EventInfo(props: { event: Event }) {
               />
             </div>
             <div style={{ flex: 1 }}>
-              <label style={{ display: "block", marginBottom: "4px" }}>Tenders</label>
+              <label style={{ display: "block", marginBottom: "4px" }}>
+                Tenders
+              </label>
               <InputNumber
                 min={0}
                 value={customShiftTenders}
@@ -311,12 +343,11 @@ export default function EventInfo(props: { event: Event }) {
           </div>
         </Space>
       </Modal>
-
       {shifts && shifts.length > 0 ? (
         shifts.map((shift) => (
-          <ShiftInfo 
-            key={shift.id} 
-            shift={shift} 
+          <ShiftInfo
+            key={shift.id}
+            shift={shift}
             updateShift={updateShift}
             removeShift={removeShift}
           />
