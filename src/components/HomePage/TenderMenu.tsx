@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import type { MenuProps } from 'antd';
-import { ConfigProvider, Dropdown, Menu } from "antd";
+import { ConfigProvider, Menu } from "antd";
 import logo from '../../assets/images/logo.png';
 import { useAuth } from "../../contexts/AuthContext";
 import { MenuOutlined } from '@ant-design/icons'
