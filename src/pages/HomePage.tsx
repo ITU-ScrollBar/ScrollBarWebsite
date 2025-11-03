@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { Button, Col, Divider, Layout, Row, List } from 'antd'
 import Title from 'antd/es/typography/Title'
 import Paragraph from 'antd/es/typography/Paragraph'
@@ -15,13 +15,16 @@ import { Loading } from '../components/Loading'
 import CountDown from '../components/EventCountDown'
 import {useNextEvent}  from '../hooks/useEvents'
 
+let cachedStudylines: StudyLine[] | null = null;
+let cachePromise: Promise<StudyLine[]> | null = null;
+
 export default function HomePage() {
   const { settingsState } = useSettings();
   const { tenderState } = useTenders();
   const { nextEvent, loading: eventLoading } = useNextEvent();
-  const activeTenders = tenderState.tenders.filter(t => !t.roles?.includes('passive') && !t.roles?.includes('board') && t?.active);
-  const boardMembers = tenderState.tenders.filter(t => t.roles?.includes('board'));
-  
+  const activeTenders = useMemo(() => tenderState.tenders.filter(t => !t.roles?.includes('passive') && !t.roles?.includes('board') && t?.active), [tenderState.tenders]);
+  const boardMembers = useMemo(() => tenderState.tenders.filter(t => t.roles?.includes('board')), [tenderState.tenders]);
+
   if (settingsState.loading) {
     return <Loading centerOverlay={true} />;
   }
@@ -214,12 +217,33 @@ const UserList = ({ users }: { users: Tender[] }) => {
   const [studylines, setStudylines] = React.useState<StudyLine[]>([]);
 
   useEffect(() => {
-    getStudyLines().then((response) => {
-        const studylines: StudyLine[] = response.map((doc: any) => doc as StudyLine);
-        setStudylines(studylines);
-    }).catch((error) => {
+    // If already cached, use it immediately
+    if (cachedStudylines) {
+      setStudylines(cachedStudylines);
+      return;
+    }
+
+    // If fetch is already in progress, wait for it
+    if (cachePromise) {
+      cachePromise.then((data) => {
+        setStudylines(data);
+      });
+      return;
+    }
+
+    // Otherwise, fetch and cache
+    cachePromise = getStudyLines()
+      .then((response) => {
+        const mapped: StudyLine[] = response.map((doc: unknown) => doc as StudyLine);
+        cachedStudylines = mapped;
+        setStudylines(mapped);
+        return mapped;
+      })
+      .catch((error) => {
         console.error("Failed to fetch study lines: " + error.message);
-    });
+        cachePromise = null; // Reset on error
+        return [];
+      });
   }, []);
 
   return (
