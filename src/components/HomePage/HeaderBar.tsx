@@ -18,7 +18,7 @@ export default function HeaderBar() {
     {
       key: "1",
       label: (
-        <Link style={linkcss} href="#events">
+        <Link style={linkcss} onClick={() => navigate("/events")}>
           EVENTS
         </Link>
       ),
@@ -96,10 +96,12 @@ export default function HeaderBar() {
         backgroundColor: "transparent",
       }}
     >
-      <img
+      <a href="/">
+        <img
         style={{ width: "250px", height: "auto", cursor: "pointer" }}
         src={logo}
       />
+      </a>
       <Menu
         theme="dark"
         mode="horizontal"

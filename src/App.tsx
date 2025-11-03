@@ -17,6 +17,7 @@ import { TenderMenu } from "./components/HomePage/TenderMenu";
 import { ShiftFiltering } from "./types/types-file";
 import EventManagement from "./pages/admin/EventManagement/EventManagement";
 import GlobalSettingsPage from "./pages/admin/GlobalSettingsPage";
+import EventsPage from "./pages/EventsPage";
 import UserManagerPage from "./pages/admin/UserManagerPage";
 import { setTwoToneColor } from "@ant-design/icons";
 import { App as AntdApp } from "antd";
@@ -43,6 +44,7 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/events" element={<EventsPage />} /> 
 
                 {/* --- Protected Routes --- */}
                 <Route element={<ProtectedRoutes />}>

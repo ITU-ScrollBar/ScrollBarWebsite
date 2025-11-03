@@ -4,7 +4,6 @@ import { Button, Tabs, Layout, Space, Segmented } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import useEvents from "../../../hooks/useEvents";
 import EventInfo from "./EventInfo";
-
 const { Content } = Layout;
 
 export default function EventManagement() {

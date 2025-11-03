@@ -1,17 +1,136 @@
-import React from 'react'
 
-import { Button, Col, Divider, Image, Layout, Row, Space } from 'antd'
-
+import { Col, Divider, Layout, Row, Card } from 'antd'
 import Title from 'antd/es/typography/Title';
+import Text from 'antd/es/typography/Text';
 import Paragraph from 'antd/es/typography/Paragraph';
 import { Header } from 'antd/es/layout/layout';
+import { useWindowSize } from "../hooks/useWindowSize";
 import HeaderBar from '../components/HomePage/HeaderBar';
-
+import CountDown from '../components/EventCountDown';
+import useEvents from '../hooks/useEvents';
+import DEFAULT_EVENT_IMAGE from '../assets/images/background.png';
+import React from 'react';
 
 export default function EventsPage() {
+    const { eventState } = useEvents();
+    const { isMobile } = useWindowSize();
+    const EVENT_INFORMATION_LABEL = "Get all the latest Information on the Facebook Event"
+    const events = eventState.isLoaded ? eventState.events
+        .filter(event => event.published && !event.internal)
+        .map(event => ({
+            id: event.id,
+            title: event.title,
+            image: event.picture ?? DEFAULT_EVENT_IMAGE,
+            start: event.start,
+            event_url: event.facebook_link,
+        })).sort((a, b) => a.start.getTime() - b.start.getTime()) : [];
+
+    // Get the next upcoming event for countdown
+    const nextEvent = events.length > 0 ? events[0] : null;
+
+    // Common styles
+    const baseCardStyle: React.CSSProperties = {
+      position: 'relative',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    };
+
+    const baseOverlayStyle: React.CSSProperties = {
+      zIndex: 2,
+      backgroundColor: 'rgba(46, 46, 46, 0.8)',
+      padding: '20px',
+      borderRadius: '10px',
+      display: 'flex',
+      flexDirection: 'column',
+      position: 'relative',
+      height: '150px',
+      overflow: 'hidden',
+      boxSizing: 'border-box',
+    };
+
+    const baseTextStyle = {
+      lineHeight: '1.1',
+    };
+
+    const textVariants = {
+      date: {
+        color: 'yellow',
+        fontSize: isMobile ? '24px' : '34px',
+      },
+      title: {
+        color: 'white',
+        fontSize: isMobile ? '14px' : '22px',
+        fontWeight: 'bold',
+        marginBottom: '2px',
+      },
+      description: {
+        color: 'white',
+        fontSize: '10px',
+        marginTop: 'auto',
+      },
+    };
+
+    const renderEventCard = (event: typeof events[0], isFeatured = false) => {
+      const isSmall = !isFeatured;
+      const cardHeight = isFeatured ? (isMobile ? '190px' : '400px') : '190px';
+      const overlayTop = isFeatured ? (isMobile ? '0%' : '80%') : undefined;
+      const overlayMargin = isMobile ? '0' : '-10px';
+      const overlayAlign = isFeatured ? (isMobile ? 'center' : 'left') : 'center';
+      const overlayJustify = isMobile && isSmall ? 'center' : 'flex-start';
+
+      const cardStyle: React.CSSProperties = {
+        ...baseCardStyle,
+        height: cardHeight,
+        backgroundImage: `url(${event.image})`,
+      };
+
+      const overlayStyle: React.CSSProperties = {
+        ...baseOverlayStyle,
+        margin: overlayMargin,
+        textAlign: overlayAlign,
+        justifyContent: overlayJustify,
+        ...(overlayTop && { top: overlayTop }),
+        ...(isMobile && isFeatured && { width: '100%' }),
+      };
+
+      return (
+        <Card
+          hoverable
+          style={cardStyle}
+        >
+          <div 
+            style={overlayStyle}
+          >
+            <Text style={{ ...baseTextStyle, ...textVariants.date }}>
+              {event.start.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' })}
+            </Text>
+            <Text style={{ ...baseTextStyle, ...textVariants.title }}>
+              {event.title}
+            </Text>
+            {isFeatured && (
+              <Text style={{ ...baseTextStyle, ...textVariants.description }}>
+                {EVENT_INFORMATION_LABEL}
+              </Text>
+            )}
+          </div>
+        </Card>
+      );
+    };
+
   return (
-    <Layout style={{ minHeight: '100vh', minWidth: '100vw', flexDirection: 'column', height: 'auto'}}>
-       <Header
+    <Layout 
+      style={{
+        minHeight: '100vh',
+        minWidth: '100vw',
+        display: 'flex',
+        flexDirection: 'column',
+        height: 'auto',
+      }}
+    >
+      <Header 
         style={{
           position: 'absolute',
           top: 0,
@@ -26,40 +145,100 @@ export default function EventsPage() {
       >
         <HeaderBar />
       </Header>
-    <Image style={{width: '100vw'}} preview={false} ></Image>
-    <Row justify="center">
-          <Col
-            md={24}
-            lg={12}
+
+        <div 
+          style={{
+            position: 'relative',
+            width: '100vw',
+            height: isMobile ? '50vh' : '70vh',
+            overflow: 'hidden',
+          }}
+        >
+          <img
+            src={nextEvent ? nextEvent.image : DEFAULT_EVENT_IMAGE}
+            alt="Event background"
             style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center',
+            }}
+          />
+          <div 
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              zIndex: 1,
+            }}
+          />
+          {nextEvent && <CountDown nextEvent={nextEvent} />}
+        </div>
+
+      <Row justify="center">
+        <Col
+          md={24}
+          lg={20}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+        >
+          <Title 
+            level={2} 
+            style={{
+              textAlign: isMobile ? 'center' : 'left',
+              alignSelf: isMobile ? 'center' : 'flex-start',
+              fontSize: isMobile ? 'medium' : 'large',
+              fontWeight: 'bold',
+              marginBottom: '30px',
             }}
           >
-            <Title id="about" level={2} style={{ scrollMarginTop: '135px' }}>
-              What is ScrollBar?
-            </Title>
-            <Paragraph style={{ fontSize: '18px', lineHeight: '36px', textAlign: 'center' }}>
-              ScrollBar is a student-run Friday bar at the IT University of Copenhagen, organized by our dedicated team of volunteer students. 
-              Founded in 2004, our goal is to bring ITU students together in a cozy and welcoming atmosphere every Friday in the semester from 3PM to 2AM. 
-              <br></br>
-              <br></br>
-              We regularly host DJs and organize a wide variety of events throughout the semester, including Birthday Parties, Back-to-School,
-              Beerpong Tournaments, Halloween parties, Hand-In celebrations and more. We’re especially proud of our wide selection of beers and drinks, 
-              but there’s something for everyone.
-              <br></br>
-              <br></br>
-              This covers the basics of ScrollBar, but if you’re curious to learn more, you can check out our constitution at the bottom of the page.
-            </Paragraph>
-          </Col>
-        </Row>
-       <Divider />   
+            Our Events This Semester
+          </Title>
+
+          {events.length > 0 ? (() => {
+            const featuredEvent = events[0];
+            const otherEvents = events.slice(1);
+            return (
+              <div 
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: isMobile ? 'repeat(1, 1fr)' : 'repeat(4, 1fr)',
+                  gap: isMobile ? '12px' : '16px',
+                  width: '100%',
+                }}
+              >
+                <div 
+                  style={{
+                    gridRow: isMobile ? 'span 1' : 'span 2',
+                    gridColumn: 'span 1',
+                  }}
+                >
+                  {renderEventCard(featuredEvent, true)}
+                </div>
+                {otherEvents.map((event) => (
+                  <div key={event.id}>
+                    {renderEventCard(event, false)}
+                  </div>
+                ))}
+              </div>
+            );
+          })() : (
+            <Paragraph style={{ textAlign: "center" }}>No upcoming events at the moment.</Paragraph>
+          )}
+        </Col>
+      </Row>
+      <Divider />   
     </Layout>
   )
 }
    
-              
             
-
-
