@@ -17,7 +17,7 @@ on:
 jobs:
   migrate:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name == 'main' && 'production' || 'dev' }}
+    environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -30,13 +30,13 @@ jobs:
 
       - name: Run migrations
         env:
-          VITE_APP_ENV: ${{ github.ref_name == 'main' && 'production' || 'dev' }}
+          VITE_APP_ENV: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
           FIREBASE_SERVICE_ACCOUNT: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_SCROLLBARWEB2 }}'
         run: yarn migrate
 
   build_and_deploy:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name == 'main' && 'production' || 'dev' }}
+    environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
     needs: migrate
     env:
       HTTPS: "true"
@@ -47,8 +47,8 @@ jobs:
       VITE_APP_FIREBASE_MESSAGING_SENDER_ID: '${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}'
       VITE_APP_FIREBASE_APP_ID: '${{ secrets.FIREBASE_APP_ID }}'
       VITE_APP_FIREBASE_MEASUREMENT_ID: '${{ secrets.FIREBASE_MESSUREMENT_ID }}'
-      VITE_APP_ENV: ${{ github.ref_name == 'main' && 'production' || 'dev' }}
-      ENV: ${{ github.ref_name == 'main' && 'production' || 'dev' }}
+      VITE_APP_ENV: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+      ENV: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
     steps:
       - uses: actions/checkout@v4
       - name: Install Node.js
