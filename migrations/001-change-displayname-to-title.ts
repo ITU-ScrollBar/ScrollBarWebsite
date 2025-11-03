@@ -9,7 +9,6 @@ export default async function ({ db }: { db: Firebase.Firestore; }) {
     snapshot.forEach((doc) => {
         const data = doc.data();
         batch.update(doc.ref, { title: data.displayName });
-        batch.update(doc.ref, { displayName: Firebase.FieldValue.delete() });
     });
 
     await batch.commit();
