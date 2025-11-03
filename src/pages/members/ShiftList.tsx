@@ -9,7 +9,6 @@ import {
   Badge,
 } from "antd";
 import {
-  dateToHourString,
   getEngagementsForShift,
   getTenderForEngagement,
   getTenderDisplayName,
@@ -332,8 +331,8 @@ export function ShiftList({
               fontSize: "1em",
             }}
           >
-            {dateToHourString(shift.start).padStart(2, "0")} —{" "}
-            {dateToHourString(shift.end).padStart(2, "0")}
+            {shift.start.getHours().toString().padStart(2, "0")} —{" "}
+            {shift.end.getHours().toString().padStart(2, "0")}
           </Paragraph>
           {myShift && (
             <Popconfirm
