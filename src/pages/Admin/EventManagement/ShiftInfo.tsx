@@ -1,15 +1,12 @@
-import React from 'react'
-import { Card, InputNumber, Input, DatePicker } from 'antd'
-import dayjs from 'dayjs'
-import { Shift } from '../../../types/types-file'
+import { Card, InputNumber, Input, DatePicker } from "antd";
+import dayjs from "dayjs";
+import { Shift } from "../../../types/types-file";
 
 export default function ShiftInfo(props: {
-  shift: Shift
-  updateShift: (id: string, field: string, value: any) => void
+  shift: Shift;
+  updateShift: (id: string, field: string, value: any) => void;
 }) {
-  const { shift, updateShift } = props
-
-
+  const { shift, updateShift } = props;
 
   return (
     <Card title={shift.title} className="mb-4 shadow-sm rounded-lg">
@@ -18,14 +15,14 @@ export default function ShiftInfo(props: {
         <Input
           value={shift.title}
           placeholder="Shift title"
-          onChange={(e) => updateShift(shift.id, 'title', e.target.value)}
+          onChange={(e) => updateShift(shift.id, "title", e.target.value)}
         />
 
         {/* Location */}
         <Input
           value={shift.location}
           placeholder="Location"
-          onChange={(e) => updateShift(shift.id, 'location', e.target.value)}
+          onChange={(e) => updateShift(shift.id, "location", e.target.value)}
         />
 
         {/* Dates */}
@@ -35,7 +32,7 @@ export default function ShiftInfo(props: {
             format="DD-MM-YYYY HH:mm"
             showTime
             value={dayjs(shift.start)}
-            onChange={(value) => updateShift(shift.id, 'start', value.toDate())}
+            onChange={(value) => updateShift(shift.id, "start", value.toDate())}
           />
 
           <span>To</span>
@@ -43,28 +40,28 @@ export default function ShiftInfo(props: {
             format="DD-MM-YYYY HH:mm"
             showTime
             value={dayjs(shift.end)}
-            onChange={(value) => updateShift(shift.id, 'end', value.toDate())}
+            onChange={(value) => updateShift(shift.id, "end", value.toDate())}
           />
         </div>
 
         {/* Numbers */}
         <div className="flex gap-4">
-            anchors
+          anchors
           <InputNumber
             min={0}
             value={shift.anchors}
-            onChange={(value) => updateShift(shift.id, 'anchors', value)}
+            onChange={(value) => updateShift(shift.id, "anchors", value)}
             placeholder="Anchors"
           />
           tenders
           <InputNumber
             min={0}
             value={shift.tenders}
-            onChange={(value) => updateShift(shift.id, 'tenders', value)}
+            onChange={(value) => updateShift(shift.id, "tenders", value)}
             placeholder="Tenders"
           />
         </div>
       </div>
     </Card>
-  )
+  );
 }

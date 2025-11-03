@@ -1,6 +1,6 @@
 // context/EventContext.tsx
 
-import React, { createContext, useContext, useMemo, ReactNode } from "react";
+import { createContext, useContext, useMemo, ReactNode } from "react";
 import { DocumentData } from "firebase/firestore";
 import { Event, EventCreateParams } from "../types/types-file";
 import useEvents from "../hooks/useEvents"; // You already have this
@@ -14,7 +14,7 @@ export interface EventContextType {
     previousEvents: (Event & { key: string })[];
   };
   addEvent: (event: EventCreateParams) => Promise<DocumentData>;
-  removeEvent: (event: Event) => Promise<void>;
+  removeEvent: (id: string) => Promise<void>;
   updateEvent: (id: string, field: string, value: any) => Promise<void>;
 }
 
