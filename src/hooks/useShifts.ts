@@ -6,8 +6,19 @@ import {
   streamShifts,
   updateShift as update,
 } from '../firebase/api/shifts'; // Adjust the import path as necessary
-import { QuerySnapshot, DocumentData } from 'firebase/firestore';
+import { QuerySnapshot, DocumentData, Timestamp } from 'firebase/firestore';
 import { Shift } from '../types/types-file'; // Ensure you have Shift type defined
+
+type FirebaseShift = {
+  id: string;
+  eventId: string;
+  location: string;
+  title: string;
+  tenders: number;
+  anchors: number;
+  start: Timestamp;
+  end: Timestamp;
+}
 
 export const sortShifts = (a:Shift, b:Shift) => {
     if (a.start > b.start) {
@@ -44,14 +55,14 @@ const useShifts = () => {
       next: (snapshot: QuerySnapshot<DocumentData>) => {
         const updatedShifts: Shift[] = snapshot.docs
         .map((doc) => {
-          const data = doc.data()
+          const data = doc.data() as FirebaseShift;
           return {
             ...data,
             id: doc.id,
             key: doc.id,
             start: data.start?.toDate(),
             end: data.end?.toDate(),
-          } as unknown as Shift
+          } as Shift;
         })
         .sort(sortShifts);
 

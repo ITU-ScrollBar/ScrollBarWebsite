@@ -21,7 +21,7 @@ type EventFirebase = {
   start: Timestamp;
   end: Timestamp;
   description: string;
-  displayName: string;
+  title: string;
   location: string;
   published: boolean;
   internal: boolean;
