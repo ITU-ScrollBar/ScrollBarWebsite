@@ -99,7 +99,7 @@ export type EventCreateParams = {
   start: Date;
   end: Date;
   description: string;
-  displayName: string;
+  title: string;
   where: string;
   published: boolean;
   internal: boolean;

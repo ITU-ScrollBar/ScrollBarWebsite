@@ -33,7 +33,7 @@ export default function EventInfo(props : {event: Event}) {
     <div>
     <Button type="primary" danger onClick={() => removeEvent(props.event.id)} >Delete Event</Button>
 
-    <Title level={3} editable={{onChange: (value) => updateEvent(props.event.id,'displayName',value) }}>{props.event.displayName}</Title>
+    <Title level={3} editable={{onChange: (value) => updateEvent(props.event.id,'title',value) }}>{props.event.title}</Title>
     <Title level={4} editable={{onChange: (value) => updateEvent(props.event.id,'where',value) }}>{props.event.where}</Title>
     From
     <DatePicker   format="DD-MM-YYYY HH:mm" showTime value={dayjs(props.event.start)} onChange={(value) => updateEvent(props.event.id,'start',value.toDate())}/>

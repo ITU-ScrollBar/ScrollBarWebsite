@@ -295,7 +295,7 @@ export function ShiftList({
 
   const renderEventHeader = (event: (typeof eventState.events)[number]) => (
     <Title level={2} style={{ marginBottom: 12 }}>
-      {`${event.displayName ?? event.title ?? "Unknown Event"} (${event.start.getUTCDate()}/${event.start.getUTCMonth() + 1})`}
+      {`${event.title ?? "Unknown Event"} (${event.start.getUTCDate()}/${event.start.getUTCMonth() + 1})`}
     </Title>
   );
 

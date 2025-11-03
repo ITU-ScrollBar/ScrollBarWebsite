@@ -31,7 +31,7 @@ export default function EventManagement() {
             start: nextFriday,
             end: new Date(nextFriday.getTime() + 60 * 60 * 11000), // 1 hour later
             description: 'No description',
-            displayName: 'New Event',
+            title: 'New Event',
             where: 'ScrollBar',
             published: false,
             internal: false,
@@ -81,7 +81,7 @@ export default function EventManagement() {
         items={Array.from( !showPreviousEvents? events:previousEvents, (e, i) => {
           const id = e.id;
           return {
-            label: `${e.displayName} - ${e.start.toDateString() + ' ' + e.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} to ${e.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+            label: `${e.title} - ${e.start.toDateString() + ' ' + e.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} to ${e.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
             key: id,
             disabled: i === 28,
             children: <EventInfo event={e}></EventInfo>,
