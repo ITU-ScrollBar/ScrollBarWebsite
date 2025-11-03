@@ -250,7 +250,7 @@ export function ShiftList({
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: 2,
+              gap: 1,
               position: "relative",
             }}
           >
@@ -313,7 +313,8 @@ export function ShiftList({
         style={{
           display: "flex",
           gap: 4,
-          padding: 8,
+          padding: 6,
+          paddingLeft: 18,
           borderRadius: 8,
           background: COLORS.SHIFT_BACKGROUND,
           marginBottom: 12,
@@ -321,7 +322,7 @@ export function ShiftList({
         }}
       >
         <div style={{ minWidth: 80, flex: "0 0 80px" }}>
-          <Title level={5} style={{ marginBottom: 4, fontSize: "1.1em" }}>
+          <Title style={{ marginBottom: 4, fontSize: "1.1em" }}>
             {shift.location}
           </Title>
           <Paragraph
@@ -360,7 +361,7 @@ export function ShiftList({
         </div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <Title level={5} style={{ marginBottom: 8, fontSize: "1.1em" }}>
+          <Title style={{ marginBottom: 8, fontSize: "1.1em" }}>
             {shift.title}
           </Title>
           <Row gutter={[8, 8]} style={{ flexWrap: "wrap" }}>
