@@ -6,7 +6,7 @@ import { useWindowSize } from "../../hooks/useWindowSize";
 import { useEffect, useState } from "react";
 import { TeamsTab } from "../../components/UserPage/TeamsTab";
 
-export const UserManagerPage = () => {
+const UserManagerPage = () => {
     const { isMobile } = useWindowSize();
     const [ sidePadding, setSidePadding ] = useState<number>(96);
 
@@ -33,3 +33,5 @@ export const UserManagerPage = () => {
         </Layout>
     );
 };
+
+export default UserManagerPage;

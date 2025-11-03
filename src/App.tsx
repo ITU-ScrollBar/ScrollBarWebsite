@@ -16,9 +16,9 @@ import Shifts from "./pages/members/Shifts";
 import Profile from "./pages/members/Profile";
 import { TenderMenu } from "./components/HomePage/TenderMenu";
 import { ShiftFiltering } from "./types/types-file";
-import EventManagement from "./pages/Admin/EventManagement/EventManagement";
-import GlobalSettingsPage from "./pages/Admin/GlobalSettingsPage";
-import { UserManagerPage } from "./pages/Admin/UserManagerPage";
+import EventManagement from "./pages/admin/EventManagement/EventManagement";
+import GlobalSettingsPage from "./pages/admin/GlobalSettingsPage";
+import UserManagerPage from "./pages/admin/UserManagerPage";
 import { setTwoToneColor } from '@ant-design/icons';
 import { App as AntdApp } from "antd"
 import { InternalEventsPage } from "./pages/admin/InternalEventsPage";
