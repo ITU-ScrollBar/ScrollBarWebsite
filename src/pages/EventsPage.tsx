@@ -14,14 +14,13 @@ export default function EventsPage() {
     const { isMobile } = useWindowSize();
     const DEFAULT_EVENT_IMAGE = "src/assets/images/background.png";
     const EVENT_INFORMATION_LABEL = "Get all the latest Information on the Facebook Event"
-    const DEFAULT_FACEBOOK_LINK = "https://www.facebook.com/ScrollBar"
     const events = eventState.isLoaded ? eventState.events
         .filter(event => event.published && !event.internal)
         .map(event => ({
             title: event.title,
             image: event.picture ?? DEFAULT_EVENT_IMAGE,
             start: event.start,
-            event_url: event.facebook_link ?? DEFAULT_FACEBOOK_LINK,
+            event_url: event.facebook_link,
         })).sort((a, b) => a.start.getTime() - b.start.getTime()) : [];
 
     // Get the next upcoming event for countdown
