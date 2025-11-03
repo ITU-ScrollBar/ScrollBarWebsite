@@ -173,20 +173,20 @@ export type EngagementState = {
 };
 
 export enum Role {
-    ADMIN = "admin",
-    ANCHOR = "anchor",
-    NEWBIE = "newbie",
-    BOARD = "board",
-    USER_MANAGER = "user_manager",
-    SHIFT_MANAGER = "shift_manager",
-    EVENT_MANAGER = "event_manager",
-    REGULAR_ACCESS = "regular_access",
-    PASSIVE = "passive",
-    LEGACY = "legacy",
-    TENDER = "tender",
+  ADMIN = "admin",
+  ANCHOR = "anchor",
+  NEWBIE = "newbie",
+  BOARD = "board",
+  USER_MANAGER = "user_manager",
+  SHIFT_MANAGER = "shift_manager",
+  EVENT_MANAGER = "event_manager",
+  REGULAR_ACCESS = "regular_access",
+  PASSIVE = "passive",
+  LEGACY = "legacy",
+  TENDER = "tender",
 }
 
-export const scopeOptions = [Role.BOARD, Role.ANCHOR, Role.TENDER]
+export const scopeOptions = [Role.BOARD, Role.ANCHOR, Role.TENDER];
 
 export type InternalEvent = {
   scope: string;
