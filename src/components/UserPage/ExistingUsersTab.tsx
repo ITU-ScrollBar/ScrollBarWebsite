@@ -23,6 +23,7 @@ import { useWindowSize } from "../../hooks/useWindowSize";
 import RoleTag from "../RoleTag";
 import { roleToLabel } from "../../pages/members/helpers";
 import useTeams from "../../hooks/useTeams";
+import { Loading } from "../Loading";
 
 export const ExistingUsersTab = () => {
   const { tenderState, updateTender } = useTenders();
@@ -35,6 +36,10 @@ export const ExistingUsersTab = () => {
   const { isMobile } = useWindowSize();
   const [data, setData] = useState<(Tender & { teams: Team[] })[]>([]);
   const [searchValue, setSearchValue] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [studylineColumn, setStudylineColumn] = useState<TableColumnType<Tender>>(
+    {}
+  );
 
   useEffect(() => {
     getStudyLines()
@@ -43,6 +48,8 @@ export const ExistingUsersTab = () => {
           (doc: any) => doc as StudyLine
         );
         setStudylines(studylines);
+        setLoading(false);
+        console.log("Finished loading!!");
       })
       .catch((error) => {
         api.error({
@@ -58,10 +65,10 @@ export const ExistingUsersTab = () => {
       const teams = teamState.teams.filter((team) =>
         tender.teamIds?.includes(team.id)
       );
-      const studyline =
-        studylines.find((line) => line.id === tender.studyline)?.name ||
-        "No studyline";
-      return { ...tender, teams, studyline };
+    //   const studyline =
+    //     studylines.find((line) => line.id === tender.studyline)?.name ||
+    //     "No studyline";
+      return { ...tender, teams };
     });
     setData(updatedData);
   }, [tenderState.tenders, teamState.teams, studylines]);
@@ -85,11 +92,6 @@ export const ExistingUsersTab = () => {
     render: (teams: Team[]) => {
       return teams.map((team) => team.name).join(", ") || "No teams";
     },
-  };
-  const studylineColumn = {
-    title: "Studyline",
-    dataIndex: "studyline",
-    key: "studyline",
   };
   const rolesColumn = {
     title: "Role",
@@ -126,7 +128,18 @@ export const ExistingUsersTab = () => {
   };
 
   useEffect(() => {
-    if (isMobile) {
+    const studylineColumn = {
+    title: "Studyline",
+    dataIndex: "studyline",
+    render: (_: any, record: Tender) => {
+      const studyline = studylines.find(
+        (line) => line.id === record.studyline
+      );
+      return studyline?.prefix ? `${studyline.prefix} ${studyline.name}` : studyline?.name || "No studyline";
+    },
+    key: "studyline",
+  };
+  if (isMobile) {
       setColumns([nameColumn, emailColumn, editColumn]);
     } else {
       setColumns([
@@ -138,13 +151,17 @@ export const ExistingUsersTab = () => {
         editColumn,
       ]);
     }
-  }, [isMobile]);
+  }, [studylines, isMobile]);
 
   const filteredData = data.filter(
     (user) =>
       user.displayName?.toLowerCase().includes(searchValue.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchValue.toLowerCase())
   );
+
+  if (loading) {
+    return <Loading />;
+  }
 
   return (
     <>
