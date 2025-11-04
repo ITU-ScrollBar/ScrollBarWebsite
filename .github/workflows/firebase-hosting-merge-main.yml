@@ -75,7 +75,10 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '22'
-      - run: yarn install && yarn build
+      - name: Install and build functions
+        working-directory: ./functions
+        run: yarn install && yarn build
+
       - name: Install firebase tools
         run: yarn global add firebase firebase-tools
 
