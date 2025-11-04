@@ -87,13 +87,5 @@ jobs:
           project_id: '${{ secrets.FIREBASE_PROJECT_ID }}'
           credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_SCROLLBARWEB2 }}'
 
-      - name: 'Set up Cloud SDK'
-        uses: 'google-github-actions/setup-gcloud@v3'
-        with:
-          version: '>= 363.0.0'
-
-      - name: Enable Cloud Functions API
-        run: gcloud services enable cloudfunctions.googleapis.com --project=${{ secrets.FIREBASE_PROJECT_ID }}
-
       - name: Deploy functions
         run: firebase deploy --only functions
