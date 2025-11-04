@@ -1,6 +1,8 @@
 import React from 'react';
 import { Card } from 'antd';
 import Text from 'antd/es/typography/Text';
+import { COLORS } from '../../constants/colors';
+import { COMMON_STYLES } from '../../constants/styles';
 
 interface EventData {
   title: string;
@@ -19,46 +21,19 @@ interface EventCardProps {
 export const EventCard: React.FC<EventCardProps> = ({ event, isFeatured = false, isMobile }) => {
   const EVENT_INFORMATION_LABEL = "Get all the latest Information on the Facebook Event";
   
-  // Base styles
-  const baseCardStyle: React.CSSProperties = {
-    position: 'relative',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-  };
-
-  const baseOverlayStyle: React.CSSProperties = {
-    zIndex: 2,
-    backgroundColor: 'rgba(46, 46, 46, 0.8)',
-    padding: isMobile ? '12px 15px' : '20px',
-    borderRadius: '10px',
-    display: 'flex',
-    flexDirection: 'column',
-    position: 'relative',
-    height: isMobile ? '120px' : '150px',
-    overflow: 'hidden',
-    boxSizing: 'border-box',
-  };
-
-  const baseTextStyle = {
-    lineHeight: '1',
-  };
-
   const textVariants = {
     date: {
-      color: 'yellow',
+      color: COLORS.yellow,
       fontSize: isMobile ? '28px' : '32px',
     },
     title: {
-      color: 'white',
+      color: COLORS.white,
       fontSize: isMobile ? '22px' : '22px',
       fontWeight: 'bold',
       marginBottom: '2px',
     },
     description: {
-      color: 'white',
+      color: COLORS.white,
       fontSize: '10px',
       marginTop: 'auto',
     },
@@ -94,30 +69,32 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isFeatured = false,
   const overlayMargin = isMobile ? '0' : '-10px';
 
   const cardStyle: React.CSSProperties = {
-    ...baseCardStyle,
+    ...COMMON_STYLES.cardBase,
     height: cardConfig.height,
     backgroundImage: `url(${event.image})`,
   };
 
   const overlayStyle: React.CSSProperties = {
-    ...baseOverlayStyle,
+    ...COMMON_STYLES.overlayBase,
     margin: overlayMargin,
     textAlign: cardConfig.overlayAlign,
     justifyContent: cardConfig.overlayJustify,
+    height: isMobile ? '120px' : '150px',
+    padding: isMobile ? '12px 15px' : '20px',
     ...(cardConfig.overlayTop && { top: cardConfig.overlayTop }),
   };
 
   const cardContent = (
     <Card hoverable style={cardStyle}>
       <div style={overlayStyle}>
-        <Text style={{ ...baseTextStyle, ...textVariants.date }}>
+        <Text style={{ ...COMMON_STYLES.textBase, ...textVariants.date }}>
           {event.start.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' })}
         </Text>
-        <Text style={{ ...baseTextStyle, ...textVariants.title }}>
+        <Text style={{ ...COMMON_STYLES.textBase, ...textVariants.title }}>
           {event.title}
         </Text>
         {cardState.showDescription && (
-          <Text style={{ ...baseTextStyle, ...textVariants.description }}>
+          <Text style={{ ...COMMON_STYLES.textBase, ...textVariants.description }}>
             {EVENT_INFORMATION_LABEL}
           </Text>
         )}

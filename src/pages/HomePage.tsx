@@ -11,7 +11,7 @@ import { getTenderDisplayName } from './members/helpers'
 import { StudyLine, Tender } from '../types/types-file'
 import { getStudyLines } from '../firebase/api/authentication'
 import { Loading } from '../components/Loading'
-import CountDown from '../components/EventCountDown'
+import CountDown from '../components/EventPage/EventCountDown'
 import {useNextEvent}  from '../hooks/useEvents'
 
 let cachedStudylines: StudyLine[] | null = null;

@@ -4,10 +4,11 @@ import Title from 'antd/es/typography/Title';
 import Paragraph from 'antd/es/typography/Paragraph';
 import { useWindowSize } from "../hooks/useWindowSize";
 import HeaderBar from '../components/HomePage/HeaderBar';
-import CountDown from '../components/EventCountDown';
+import CountDown from '../components/EventPage/EventCountDown';
 import useEvents from '../hooks/useEvents';
 import DEFAULT_EVENT_IMAGE from '../assets/images/background.png';
-import { EventCard } from '../components/EventCard';
+import { EventCard } from '../components/EventPage/EventCard';
+import { COMMON_STYLES } from '../constants/styles';
 
 export default function EventsPage() {
     const { eventState } = useEvents();
@@ -60,15 +61,7 @@ export default function EventsPage() {
             }}
           />
           <div 
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-              zIndex: 1,
-            }}
+            style={COMMON_STYLES.imageOverlay}
           />
           {nextEvent && <CountDown nextEvent={nextEvent} />}
         </div>
