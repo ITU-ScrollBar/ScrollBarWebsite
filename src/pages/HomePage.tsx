@@ -2,7 +2,6 @@ import React, { useEffect, useMemo } from 'react'
 import { Button, Col, Divider, Layout, Row, List } from 'antd'
 import Title from 'antd/es/typography/Title'
 import Paragraph from 'antd/es/typography/Paragraph'
-import { Header } from 'antd/es/layout/layout'
 import HeaderBar from '../components/HomePage/HeaderBar'
 import useSettings from '../hooks/useSettings'
 import MDEditor from '@uiw/react-md-editor'
@@ -32,21 +31,7 @@ export default function HomePage() {
 
   return (
     <Layout style={{ minHeight: '100vh', width: '100%', flexDirection: 'column', height: 'auto'}}>
-       <Header
-        style={{
-          position: 'absolute',
-          top: 0,
-          width: '100%',
-          backgroundColor: 'transparent',
-          boxShadow: 'none',
-          zIndex: 3,
-          display: 'flex',
-          alignItems: 'center',
-          color: '#fff',
-        }}
-      >
-        <HeaderBar />
-      </Header>
+       <HeaderBar />
      {/* Hero video section */}
 <div
   style={{
