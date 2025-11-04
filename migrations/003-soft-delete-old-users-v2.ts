@@ -21,6 +21,7 @@ export default async function ({ db }: {db: Firebase.Firestore}) {
     snapshot.forEach((doc) => {
         const user = doc.data() as Tender;
         if (!user.roles?.includes('regular_access')) {
+            // Phone does not exist in this project since we don't use it anymore but need to delete it for old users
             batch.update(doc.ref, { photoUrl: '', active: false, displayName: 'Deleted User', email: '', phone: '' });
         }
     });

@@ -30,7 +30,6 @@ export default function HomePage() {
 
   useEffect(() => {
     const el = document.getElementById(targetId);
-    console.log(el, targetId);
     if (el) {
       el.scrollIntoView();
     }

@@ -37,9 +37,6 @@ export const ExistingUsersTab = () => {
   const [data, setData] = useState<(Tender & { teams: Team[] })[]>([]);
   const [searchValue, setSearchValue] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
-  const [studylineColumn, setStudylineColumn] = useState<TableColumnType<Tender>>(
-    {}
-  );
 
   useEffect(() => {
     getStudyLines()
@@ -49,7 +46,6 @@ export const ExistingUsersTab = () => {
         );
         setStudylines(studylines);
         setLoading(false);
-        console.log("Finished loading!!");
       })
       .catch((error) => {
         api.error({
@@ -65,9 +61,6 @@ export const ExistingUsersTab = () => {
       const teams = teamState.teams.filter((team) =>
         tender.teamIds?.includes(team.id)
       );
-    //   const studyline =
-    //     studylines.find((line) => line.id === tender.studyline)?.name ||
-    //     "No studyline";
       return { ...tender, teams };
     });
     setData(updatedData);
@@ -135,7 +128,7 @@ export const ExistingUsersTab = () => {
       const studyline = studylines.find(
         (line) => line.id === record.studyline
       );
-      return studyline?.prefix ? `${studyline.prefix} ${studyline.name}` : studyline?.name || "No studyline";
+      return studyline?.prefix ? `${studyline.prefix} in ${studyline.name}` : studyline?.name || "No studyline";
     },
     key: "studyline",
   };

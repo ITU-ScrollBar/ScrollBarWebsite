@@ -88,7 +88,7 @@ export const UserAvatarWithUpload = ({
   const [imageSrc, setImageSrc] = useState<string>("");
   const [cropPosition, setCropPosition] = useState(0);
   const [cropPositionY, setCropPositionY] = useState(0);
-  const [zoom, setZoom] = useState(0.1);
+  const [zoom, setZoom] = useState(0.4);
   const tokenRegex = /(\?alt=media&token=[\w-]+)$/;
 
   const resetModal = () => {
@@ -96,7 +96,7 @@ export const UserAvatarWithUpload = ({
     setImageSrc("");
     setCropPosition(0);
     setCropPositionY(0);
-    setZoom(1);
+    setZoom(0.4);
   };
 
   const handleBeforeUpload = (file: File) => {
