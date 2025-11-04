@@ -15,7 +15,7 @@ export interface StudyLine {
   id: string;
   name: string;
   abbreviation: string;
-  Prefix: string;
+  prefix: string;
 }
 
 export interface UserForm {
