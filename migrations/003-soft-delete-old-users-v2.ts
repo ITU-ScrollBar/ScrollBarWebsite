@@ -1,5 +1,17 @@
 import * as Firebase from 'firebase-admin/firestore';
-import { Role, Tender } from '../src/types/types-file';
+
+type Tender = {
+  uid: string;
+  name?: string;
+  active: boolean;
+  email: string;
+  displayName?: string;
+  photoUrl?: string;
+  isAdmin: boolean;
+  roles?: string[];
+  studyline?: string;
+  teamIds?: string[];
+};
 
 export default async function ({ db }: {db: Firebase.Firestore}) {
     const usersRef = db.collection(`users`);
@@ -8,7 +20,7 @@ export default async function ({ db }: {db: Firebase.Firestore}) {
 
     snapshot.forEach((doc) => {
         const user = doc.data() as Tender;
-        if (!user.roles?.includes(Role.REGULAR_ACCESS)) {
+        if (!user.roles?.includes('regular_access')) {
             batch.update(doc.ref, { photoUrl: '', active: false, displayName: 'Deleted User', email: '' });
         }
     });
