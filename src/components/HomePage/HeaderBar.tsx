@@ -46,9 +46,9 @@ export default function HeaderBar() {
     {
       key: "5",
       label: (
-        <div style={linkcss} onClick={() => navigate("/members/profile")}>
+        <Link style={linkcss} onClick={() => navigate("/members/profile")}>
           TENDER SITE
-        </div>
+        </Link>
       ),
     },
     {
