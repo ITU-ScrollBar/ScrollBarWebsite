@@ -58,9 +58,6 @@ export default function CountDown({ nextEvent }: CountDownProps) {
         padding: isMobile ? '15px 5vw' : '30px 7vw',
         zIndex: 2,
         boxSizing: 'border-box',
-        background: isMobile
-          ? 'linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 70%, transparent 100%)'
-          : undefined,
       }}
     >
       <Space direction="vertical" size={12} style={{ maxWidth: 640, width: '100%' }} align="start">
