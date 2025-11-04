@@ -24,17 +24,21 @@ export default function HeaderBar() {
       ),
     },
     {
-      key: "3",
-      label: (
-        <Link style={linkcss} href="#menu">
-          OUR MENU
-        </Link>
-      ),
-    },
-    {
       key: "4",
       label: (
-        <Link style={linkcss} href="#volunteers">
+        <Link
+          style={linkcss}
+          onClick={() => {
+            // if already on home, just scroll
+            if (window.location.pathname === "/") {
+              const el = document.getElementById("volunteers");
+              if (el) el.scrollIntoView({ behavior: "smooth" });
+              return;
+            }
+            // otherwise navigate to home and pass a flag so Home can scroll after mount
+            navigate("/", { state: { targetId: "volunteers" } });
+          }}
+        >
           OUR VOLUNTEERS
         </Link>
       ),
