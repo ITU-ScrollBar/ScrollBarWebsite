@@ -76,7 +76,7 @@ export const streamNextEvent = (observer: { next: (snapshot: QuerySnapshot<Docum
   const now = Timestamp.now();
   const q = query(
     eventsRef,
-    where('start', '>', now),
+    where('end', '>', now),
     where('published', '==', true),
     orderBy('start', 'asc'),
     limit(1)

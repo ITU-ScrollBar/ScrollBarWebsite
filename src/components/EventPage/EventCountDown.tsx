@@ -1,6 +1,7 @@
 
 import { Button, Space } from 'antd'
 import Title from 'antd/es/typography/Title';
+import Text from 'antd/es/typography/Text';
 import { useWindowSize } from '../../hooks/useWindowSize';
 import { useCountdown } from '../../hooks/useCountdown';
 import CountdownUnit from './CountdownUnit';
@@ -11,12 +12,13 @@ interface CountDownProps {
   nextEvent: {
     title: string;
     start: Date;
+    end: Date;
     event_url: string;
   } | null;
 }
 
 export default function CountDown({ nextEvent }: CountDownProps) {
-  const timeLeft = useCountdown(nextEvent?.start || null);
+  const timeLeft = useCountdown(nextEvent?.start || null, nextEvent?.end || null);
   const { isMobile } = useWindowSize();
 
   const BASE_EVENT_URL = "https://www.facebook.com/ScrollBar"
@@ -52,37 +54,52 @@ export default function CountDown({ nextEvent }: CountDownProps) {
             fontSize: isMobile ? 32 : 60,
             lineHeight: 1.1,
             textShadow: `2px 2px 4px ${COLORS.blackShadow}`,
+            marginBottom: timeLeft.isOpen ? '-14px' : undefined,
           }}
         >
           {nextEvent.title}
         </Title>
-        <Space
-          align="center"
-          size={isMobile ? 6 : 8}
-          split={
-            <span
-              style={{
-                color: COLORS.yellow,
-                fontSize: isMobile ? 18 : 32,
-                fontWeight: 'bolder',
-                position: 'relative',
-                top: -5,
-                textShadow: isMobile ? `2px 2px 4px ${COLORS.blackShadow}` : undefined,
-              }}
-            >
-              :
-            </span>
-          }
-        >
-          {units.map(({ label, value }) => (
-            <CountdownUnit 
-              key={label} 
-              label={label} 
-              value={value} 
-              isMobile={isMobile}
-            />
-          ))}
-        </Space>
+        {timeLeft.isOpen && (
+          <Text
+            style={{
+              ...COMMON_STYLES.textYellow,
+              fontSize: isMobile ? 32 : 48,
+              fontWeight: 'bold',
+              textShadow: `2px 2px 4px ${COLORS.blackShadow}`,
+            }}
+          >
+            We're Open
+          </Text>
+        )}
+        {!timeLeft.isOpen && !timeLeft.loading && (
+          <Space
+            align="center"
+            size={isMobile ? 6 : 8}
+            split={
+              <span
+                style={{
+                  color: COLORS.yellow,
+                  fontSize: isMobile ? 18 : 32,
+                  fontWeight: 'bolder',
+                  position: 'relative',
+                  top: -5,
+                  textShadow: isMobile ? `2px 2px 4px ${COLORS.blackShadow}` : undefined,
+                }}
+              >
+                :
+              </span>
+            }
+          >
+            {units.map(({ label, value }) => (
+              <CountdownUnit 
+                key={label} 
+                label={label} 
+                value={value} 
+                isMobile={isMobile}
+              />
+            ))}
+          </Space>
+        )}
         <Button
           type="primary"
           size="large"

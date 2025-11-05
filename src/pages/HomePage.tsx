@@ -86,6 +86,7 @@ export default function HomePage() {
         {!eventLoading && <CountDown nextEvent={nextEvent ? {
           title: nextEvent.title,
           start: nextEvent.start,
+          end: nextEvent.end,
           event_url: nextEvent.facebook_link,
         } : null} />}
         <Row justify="center">
