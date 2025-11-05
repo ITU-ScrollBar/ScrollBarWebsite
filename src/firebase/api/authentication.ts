@@ -17,6 +17,7 @@ import {
   deleteDoc,
   QuerySnapshot,
   DocumentData,
+  where,
 } from 'firebase/firestore';
 import {
   ref,
@@ -126,7 +127,7 @@ export const getUser = (
 
 // Stream all users and listen for changes
 export const streamUsers = (observer: Observer<QuerySnapshot>) => {
-  const usersQuery = query(collection(db, 'users'), orderBy('displayName', 'asc'));
+  const usersQuery = query(collection(db, 'users'), where('active', '==', true), orderBy('displayName', 'asc'));
   
   return onSnapshot(usersQuery, {
     next: (snapshot: QuerySnapshot) => {
