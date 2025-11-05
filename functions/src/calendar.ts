@@ -102,9 +102,11 @@ app.get('/calendar/:uid', async (req, res) => {
     const uid = req.params.uid;
     if (!uid) return res.status(400).send('Missing uid');
 
-    const shiftEvents = await handleShifts(uid);
+    const env = process.env.VITE_APP_ENV || 'dev';
 
-    const internalEvents = await handleInternalEvents(uid);
+    const shiftEvents = await handleShifts(uid, env);
+    
+    const internalEvents = await handleInternalEvents(uid, env);
 
     const { error, value } = createEvents(shiftEvents.concat(internalEvents));
     if (error) {
@@ -124,11 +126,11 @@ app.get('/calendar/:uid', async (req, res) => {
   }
 });
 
-const handleShifts = async (uid: string): Promise<EventAttributes[]> => {
+const handleShifts = async (uid: string, env: string): Promise<EventAttributes[]> => {
   // Handle shifts for the user
   const userEngagementsSnapshot = await db
       .collection('env')
-      .doc('dev')
+      .doc(env)
       .collection('engagements')
       .where('userId', '==', uid)
       .where('shiftEnd', '>=', Timestamp.now())
@@ -138,14 +140,14 @@ const handleShifts = async (uid: string): Promise<EventAttributes[]> => {
 
     const shiftsSnapshot = await db
       .collection('env')
-      .doc('dev')
+      .doc(env)
       .collection('shifts')
       .where('__name__', 'in', shiftIds)
       .get();
     
     const relatedEngagementsSnapshot = await db
       .collection('env')
-      .doc('dev')
+      .doc(env)
       .collection('engagements')
       .where('shiftId', 'in', shiftIds)
       .get();
@@ -154,7 +156,7 @@ const handleShifts = async (uid: string): Promise<EventAttributes[]> => {
 
     const eventsSnapshot = await db
       .collection('env')
-      .doc('dev')
+      .doc(env)
       .collection('events')
       .where('__name__', 'in', eventIds)
       .get();
@@ -193,11 +195,11 @@ const handleShifts = async (uid: string): Promise<EventAttributes[]> => {
     return events;
 };
 
-const handleInternalEvents = async (uid: string): Promise<EventAttributes[]> => {
+const handleInternalEvents = async (uid: string, env: string): Promise<EventAttributes[]> => {
   // Handle internal events for the user
   const internalEventsSnapshot = await db
     .collection('env')
-    .doc('dev')  
+    .doc(env)
     .collection('internalEvents')
     .where('end', '>=', Timestamp.now())
     .get();
