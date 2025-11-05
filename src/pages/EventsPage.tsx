@@ -17,10 +17,10 @@ export default function EventsPage() {
         .map(event => ({
             id: event.id,
             title: event.title,
-            image: event.picture ?? DEFAULT_EVENT_IMAGE,
+            image: event.photo_url ?? DEFAULT_EVENT_IMAGE,
             start: event.start,
             end: event.end,
-            event_url: event.facebook_link,
+            event_url: event.event_url,
         })).sort((a, b) => a.start.getTime() - b.start.getTime()) : [];
 
     // Get the next upcoming event for countdown

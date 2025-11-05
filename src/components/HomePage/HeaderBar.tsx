@@ -88,8 +88,6 @@ export default function HeaderBar() {
     },
   ];
 
-  <Menu items={items} />;
-
   return (
     <Header 
       style={{
