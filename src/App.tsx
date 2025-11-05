@@ -98,7 +98,7 @@ function App() {
                     </Route>
                     <Route
                       element={
-                        <RoleProtectedRoute requiredRole={"shifts_manager"} />
+                        <RoleProtectedRoute requiredRole={Role.SHIFT_MANAGER} />
                       }
                     >
                       <Route
