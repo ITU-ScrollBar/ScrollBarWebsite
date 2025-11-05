@@ -10,7 +10,6 @@ export default function RoleTag({ role }: RoleTagProps) {
     const key = role.toUpperCase();
 
     if (!(key in Role)) {
-        console.log('key:', key);
         notification.error({
             message: "Unknown role",
             description: `The role "${role}" is not recognized.`,

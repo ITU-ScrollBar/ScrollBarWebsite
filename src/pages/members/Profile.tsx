@@ -76,7 +76,7 @@ export default function Profile() {
     });
   };
 
-  const EXCLUDED_ROLES = [Role.NEWBIE, Role.REGULAR_ACCESS].map(toString);
+  const EXCLUDED_ROLES = [Role.NEWBIE, Role.REGULAR_ACCESS].map((role) => role.toString());
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
