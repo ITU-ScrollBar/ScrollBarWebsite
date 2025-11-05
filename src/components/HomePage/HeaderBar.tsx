@@ -6,6 +6,7 @@ import Link from "antd/es/typography/Link";
 import instagramIcon from "../../assets/images/instagram.png";
 import facebookIcon from "../../assets/images/facebook.png";
 import { useNavigate } from "react-router";
+import { useHashNavigation } from "../../hooks/useHashNavigation";
 
 const linkcss = {
   fontWeight: "bold",
@@ -15,6 +16,9 @@ const linkcss = {
 };
 
 export default function HeaderBar() {
+  const navigate = useNavigate();
+  const { handleSectionLink } = useHashNavigation();
+
   const items = [
     {
       key: "1",
@@ -27,17 +31,17 @@ export default function HeaderBar() {
     {
       key: "3",
       label: (
-        <Link style={linkcss} href="#menu">
+        <a href="#menu" style={linkcss}>
           OUR MENU
-        </Link>
+        </a>
       ),
     },
     {
       key: "4",
       label: (
-        <Link style={linkcss} href="#volunteers">
+        <a href="#volunteers" style={linkcss} onClick={(e) => handleSectionLink(e, "volunteers")}>
           OUR VOLUNTEERS
-        </Link>
+        </a>
       ),
     },
     {
@@ -83,8 +87,6 @@ export default function HeaderBar() {
   ];
 
   <Menu items={items} />;
-
-  const navigate = useNavigate();
 
   return (
     <Header 
