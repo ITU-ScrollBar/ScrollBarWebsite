@@ -14,6 +14,7 @@ import { getStudyLines } from '../firebase/api/authentication'
 import { Loading } from '../components/Loading'
 import CountDown from '../components/EventCountDown'
 import {useNextEvent}  from '../hooks/useEvents'
+import { useLocation } from 'react-router-dom'
 
 let cachedStudylines: StudyLine[] | null = null;
 let cachePromise: Promise<StudyLine[]> | null = null;
@@ -24,6 +25,15 @@ export default function HomePage() {
   const { nextEvent, loading: eventLoading } = useNextEvent();
   const activeTenders = useMemo(() => tenderState.tenders.filter(t => !t.roles?.includes('passive') && !t.roles?.includes('board') && t?.active), [tenderState.tenders]);
   const boardMembers = useMemo(() => tenderState.tenders.filter(t => t.roles?.includes('board')), [tenderState.tenders]);
+  const { state } = useLocation();
+  const { targetId } = state || {};
+
+  useEffect(() => {
+    const el = document.getElementById(targetId);
+    if (el) {
+      el.scrollIntoView();
+    }
+  }, [targetId, settingsState.loading]);
 
   if (settingsState.loading) {
     return <Loading centerOverlay={true} />;

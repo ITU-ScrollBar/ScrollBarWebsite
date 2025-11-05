@@ -19,6 +19,7 @@ import {
 } from "../../../types/types-file";
 import { useEngagementContext } from "../../../contexts/EngagementContext";
 import useTenders from "../../../hooks/useTenders";
+import { UserAvatar } from "../../../components/UserAvatar";
 
 const { Title, Text } = Typography;
 
@@ -111,6 +112,7 @@ export default function ShiftInfo({ shift }: ShiftInfoProps) {
           dataSource={engagements}
           renderItem={(engagement) => {
             const tender = getTenderById(engagement.userId);
+            if (!tender) return null;
             return (
               <List.Item
                 actions={[
@@ -131,17 +133,16 @@ export default function ShiftInfo({ shift }: ShiftInfoProps) {
               >
                 <List.Item.Meta
                   avatar={
-                    <Avatar
-                      src={tender?.photoUrl}
+                    <UserAvatar
+                      user={tender}
+                      size={40}
                       style={{
                         backgroundColor:
                           engagement.type === engagementType.ANCHOR
                             ? "#FFD600"
                             : "#1890ff",
                       }}
-                    >
-                      {tender?.displayName?.[0] || "?"}
-                    </Avatar>
+                    />
                   }
                   title={tender?.displayName || "Unknown"}
                   description={tender?.email}

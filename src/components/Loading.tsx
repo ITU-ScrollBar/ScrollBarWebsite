@@ -6,18 +6,20 @@ const { Text } = Typography;
 export interface LoadingProps {
   resources?: string[];
   centerOverlay?: boolean;
+  backdropFullScreen?: boolean;
 }
 
 export const Loading: React.FC<LoadingProps> = ({
   resources = [],
   centerOverlay = false,
+  backdropFullScreen = true,
 }) => {
   const message = resources.length
     ? `Loading ${resources.join(", ")}`
     : "Pouring beer";
   const duration = "1.6s";
 
-  const content = (
+  const loaderInner = (
     <div
       style={{
         display: "flex",
@@ -28,7 +30,7 @@ export const Loading: React.FC<LoadingProps> = ({
     >
       <style>{`
         @keyframes sb-fill-simple { from { transform: translateY(100%); } to { transform: translateY(30%); } }
-        @keyframes sb-foam-bubble { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 50% { transform: translate(var(--tx), -40px) scale(1.1); opacity: 0.8; } 100% { transform: translate(var(--tx), -80px) scale(0.5); opacity: 0; } }
+        @keyframes sb-foam-bubble { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 50% { transform: translate(var(--tx), -40px) scale(1.1); opacity: 0.8; } 100% { transform: translate(var(--tx), -80px) scale(0.9); opacity: 0; } }
       `}</style>
 
       <div
@@ -37,7 +39,7 @@ export const Loading: React.FC<LoadingProps> = ({
           width: 64,
           height: 92,
           borderRadius: 10,
-          border: "3px solid rgba(0,0,0,0.06)",
+          border: "3px solid rgba(255,255,255,0.08)",
           position: "relative",
           background: "#fff",
           overflow: "hidden",
@@ -83,14 +85,53 @@ export const Loading: React.FC<LoadingProps> = ({
       </div>
 
       <div style={{ textAlign: "center" }}>
-        <Text strong style={{ display: "block", marginBottom: 6 }}>
+        <Text strong style={{ display: "block", marginBottom: 6, color: "#fff" }}>
           {message}
         </Text>
       </div>
     </div>
   );
 
+  // panel that sits around loaderInner (rounded translucent panel)
+  const panel = (
+    <div
+      style={{
+        background: "rgba(0,0,0,0.56)",
+        padding: 16,
+        borderRadius: 12,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 12,
+        color: "#fff",
+        boxShadow: "0 8px 24px rgba(0,0,0,0.16)",
+      }}
+    >
+      {loaderInner}
+    </div>
+  );
+
   if (centerOverlay) {
+    if (backdropFullScreen) {
+      // original fullscreen dimmed overlay with centered panel
+      return (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            background: "rgba(0,0,0,0.16)",
+            zIndex: 9999,
+            pointerEvents: "auto",
+          }}
+        >
+          {panel}
+        </div>
+      );
+    }
+
     return (
       <div
         style={{
@@ -99,18 +140,26 @@ export const Loading: React.FC<LoadingProps> = ({
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          background: "rgba(0,0,0,0.16)",
           zIndex: 9999,
+          pointerEvents: "none", // allow clicks to pass through outside the panel
         }}
       >
-        {content}
+        {/* the panel's backdrop — only as large as the panel; pointer events enabled */}
+        <div
+          style={{
+            pointerEvents: "auto", // ensure panel itself captures interactions (if any)
+            margin: 16,
+          }}
+        >
+          {panel}
+        </div>
       </div>
     );
   }
 
   return (
     <div style={{ display: "flex", justifyContent: "center", padding: 16 }}>
-      {content}
+      {panel}
     </div>
   );
 };

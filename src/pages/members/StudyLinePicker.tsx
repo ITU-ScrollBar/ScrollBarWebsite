@@ -34,11 +34,11 @@ export default function StudyLinePicker({ value, onChange, fontSize = 16, bold =
 
   const items: MenuProps['items'] = studyLines.map((sl) => ({
     key: sl.id,
-    label: sl.name,
+    label: sl.prefix ? `${sl.prefix} in ${sl.name}` : sl.name,
   }));
 
   const selectedStudyLine = studyLines.find(sl => sl.id === selectedValue);
-  const displayText = selectedStudyLine?.name || "Select study line";
+  const displayText = (selectedStudyLine?.prefix ? `${selectedStudyLine.prefix} in ` : "") + (selectedStudyLine?.name || "Select study line");
 
   return (
     <Dropdown
