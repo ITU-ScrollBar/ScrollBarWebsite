@@ -1,8 +1,6 @@
 import React from 'react';
 import { Card } from 'antd';
 import Text from 'antd/es/typography/Text';
-import { COLORS } from '../../constants/colors';
-import { COMMON_STYLES } from '../../constants/styles';
 
 interface EventData {
   title: string;
@@ -21,24 +19,6 @@ interface EventCardProps {
 export const EventCard: React.FC<EventCardProps> = ({ event, isFeatured = false, isMobile }) => {
   const EVENT_INFORMATION_LABEL = "Get all the latest Information on the Facebook Event";
   
-  const textVariants = {
-    date: {
-      color: COLORS.yellow,
-      fontSize: isMobile ? '28px' : '32px',
-    },
-    title: {
-      color: COLORS.white,
-      fontSize: isMobile ? '22px' : '22px',
-      fontWeight: 'bold',
-      marginBottom: '2px',
-    },
-    description: {
-      color: COLORS.white,
-      fontSize: '10px',
-      marginTop: 'auto',
-    },
-  };
-
   // Computed values
   const hasUrl = event.event_url;
   const isDesktop = !isMobile;
@@ -66,17 +46,28 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isFeatured = false,
   };
 
   const cardConfig = getCardConfig();
-  const overlayMargin = isMobile ? '0' : '-10px';
 
   const cardStyle: React.CSSProperties = {
-    ...COMMON_STYLES.cardBase,
+    position: 'relative',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
     height: cardConfig.height,
     backgroundImage: `url(${event.image})`,
   };
 
   const overlayStyle: React.CSSProperties = {
-    ...COMMON_STYLES.overlayBase,
-    margin: overlayMargin,
+    zIndex: 2,
+    backgroundColor: 'rgba(46, 46, 46, 0.8)',
+    borderRadius: '10px',
+    display: 'flex',
+    flexDirection: 'column',
+    position: 'relative',
+    overflow: 'hidden',
+    boxSizing: 'border-box',
+    margin: isMobile ? '0' : '-10px',
     textAlign: cardConfig.overlayAlign,
     justifyContent: cardConfig.overlayJustify,
     height: isMobile ? '120px' : '150px',
@@ -84,17 +75,35 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isFeatured = false,
     ...(cardConfig.overlayTop && { top: cardConfig.overlayTop }),
   };
 
+  const textVariants = {
+    date: {
+      color: 'yellow',
+      fontSize: isMobile ? '28px' : '32px',
+    },
+    title: {
+      color: 'white',
+      fontSize: isMobile ? '22px' : '22px',
+      fontWeight: 'bold',
+      marginBottom: '2px',
+    },
+    description: {
+      color: 'white',
+      fontSize: '10px',
+      marginTop: 'auto',
+    },
+  };
+
   const cardContent = (
     <Card hoverable style={cardStyle}>
       <div style={overlayStyle}>
-        <Text style={{ ...COMMON_STYLES.textBase, ...textVariants.date }}>
+        <Text style={{ lineHeight: 1, ...textVariants.date }}>
           {event.start.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' })}
         </Text>
-        <Text style={{ ...COMMON_STYLES.textBase, ...textVariants.title }}>
+        <Text style={{ lineHeight: 1, ...textVariants.title }}>
           {event.title}
         </Text>
         {cardState.showDescription && (
-          <Text style={{ ...COMMON_STYLES.textBase, ...textVariants.description }}>
+          <Text style={{ lineHeight: 1, ...textVariants.description }}>
             {EVENT_INFORMATION_LABEL}
           </Text>
         )}

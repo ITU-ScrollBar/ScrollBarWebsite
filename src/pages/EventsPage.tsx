@@ -8,7 +8,6 @@ import CountDown from '../components/EventPage/EventCountDown';
 import useEvents from '../hooks/useEvents';
 import DEFAULT_EVENT_IMAGE from '../assets/images/background.png';
 import { EventCard } from '../components/EventPage/EventCard';
-import { COMMON_STYLES } from '../constants/styles';
 
 export default function EventsPage() {
     const { eventState } = useEvents();
@@ -62,7 +61,15 @@ export default function EventsPage() {
             }}
           />
           <div 
-            style={COMMON_STYLES.imageOverlay}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              zIndex: 1,
+            }}
           />
           {nextEvent && <CountDown nextEvent={nextEvent} />}
         </div>

@@ -5,8 +5,6 @@ import Text from 'antd/es/typography/Text';
 import { useWindowSize } from '../../hooks/useWindowSize';
 import { useCountdown } from '../../hooks/useCountdown';
 import CountdownUnit from './CountdownUnit';
-import { COLORS } from '../../constants/colors';
-import { COMMON_STYLES } from '../../constants/styles';
 
 interface CountDownProps {
   nextEvent: {
@@ -21,6 +19,7 @@ export default function CountDown({ nextEvent }: CountDownProps) {
   const timeLeft = useCountdown(nextEvent?.start || null, nextEvent?.end || null);
   const { isMobile } = useWindowSize();
 
+  const TEXT_SHADOW = `2px 2px 4px 'rgba(0, 0, 0, 0.8)'`;
   const BASE_EVENT_URL = "https://www.facebook.com/ScrollBar"
   const units = [
     { label: 'Days', value: timeLeft.days.toString().padStart(2, '0') },
@@ -49,11 +48,11 @@ export default function CountDown({ nextEvent }: CountDownProps) {
         <Title
           level={1}
           style={{
-            color: COLORS.white,
+            color: 'white',
             fontWeight: 'bold',
             fontSize: isMobile ? 32 : 60,
             lineHeight: 1.1,
-            textShadow: `2px 2px 4px ${COLORS.blackShadow}`,
+            textShadow: TEXT_SHADOW,
             marginBottom: timeLeft.isOpen ? '-14px' : undefined,
           }}
         >
@@ -62,10 +61,11 @@ export default function CountDown({ nextEvent }: CountDownProps) {
         {timeLeft.isOpen && (
           <Text
             style={{
-              ...COMMON_STYLES.textYellow,
+              color: 'yellow', 
+              lineHeight: 1,
               fontSize: isMobile ? 32 : 48,
               fontWeight: 'bold',
-              textShadow: `2px 2px 4px ${COLORS.blackShadow}`,
+              textShadow: TEXT_SHADOW,
             }}
           >
             We're Open
@@ -78,12 +78,12 @@ export default function CountDown({ nextEvent }: CountDownProps) {
             split={
               <span
                 style={{
-                  color: COLORS.yellow,
+                  color: 'yellow',
                   fontSize: isMobile ? 18 : 32,
                   fontWeight: 'bolder',
                   position: 'relative',
                   top: -5,
-                  textShadow: isMobile ? `2px 2px 4px ${COLORS.blackShadow}` : undefined,
+                  textShadow: isMobile ? TEXT_SHADOW : undefined,
                 }}
               >
                 :
@@ -104,10 +104,10 @@ export default function CountDown({ nextEvent }: CountDownProps) {
           type="primary"
           size="large"
           style={{
-            background: COLORS.yellow,
-            borderColor: COLORS.darkGrayBorder,
+            background: 'yellow',
+            borderColor: 'rgba(46, 46, 46, 0.6)',
             borderWidth: 1,
-            color: COLORS.black,
+            color: 'black',
             marginTop: 8,
             borderRadius: 25,
             alignSelf: 'flex-start',

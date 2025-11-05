@@ -1,7 +1,5 @@
 import React from 'react';
 import Text from 'antd/es/typography/Text';
-import { COLORS } from '../../constants/colors';
-import { COMMON_STYLES } from '../../constants/styles';
 
 interface CountdownUnitProps {
   label: string;
@@ -9,21 +7,29 @@ interface CountdownUnitProps {
   isMobile: boolean;
 }
 
+const flexCenter = {
+  display: 'flex',
+  flexDirection: 'column' as const,
+  alignItems: 'center',
+};
+
 const CountdownUnit: React.FC<CountdownUnitProps> = ({ label, value, isMobile }) => (
-  <div style={COMMON_STYLES.flexCenter}>
+  <div style={flexCenter}>
     <div
       style={{
-        ...COMMON_STYLES.flexCenterJustify,
+        ...flexCenter,
+        justifyContent: 'center',
         width: isMobile ? '55px' : '70px',
         height: isMobile ? '50px' : '60px',
-        backgroundColor: COLORS.darkGray,
+        backgroundColor: 'rgb(46, 46, 46)',
         borderRadius: 8,
         padding: 4,
       }}
     >
       <Text
         style={{
-          ...COMMON_STYLES.textYellow,
+          color: 'yellow',
+          lineHeight: 1,
           fontSize: isMobile ? 18 : 20,
           fontWeight: 'bold',
         }}
@@ -32,7 +38,8 @@ const CountdownUnit: React.FC<CountdownUnitProps> = ({ label, value, isMobile })
       </Text>
       <Text
         style={{
-          ...COMMON_STYLES.textYellow,
+          color: 'yellow',
+          lineHeight: 1,
           fontSize: isMobile ? 10 : 12,
           fontWeight: 'normal',
           margin: '2px 0 0 0',
