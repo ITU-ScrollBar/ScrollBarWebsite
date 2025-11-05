@@ -6,7 +6,6 @@ import Link from "antd/es/typography/Link";
 import instagramIcon from "../../assets/images/instagram.png";
 import facebookIcon from "../../assets/images/facebook.png";
 import { useNavigate } from "react-router";
-import { useHashNavigation } from "../../hooks/useHashNavigation";
 
 const linkcss = {
   fontWeight: "bold",
@@ -17,7 +16,6 @@ const linkcss = {
 
 export default function HeaderBar() {
   const navigate = useNavigate();
-  const { handleSectionLink } = useHashNavigation();
 
   const items = [
     {
