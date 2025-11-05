@@ -10,6 +10,7 @@ import {
   Tender,
   ShiftFiltering,
   engagementType,
+  Role,
 } from "../../types/types-file";
 import { useAuth } from "../../contexts/AuthContext";
 import { useEffect, useState, useMemo } from "react";
@@ -211,7 +212,7 @@ export function ShiftList({
   const grabShift = (engagement: Engagement) => {
     if (
       engagement.type === engagementType.ANCHOR &&
-      !currentUser?.roles?.includes("anchor")
+      !currentUser?.roles?.includes(Role.ANCHOR)
     ) {
       message.error("You must be an anchor to grab an anchor shift");
     } else if (
@@ -287,8 +288,8 @@ export function ShiftList({
 
   const renderShiftCard = (shift: Shift) => {
     const shiftEngagements = getEngagementsForShift(shift.id!, engagements);
-    const anchors = shiftEngagements.filter((e) => e.type === "anchor");
-    const regulars = shiftEngagements.filter((e) => e.type !== "anchor");
+    const anchors = shiftEngagements.filter((e) => e.type === engagementType.ANCHOR);
+    const regulars = shiftEngagements.filter((e) => e.type !== engagementType.ANCHOR);
     const myShift = shiftEngagements
       .filter((e) => e.userId === currentUser?.uid)
       .find((e) => e);

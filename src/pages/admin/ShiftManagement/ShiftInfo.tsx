@@ -16,6 +16,7 @@ import {
   Engagement,
   Tender,
   engagementType,
+  Role,
 } from "../../../types/types-file";
 import { useEngagementContext } from "../../../contexts/EngagementContext";
 import useTenders from "../../../hooks/useTenders";
@@ -50,7 +51,7 @@ export default function ShiftInfo({ shift }: ShiftInfoProps) {
   const availableAnchors = tenderState.tenders.filter(
     (t) =>
       t.active &&
-      t.roles?.includes("anchor") &&
+      t.roles?.includes(Role.ANCHOR) &&
       !shiftEngagements.some((e) => e.userId === t.uid)
   );
 

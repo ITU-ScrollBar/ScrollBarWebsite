@@ -6,7 +6,7 @@ import avatar from "../../assets/images/avatar.png";
 import StudyLinePicker from "./StudyLinePicker";
 import { updateUser } from "../../firebase/api/authentication";
 import { UserAvatarWithUpload } from "../../components/UserAvatar";
-import { ShiftFiltering } from "../../types/types-file";
+import { Role, ShiftFiltering } from "../../types/types-file";
 import { CalendarSection } from "../../components/CalendarComponent";
 import { Loading } from "../../components/Loading";
 import Shifts from "./Shifts";
@@ -76,7 +76,7 @@ export default function Profile() {
     });
   };
 
-  const EXCLUDED_ROLES = ["newbie", "regular_access"];
+  const EXCLUDED_ROLES = [Role.NEWBIE, Role.REGULAR_ACCESS];
 
   return (
     <Layout style={{ minHeight: "100vh" }}>

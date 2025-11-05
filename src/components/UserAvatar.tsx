@@ -7,7 +7,7 @@ import {
   Button,
   Space,
 } from "antd";
-import { Tender, UserProfile } from "../types/types-file";
+import { Role, Tender, UserProfile } from "../types/types-file";
 import avatar from "../assets/images/avatar.png";
 import newbiehat from "../assets/images/newbiehat.svg";
 import {
@@ -35,7 +35,7 @@ export const UserAvatar = ({
   backgroundColor,
   ...divProps
 }: UserAvatarProps & Record<string, unknown>) => {
-  const showNewbieHat = showHats && (user.roles?.includes("newbie") ?? false);
+  const showNewbieHat = showHats && (user.roles?.includes(Role.NEWBIE) ?? false);
 
   const passedStyle = divProps.style || {};
   const combinedStyle: React.CSSProperties = {

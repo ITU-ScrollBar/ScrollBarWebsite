@@ -14,7 +14,7 @@ import Register from "./pages/Register";
 import Shifts from "./pages/members/Shifts";
 import Profile from "./pages/members/Profile";
 import { TenderMenu } from "./components/HomePage/TenderMenu";
-import { ShiftFiltering } from "./types/types-file";
+import { Role, ShiftFiltering } from "./types/types-file";
 import EventManagement from "./pages/admin/EventManagement/EventManagement";
 import GlobalSettingsPage from "./pages/admin/GlobalSettingsPage";
 import EventsPage from "./pages/EventsPage";
@@ -78,7 +78,7 @@ function App() {
                     </Route>
                     <Route
                       element={
-                        <RoleProtectedRoute requiredRole={"event_manager"} />
+                        <RoleProtectedRoute requiredRole={Role.EVENT_MANAGER} />
                       }
                     >
                       <Route
@@ -88,7 +88,7 @@ function App() {
                     </Route>
                     <Route
                       element={
-                        <RoleProtectedRoute requiredRole={"board_member"} />
+                        <RoleProtectedRoute requiredRole={Role.BOARD} />
                       }
                     >
                       <Route
@@ -108,7 +108,7 @@ function App() {
                     </Route>
                     <Route
                       element={
-                        <RoleProtectedRoute requiredRole={"tender_manager"} />
+                        <RoleProtectedRoute requiredRole={Role.BOARD} />
                       }
                     >
                       <Route path="admin/users" element={<UserManagerPage />} />

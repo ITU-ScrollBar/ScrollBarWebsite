@@ -95,10 +95,10 @@ export const ExistingUsersTab = () => {
         <RoleTag key={role} role={role} />
       )) || "No roles",
     filters: [
-      { text: "Admins", value: "admin" },
-      { text: "Board members", value: "board" },
-      { text: "Newbies", value: "newbie" },
-      { text: "Anchors", value: "anchor" },
+      { text: "Admins", value: Role.ADMIN },
+      { text: "Board members", value: Role.BOARD },
+      { text: "Newbies", value: Role.NEWBIE },
+      { text: "Anchors", value: Role.ANCHOR },
     ],
     onFilter: userFilterMatch,
   };

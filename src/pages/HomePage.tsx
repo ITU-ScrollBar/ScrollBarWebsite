@@ -9,7 +9,7 @@ import MDEditor from '@uiw/react-md-editor'
 import useTenders from '../hooks/useTenders'
 import { UserAvatar } from '../components/UserAvatar'
 import { getTenderDisplayName } from './members/helpers'
-import { StudyLine, Tender } from '../types/types-file'
+import { Role, StudyLine, Tender } from '../types/types-file'
 import { getStudyLines } from '../firebase/api/authentication'
 import { Loading } from '../components/Loading'
 import CountDown from '../components/EventCountDown'
@@ -23,8 +23,8 @@ export default function HomePage() {
   const { settingsState } = useSettings();
   const { tenderState } = useTenders();
   const { nextEvent, loading: eventLoading } = useNextEvent();
-  const activeTenders = useMemo(() => tenderState.tenders.filter(t => !t.roles?.includes('passive') && !t.roles?.includes('board') && t?.active), [tenderState.tenders]);
-  const boardMembers = useMemo(() => tenderState.tenders.filter(t => t.roles?.includes('board')), [tenderState.tenders]);
+  const activeTenders = useMemo(() => tenderState.tenders.filter(t => !t.roles?.includes(Role.PASSIVE) && !t.roles?.includes(Role.BOARD) && t?.active), [tenderState.tenders]);
+  const boardMembers = useMemo(() => tenderState.tenders.filter(t => t.roles?.includes(Role.BOARD)), [tenderState.tenders]);
   const { state } = useLocation();
   const { targetId } = state || {};
 

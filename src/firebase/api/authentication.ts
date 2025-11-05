@@ -28,6 +28,7 @@ import {
 
 import { auth, db, storage } from '../index';
 import { getCollection, getDocument, getExtension } from './common';
+import { Role } from '../../types/types-file';
 
 // Define the shape of the form data when creating a new user
 interface FormData {
@@ -79,7 +80,7 @@ export const createAccount = async (form: FormData): Promise<User> => {
       email: form.email,
       studyline: form.studyline,
       isAdmin: false,
-      roles: ['regular_access', 'tender', 'newbie'],
+      roles: [Role.REGULAR_ACCESS, Role.TENDER, Role.NEWBIE],
       active: true,
       photoUrl: '',
     };
