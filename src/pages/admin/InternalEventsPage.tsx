@@ -144,6 +144,7 @@ export const renderInternalEvent = ({
 
   const team = teams.find((team) => team.id === internalEvent.scope);
   const scopeText = team ? team.name : internalEvent.scope;
+  const isSingleDayEvent = internalEvent.start.toDateString() === internalEvent.end.toDateString();
 
   return (
     <>
@@ -170,7 +171,7 @@ export const renderInternalEvent = ({
         </Typography.Text>
         <br />
         <Typography.Text strong style={{ color: GRAY_TEXT }}>
-          Date: {formatDate(internalEvent.start, internalEvent.end)}
+          {isSingleDayEvent ? "Time:" : "Date:"} {formatDate(internalEvent.start, internalEvent.end, isSingleDayEvent)}
         </Typography.Text>
         <br />
         <Typography.Text style={{ color: GRAY_TEXT }}>
@@ -190,7 +191,7 @@ const formatDateShort = (start: Date) => {
   return `(${start.toLocaleDateString(locale, options)})`;
 };
 
-const formatDate = (start: Date, end: Date) => {
+const formatDate = (start: Date, end: Date, isSingleDayEvent: boolean) => {
   const locale = "en-GB";
   const dateOptions: Intl.DateTimeFormatOptions = {
     year: "numeric",
@@ -201,7 +202,7 @@ const formatDate = (start: Date, end: Date) => {
     hour: "2-digit",
     minute: "2-digit",
   };
-  if (start.toDateString() === end.toDateString()) {
+  if (isSingleDayEvent) {
     return `${start.toLocaleTimeString(locale, timeOptions)} to ${end.toLocaleTimeString(locale, timeOptions)}`;
   } else {
     return `${start.toLocaleDateString(locale, dateOptions)} ${start.toLocaleTimeString(locale, timeOptions)} - ${end.toLocaleDateString(locale, dateOptions)} ${end.toLocaleTimeString(locale, timeOptions)}`;
