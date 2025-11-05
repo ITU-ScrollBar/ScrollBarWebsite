@@ -58,7 +58,7 @@ export const TeamsTab = () => {
         {<Modal
             onCancel={() => {setIsModalOpen(false); setEditingTeam(null); form.resetFields();}}
             onOk={() => {
-                form.validateFields().then(values => {
+                form.validateFields().then(async values => {
                     if (editingTeam) {
                         updateTeam({ ...editingTeam, name: values.name });
                         tenderState.tenders.forEach(tender => {
@@ -73,7 +73,11 @@ export const TeamsTab = () => {
                             }
                         });
                     } else {
-                        addTeam({ name: values.name });
+                        const newTeam = await addTeam({ name: values.name });
+                        values.members.forEach(tenderId => {
+                            const tenderTeams = tenderState.tenders.find(t => t.uid === tenderId)?.teamIds ?? [];
+                            updateTender(tenderId, 'teamIds', [...tenderTeams, newTeam.id]);
+                        });
                     }
                     setIsModalOpen(false);
                 });

@@ -29,27 +29,31 @@ export default function HeaderBar() {
       ),
     },
     {
-      key: "3",
-      label: (
-        <a href="#menu" style={linkcss}>
-          OUR MENU
-        </a>
-      ),
-    },
-    {
       key: "4",
       label: (
-        <a href="#volunteers" style={linkcss} onClick={(e) => handleSectionLink(e, "volunteers")}>
+        <Link
+          style={linkcss}
+          onClick={() => {
+            // if already on home, just scroll
+            if (window.location.pathname === "/") {
+              const el = document.getElementById("volunteers");
+              if (el) el.scrollIntoView({ behavior: "smooth" });
+              return;
+            }
+            // otherwise navigate to home and pass a flag so Home can scroll after mount
+            navigate("/", { state: { targetId: "volunteers" } });
+          }}
+        >
           OUR VOLUNTEERS
-        </a>
+        </Link>
       ),
     },
     {
       key: "5",
       label: (
-        <div style={linkcss} onClick={() => navigate("/members/profile")}>
+        <Link style={linkcss} onClick={() => navigate("/members/profile")}>
           TENDER SITE
-        </div>
+        </Link>
       ),
     },
     {

@@ -1,13 +1,4 @@
-import {
-  Row,
-  Col,
-  Typography,
-  Button,
-  Popconfirm,
-  message,
-  Tooltip,
-  Badge,
-} from "antd";
+import { Row, Col, Typography, Button, Popconfirm, message, Badge } from "antd";
 import {
   getEngagementsForShift,
   getTenderForEngagement,
@@ -19,6 +10,7 @@ import {
   Tender,
   ShiftFiltering,
   engagementType,
+  Role,
 } from "../../types/types-file";
 import { useAuth } from "../../contexts/AuthContext";
 import { useEffect, useState, useMemo } from "react";
@@ -220,7 +212,7 @@ export function ShiftList({
   const grabShift = (engagement: Engagement) => {
     if (
       engagement.type === engagementType.ANCHOR &&
-      !currentUser?.roles?.includes("anchor")
+      !currentUser?.roles?.includes(Role.ANCHOR)
     ) {
       message.error("You must be an anchor to grab an anchor shift");
     } else if (
@@ -243,51 +235,47 @@ export function ShiftList({
 
     return (
       <Col key={engagement.id} style={{ minWidth: 56 }}>
-        <Tooltip title={getTenderDisplayName(tender)}>
-          <div
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 1,
+            position: "relative",
+          }}
+        >
+          <Badge
+            count={
+              <UpForGrabsBadge
+                isUpForGrabs={isUpForGrabs}
+                onGrab={() => grabShift(engagement)}
+              />
+            }
+          >
+            <UserAvatar
+              user={tender}
+              size={60}
+              backgroundColor={
+                isAnchor ? COLORS.ANCHOR_BACKGROUND : COLORS.REGULAR_BACKGROUND
+              }
+            />
+          </Badge>
+          <span
             style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 1,
-              position: "relative",
+              fontSize: "0.85em",
+              textAlign: "center",
+              maxWidth: "80px",
+              overflow: "inline-block",
+              whiteSpace: "normal",
+              wordBreak: "break-word",
+              zIndex: 12,
+              backgroundColor: "rgba(255, 255, 255, 0.5)",
+              backdropFilter: "blur(4px)",
             }}
           >
-            <Badge
-              count={
-                <UpForGrabsBadge
-                  isUpForGrabs={isUpForGrabs}
-                  onGrab={() => grabShift(engagement)}
-                />
-              }
-            >
-              <UserAvatar
-                user={tender}
-                size={60}
-                backgroundColor={
-                  isAnchor
-                    ? COLORS.ANCHOR_BACKGROUND
-                    : COLORS.REGULAR_BACKGROUND
-                }
-              />
-            </Badge>
-            <span
-              style={{
-                fontSize: "0.85em",
-                textAlign: "center",
-                maxWidth: "80px",
-                overflow: "inline-block",
-                whiteSpace: "normal",
-                wordBreak: "break-word",
-                zIndex: 12,
-                backgroundColor: "rgba(255, 255, 255, 0.5)",
-                backdropFilter: "blur(4px)",
-              }}
-            >
-              {getTenderDisplayName(tender)}
-            </span>
-          </div>
-        </Tooltip>
+            {getTenderDisplayName(tender)}
+          </span>
+        </div>
       </Col>
     );
   };
@@ -300,8 +288,8 @@ export function ShiftList({
 
   const renderShiftCard = (shift: Shift) => {
     const shiftEngagements = getEngagementsForShift(shift.id!, engagements);
-    const anchors = shiftEngagements.filter((e) => e.type === "anchor");
-    const regulars = shiftEngagements.filter((e) => e.type !== "anchor");
+    const anchors = shiftEngagements.filter((e) => e.type === engagementType.ANCHOR);
+    const regulars = shiftEngagements.filter((e) => e.type !== engagementType.ANCHOR);
     const myShift = shiftEngagements
       .filter((e) => e.userId === currentUser?.uid)
       .find((e) => e);

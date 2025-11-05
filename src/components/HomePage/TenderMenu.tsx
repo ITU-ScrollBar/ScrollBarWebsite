@@ -43,24 +43,24 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
 
   if (
     currentUser?.isAdmin 
-    || currentUser?.roles?.includes('tender_manager')
-    || currentUser?.roles?.includes('shift_manager')
-    || currentUser?.roles?.includes('board_member')
+    || currentUser?.roles?.includes(Role.TENDER_MANAGER)
+    || currentUser?.roles?.includes(Role.SHIFT_MANAGER)
+    || currentUser?.roles?.includes(Role.BOARD)
   ) {
     const adminItems = [];
-    if (currentUser?.isAdmin || currentUser?.roles?.includes('tender_manager')) {
+    if (currentUser?.isAdmin || currentUser?.roles?.includes(Role.TENDER_MANAGER)) {
       adminItems.push({
         label: 'Manage Events',
         key: 'admin/events',
       });
     }
-    if (currentUser?.isAdmin || currentUser?.roles?.includes('shift_manager')) {
+    if (currentUser?.isAdmin || currentUser?.roles?.includes(Role.SHIFT_MANAGER)) {
       adminItems.push({
         label: 'Manage Shifts',
         key: 'admin/shifts',
       });
     }
-    if (currentUser?.isAdmin || currentUser?.roles?.includes('tender_manager')) {
+    if (currentUser?.isAdmin || currentUser?.roles?.includes(Role.TENDER_MANAGER) || currentUser?.roles?.includes(Role.BOARD)) {
       adminItems.push({
         label: 'Manage Users',
         key: 'admin/users',
@@ -114,7 +114,7 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
 
   return (
     <div>
-      <div style={{ backgroundColor: '#2E2E2E', display: "flex", alignItems: "center", justifyContent: "space-between", height: "128px" }}>
+      <div style={{ backgroundColor: '#202020', display: "flex", alignItems: "center", justifyContent: "space-between", height: "128px" }}>
         <div>
           <a href="/" style={{ display: "inline-block" }}>
             <img src={logo} alt="Logo" style={{ height: 128 }} />
