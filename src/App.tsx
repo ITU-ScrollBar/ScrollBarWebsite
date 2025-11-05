@@ -121,7 +121,7 @@ function App() {
               </Routes>
             </Content>
           </Layout>
-          <Footer style={{ backgroundColor: "#FFE600" }}>
+          <Footer style={{ backgroundColor: "#202020" }}>
             <FooterBar />
           </Footer>
         </Layout>

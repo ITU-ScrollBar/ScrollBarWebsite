@@ -114,7 +114,7 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
 
   return (
     <div>
-      <div style={{ backgroundColor: '#2E2E2E', display: "flex", alignItems: "center", justifyContent: "space-between", height: "128px" }}>
+      <div style={{ backgroundColor: '#202020', display: "flex", alignItems: "center", justifyContent: "space-between", height: "128px" }}>
         <div>
           <a href="/" style={{ display: "inline-block" }}>
             <img src={logo} alt="Logo" style={{ height: 128 }} />
