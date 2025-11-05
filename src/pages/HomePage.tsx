@@ -256,12 +256,12 @@ const UserList = ({ users }: { users: Tender[] }) => {
 
   return (
     <List
-      grid={{ gutter: 16, column: 10, xs: 4, sm: 3, md: 5, lg: 8, xl: 10 }}
+      grid={{ gutter: 16, column: 10, xs: 3, sm: 3, md: 5, lg: 8, xl: 10 }}
       dataSource={users}
       renderItem={(user) => (
         <List.Item>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <UserAvatar user={user} size={64} showHats={false} />
+            <UserAvatar user={user} size={95} showHats={false} />
             <div style={{ marginTop: 8, textAlign: 'center' }}>{getTenderDisplayName(user)}</div>
             <div style={{ marginTop: 8, textAlign: 'center' }}>{studylines.find(sl => sl.id === user.studyline)?.abbreviation?.toLocaleUpperCase()}</div>
           </div>
