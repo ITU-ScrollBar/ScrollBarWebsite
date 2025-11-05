@@ -33,7 +33,7 @@ export const CalendarSection = () => {
 
     const calendarUrl = `${globalThis.location.origin}/calendar/${currentUser.uid}`;
 
-    const googleCalendarUrl = `https://calendar.google.com/calendar/u/0/r?cid=${calendarUrl}`
+    const googleCalendarUrl = `http://calendar.google.com/calendar/u/0/r?cid=${calendarUrl}`
     const appCalendarUrl = `webcal:${calendarUrl}`;
 
     return (
