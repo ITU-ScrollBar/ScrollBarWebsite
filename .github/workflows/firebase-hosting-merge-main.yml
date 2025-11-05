@@ -88,4 +88,4 @@ jobs:
           credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_SCROLLBARWEB2 }}'
 
       - name: Deploy functions
-        run: firebase deploy --only functions
+        run: firebase deploy --only functions --project "${{ secrets.FIREBASE_PROJECT_ID }}"
