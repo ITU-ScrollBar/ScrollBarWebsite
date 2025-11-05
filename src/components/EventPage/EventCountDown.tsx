@@ -11,7 +11,7 @@ interface CountDownProps {
     title: string;
     start: Date;
     end: Date;
-    event_url: string;
+    event_url?: string;
   } | null;
 }
 
