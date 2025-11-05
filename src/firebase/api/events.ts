@@ -14,8 +14,10 @@ import {
   Timestamp,
   orderBy,
 } from 'firebase/firestore';
-import { db } from '..';
+import { db, storage } from '..';
 import { EventCreateParams } from '../../types/types-file'; // Assuming you define your Event type here
+import { getExtension } from './common';
+import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 
 const env =import.meta.env.VITE_APP_ENV as string;
 
@@ -72,16 +74,38 @@ export const streamEvents = (observer: { next: (snapshot: QuerySnapshot<Document
  * Streams only the most recent/next upcoming event ordered by start date.
  */
 export const streamNextEvent = (observer: { next: (snapshot: QuerySnapshot<DocumentData>) => void; error: (error: Error) => void }): Unsubscribe => {
-  // console.log('streamNextEvent')
   const eventsRef = collection(db, 'env', env, 'events');
   const now = Timestamp.now();
   const q = query(
     eventsRef,
-    where('start', '>', now),
+    where('end', '>', now),
     where('published', '==', true),
     orderBy('start', 'asc'),
     limit(1)
   );
-  // console.log(q)
   return onSnapshot(q, observer.next, observer.error);
+};
+
+export const uploadEventPicture = async (
+  picture: File,
+  eventId: string
+): Promise<string> => {
+  const extension = getExtension(picture.name);
+  const storageRef = ref(storage, `event_pictures/${eventId}.${extension}`);
+  await uploadBytes(storageRef, picture, {
+    contentType: picture.type,
+    customMetadata: { eventId },
+  });
+  return await getDownloadURL(storageRef);
+};
+
+// Delete event picture from storage when new picture is uploaded
+export const deleteFileFromStorage = async (filePath: string): Promise<void> => {
+  try {
+    const storageRef = ref(storage, filePath);
+    await deleteObject(storageRef);
+  } catch (error) {
+    console.error('Error deleting file from storage:', error);
+    throw error;
+  }
 };

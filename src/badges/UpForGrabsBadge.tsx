@@ -38,8 +38,8 @@ export const UpForGrabsBadge: React.FC<UpForGrabsBadgeProps> = ({
             width: 28,
             height: 28,
             borderRadius: "50%",
-            backgroundColor: "#FFD600",
-            border: "3px solid white",
+            backgroundColor: "#FFF",
+            border: "3px solid #FFD600",
             cursor: "pointer",
             fontSize: 16,
             boxShadow:

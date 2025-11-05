@@ -2,17 +2,16 @@ import React, { useEffect, useMemo } from 'react'
 import { Button, Col, Divider, Layout, Row, List } from 'antd'
 import Title from 'antd/es/typography/Title'
 import Paragraph from 'antd/es/typography/Paragraph'
-import { Header } from 'antd/es/layout/layout'
 import HeaderBar from '../components/HomePage/HeaderBar'
 import useSettings from '../hooks/useSettings'
 import MDEditor from '@uiw/react-md-editor'
 import useTenders from '../hooks/useTenders'
 import { UserAvatar } from '../components/UserAvatar'
 import { getTenderDisplayName } from './members/helpers'
-import { StudyLine, Tender } from '../types/types-file'
+import { Role, StudyLine, Tender } from '../types/types-file'
 import { getStudyLines } from '../firebase/api/authentication'
 import { Loading } from '../components/Loading'
-import CountDown from '../components/EventCountDown'
+import CountDown from '../components/EventPage/EventCountDown'
 import {useNextEvent}  from '../hooks/useEvents'
 import { useLocation } from 'react-router-dom'
 
@@ -23,8 +22,8 @@ export default function HomePage() {
   const { settingsState } = useSettings();
   const { tenderState } = useTenders();
   const { nextEvent, loading: eventLoading } = useNextEvent();
-  const activeTenders = useMemo(() => tenderState.tenders.filter(t => !t.roles?.includes('passive') && !t.roles?.includes('board') && t?.active), [tenderState.tenders]);
-  const boardMembers = useMemo(() => tenderState.tenders.filter(t => t.roles?.includes('board')), [tenderState.tenders]);
+  const activeTenders = useMemo(() => tenderState.tenders.filter(t => !t.roles?.includes(Role.PASSIVE) && !t.roles?.includes(Role.BOARD) && t?.active), [tenderState.tenders]);
+  const boardMembers = useMemo(() => tenderState.tenders.filter(t => t.roles?.includes(Role.BOARD)), [tenderState.tenders]);
   const { state } = useLocation();
   const { targetId } = state || {};
 
@@ -42,21 +41,7 @@ export default function HomePage() {
 
   return (
     <Layout style={{ minHeight: '100vh', width: '100%', flexDirection: 'column', height: 'auto'}}>
-       <Header
-        style={{
-          position: 'absolute',
-          top: 0,
-          width: '100%',
-          backgroundColor: 'transparent',
-          boxShadow: 'none',
-          zIndex: 3,
-          display: 'flex',
-          alignItems: 'center',
-          color: '#fff',
-        }}
-      >
-        <HeaderBar />
-      </Header>
+       <HeaderBar />
      {/* Hero video section */}
 <div
   style={{
@@ -111,6 +96,7 @@ export default function HomePage() {
         {!eventLoading && <CountDown nextEvent={nextEvent ? {
           title: nextEvent.title,
           start: nextEvent.start,
+          end: nextEvent.end,
           event_url: nextEvent.facebook_link,
         } : null} />}
         <Row justify="center">
@@ -256,12 +242,12 @@ const UserList = ({ users }: { users: Tender[] }) => {
 
   return (
     <List
-      grid={{ gutter: 16, column: 10, xs: 4, sm: 3, md: 5, lg: 8, xl: 10 }}
+      grid={{ gutter: 16, column: 10, xs: 3, sm: 3, md: 5, lg: 8, xl: 10 }}
       dataSource={users}
       renderItem={(user) => (
         <List.Item>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <UserAvatar user={user} size={64} showHats={false} />
+            <UserAvatar user={user} size={95} showHats={false} />
             <div style={{ marginTop: 8, textAlign: 'center' }}>{getTenderDisplayName(user)}</div>
             <div style={{ marginTop: 8, textAlign: 'center' }}>{studylines.find(sl => sl.id === user.studyline)?.abbreviation?.toLocaleUpperCase()}</div>
           </div>

@@ -1,14 +1,45 @@
-import { Layout, Tabs, Space } from "antd";
+import { Layout, Tabs, Space, TabsProps } from "antd";
 import { UserAddOutlined } from "@ant-design/icons";
 import { InvitedUsersTab } from "../../components/UserPage/InvitedUsersTab";
 import { ExistingUsersTab } from "../../components/UserPage/ExistingUsersTab";
 import { useWindowSize } from "../../hooks/useWindowSize";
 import { TeamsTab } from "../../components/UserPage/TeamsTab";
+import { useEffect, useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import { Role } from "../../types/types-file";
+import Loading from "../../components/Loading";
 
 const { Content } = Layout;
 
 const UserManagerPage = () => {
   const { isMobile } = useWindowSize();
+  const [tabItems, setTabItems] = useState<TabsProps["items"]>([]);
+  const { currentUser, loading } = useAuth();
+
+  useEffect(() => {
+    const teamsTab = { key: "teams", label: "Teams", children: <TeamsTab /> };
+    if (currentUser?.roles?.includes(Role.TENDER_MANAGER)) {
+      setTabItems([
+        {
+          key: "existingUsers",
+          label: "Existing Users",
+          children: <ExistingUsersTab />,
+        },
+        {
+          key: "invitedUsers",
+          label: "Invited Users",
+          children: <InvitedUsersTab />,
+        },
+        teamsTab,
+      ]);
+    } else {
+      setTabItems([teamsTab]);
+    }
+  }, [currentUser]);
+
+  if (loading) {
+    return <Loading />;
+  }
 
   return (
     <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
@@ -35,19 +66,7 @@ const UserManagerPage = () => {
           <Tabs
             tabPosition={isMobile ? "top" : "left"}
             defaultActiveKey="existingUsers"
-            items={[
-              {
-                key: "existingUsers",
-                label: "Existing Users",
-                children: <ExistingUsersTab />,
-              },
-              {
-                key: "invitedUsers",
-                label: "Invited Users",
-                children: <InvitedUsersTab />,
-              },
-              { key: "teams", label: "Teams", children: <TeamsTab /> },
-            ]}
+            items={tabItems}
             style={{ marginTop: "24px" }}
           />
         </div>
