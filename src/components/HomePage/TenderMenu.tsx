@@ -43,12 +43,13 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
 
   if (
     currentUser?.isAdmin 
+    || currentUser?.roles?.includes(Role.EVENT_MANAGER)
     || currentUser?.roles?.includes(Role.TENDER_MANAGER)
     || currentUser?.roles?.includes(Role.SHIFT_MANAGER)
     || currentUser?.roles?.includes(Role.BOARD)
   ) {
     const adminItems = [];
-    if (currentUser?.isAdmin || currentUser?.roles?.includes(Role.TENDER_MANAGER)) {
+    if (currentUser?.isAdmin || currentUser?.roles?.includes(Role.EVENT_MANAGER)) {
       adminItems.push({
         label: 'Manage Events',
         key: 'admin/events',

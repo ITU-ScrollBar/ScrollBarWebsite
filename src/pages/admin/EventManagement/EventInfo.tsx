@@ -13,6 +13,7 @@ import {
   Input,
   InputNumber,
   Upload,
+  Popconfirm,
 } from "antd";
 import dayjs from "dayjs";
 import TextArea from "antd/es/input/TextArea";
@@ -175,9 +176,12 @@ export default function EventInfo(props: { event: Event }) {
 
   return (
     <div>
-      <Button type="primary" danger onClick={() => removeEvent(props.event.id)}>
-        Delete Event
-      </Button>
+      <Popconfirm title={"Delete Event"} description={"Are you sure you want to delete this event? This action cannot be undone."}
+        onConfirm={() => removeEvent(props.event.id)}>
+        <Button type="primary" danger>
+          Delete Event
+        </Button>
+      </Popconfirm>
       <div {...(props.event.photo_url) ?
         {style: 
           {backgroundImage: `url(${props.event.photo_url})`,
