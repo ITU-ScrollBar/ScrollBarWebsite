@@ -11,7 +11,6 @@ on:
       - 'storage.rules'
       - 'firestore.indexes.json'
       - '.env.example'
-      - '.github/**'
       - '.vscode/**'
 jobs:
   migrate:
