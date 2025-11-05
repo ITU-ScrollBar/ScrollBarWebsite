@@ -85,6 +85,16 @@ jobs:
         with:
           project_id: '${{ secrets.FIREBASE_PROJECT_ID }}'
           credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_SCROLLBARWEB2 }}'
+      
+      - name: Create functions/.env
+        working-directory: functions
+        shell: bash
+        run: |
+          cat > .env <<'EOF'
+          MAILGUN_API_KEY=${{ secrets.MAILGUN_API_KEY }}
+          MAILGUN_DOMAIN=${{ secrets.MAILGUN_DOMAIN }}
+          VITE_APP_ENV=${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+          EOF
 
       - name: Deploy functions
         run: firebase deploy --only functions --project "${{ secrets.FIREBASE_PROJECT_ID }}"
