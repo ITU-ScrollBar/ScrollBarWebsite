@@ -1,5 +1,6 @@
 import { Image, Menu } from "antd";
 import { MenuOutlined } from "@ant-design/icons";
+import { Header } from "antd/es/layout/layout";
 import logo from "../../assets/images/logo.png";
 import Link from "antd/es/typography/Link";
 import instagramIcon from "../../assets/images/instagram.png";
@@ -14,6 +15,8 @@ const linkcss = {
 };
 
 export default function HeaderBar() {
+  const navigate = useNavigate();
+
   const items = [
     {
       key: "1",
@@ -87,39 +90,51 @@ export default function HeaderBar() {
 
   <Menu items={items} />;
 
-  const navigate = useNavigate();
-
   return (
-    <div
+    <Header 
       style={{
-        display: "flex",
-        alignItems: "center",
-        height: "100%",
-        width: "100vw",
-        marginTop: "100px",
-        backgroundColor: "transparent",
+        position: 'absolute',
+        top: 0,
+        width: '100%',
+        backgroundColor: 'transparent',
+        boxShadow: 'none',
+        zIndex: 3,
+        display: 'flex',
+        alignItems: 'center',
+        color: '#fff',
       }}
     >
-      <a href="/">
-        <img
-        style={{ width: "250px", height: "auto", cursor: "pointer" }}
-        src={logo}
-      />
-      </a>
-      <Menu
-        theme="dark"
-        mode="horizontal"
-        overflowedIndicator={<MenuOutlined style={{ color: "white" }} />}
+      <div
         style={{
-          flex: "auto",
+          display: "flex",
+          alignItems: "center",
+          height: "100%",
+          width: "100vw",
+          marginTop: "100px",
           backgroundColor: "transparent",
-          fontWeight: "bold",
-          justifyContent: "flex-end",
-          minWidth: 0,
-          maxWidth: "calc(100vw - 270px)",
         }}
-        items={items}
-      />
-    </div>
+      >
+        <a href="/">
+          <img
+          style={{ width: "250px", height: "auto", cursor: "pointer" }}
+          src={logo}
+        />
+        </a>
+        <Menu
+          theme="dark"
+          mode="horizontal"
+          overflowedIndicator={<MenuOutlined style={{ color: "white" }} />}
+          style={{
+            flex: "auto",
+            backgroundColor: "transparent",
+            fontWeight: "bold",
+            justifyContent: "flex-end",
+            minWidth: 0,
+            maxWidth: "calc(100vw - 270px)",
+          }}
+          items={items}
+        />
+      </div>
+    </Header>
   );
 }

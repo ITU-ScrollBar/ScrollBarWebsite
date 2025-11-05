@@ -72,16 +72,14 @@ export const streamEvents = (observer: { next: (snapshot: QuerySnapshot<Document
  * Streams only the most recent/next upcoming event ordered by start date.
  */
 export const streamNextEvent = (observer: { next: (snapshot: QuerySnapshot<DocumentData>) => void; error: (error: Error) => void }): Unsubscribe => {
-  // console.log('streamNextEvent')
   const eventsRef = collection(db, 'env', env, 'events');
   const now = Timestamp.now();
   const q = query(
     eventsRef,
-    where('start', '>', now),
+    where('end', '>', now),
     where('published', '==', true),
     orderBy('start', 'asc'),
     limit(1)
   );
-  // console.log(q)
   return onSnapshot(q, observer.next, observer.error);
 };
