@@ -170,14 +170,10 @@ export default function Profile() {
                   </div>
 
                   <Title level={4} style={{ marginTop: 16, marginBottom: 8 }}>
-                    Your Data
+                    Statistics
                   </Title>
                   <Text>Total shifts: {userProfile?.totalShifts ?? 5}</Text>
                   <Text>Member since: {userProfile?.memberSince}</Text>
-
-                  <Title level={4} style={{ marginTop: 16, marginBottom: 8 }}>
-                    Badges TBD
-                  </Title>
                 </Space>
 
                 <div>
