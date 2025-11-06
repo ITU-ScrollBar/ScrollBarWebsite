@@ -10,7 +10,8 @@ interface CountDownProps {
   nextEvent: {
     title: string;
     start: Date;
-    event_url: string;
+    end: Date;
+    event_url?: string;
   } | null;
 }
 

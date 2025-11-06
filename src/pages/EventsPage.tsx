@@ -22,7 +22,8 @@ export default function EventsPage() {
             title: event.title,
             image: event.picture ?? DEFAULT_EVENT_IMAGE,
             start: event.start,
-            event_url: event.facebook_link,
+            end: event.end,
+            event_url: event.event_url,
         })).sort((a, b) => a.start.getTime() - b.start.getTime()) : [];
 
     // Get the next upcoming event for countdown
