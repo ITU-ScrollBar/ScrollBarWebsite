@@ -214,8 +214,6 @@ export default function HomePage() {
             <UserList users={activeTenders} />
           </Col>
         </Row>
-
-        <Divider />
       </div>
     </Layout>
   )
