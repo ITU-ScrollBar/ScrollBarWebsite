@@ -4,12 +4,14 @@ import { Button, Tabs, Layout, Space, Segmented } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import useEvents from "../../../hooks/useEvents";
 import EventInfo from "./EventInfo";
+import { useWindowSize } from "../../../hooks/useWindowSize";
 const { Content } = Layout;
 
 export default function EventManagement() {
   const { addEvent, eventState } = useEvents();
   const [showPreviousEvents, setShowPreviousEvents] = useState<boolean>(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const { isMobile } = useWindowSize();
 
   const findNextFridayAt15 = () => {
     const today = new Date();
@@ -116,7 +118,7 @@ export default function EventManagement() {
               activeKey={selectedEventId || displayEvents[0]?.id}
               onChange={(key) => setSelectedEventId(key)}
               items={tabItems}
-              tabPosition="left"
+              tabPosition={isMobile ? "top" : "left"}
               style={{ marginTop: "24px" }}
             />
           ) : (
