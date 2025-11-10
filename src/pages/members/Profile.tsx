@@ -76,7 +76,7 @@ export default function Profile() {
     });
   };
 
-  const EXCLUDED_ROLES = [Role.NEWBIE, Role.REGULAR_ACCESS].map(toString);
+  const EXCLUDED_ROLES = [Role.NEWBIE, Role.REGULAR_ACCESS].map((role) => role.toString());
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -170,14 +170,10 @@ export default function Profile() {
                   </div>
 
                   <Title level={4} style={{ marginTop: 16, marginBottom: 8 }}>
-                    Your Data
+                    Statistics
                   </Title>
                   <Text>Total shifts: {userProfile?.totalShifts ?? 5}</Text>
                   <Text>Member since: {userProfile?.memberSince}</Text>
-
-                  <Title level={4} style={{ marginTop: 16, marginBottom: 8 }}>
-                    Badges TBD
-                  </Title>
                 </Space>
 
                 <div>

@@ -1,26 +1,23 @@
 
-import { Col, Divider, Layout, Row, Card } from 'antd'
+import { Col, Divider, Layout, Row } from 'antd'
 import Title from 'antd/es/typography/Title';
-import Text from 'antd/es/typography/Text';
 import Paragraph from 'antd/es/typography/Paragraph';
-import { Header } from 'antd/es/layout/layout';
 import { useWindowSize } from "../hooks/useWindowSize";
 import HeaderBar from '../components/HomePage/HeaderBar';
-import CountDown from '../components/EventCountDown';
+import CountDown from '../components/EventPage/EventCountDown';
 import useEvents from '../hooks/useEvents';
 import DEFAULT_EVENT_IMAGE from '../assets/images/background.png';
-import React from 'react';
+import { EventCard } from '../components/EventPage/EventCard';
 
 export default function EventsPage() {
     const { eventState } = useEvents();
     const { isMobile } = useWindowSize();
-    const EVENT_INFORMATION_LABEL = "Get all the latest Information on the Facebook Event"
     const events = eventState.isLoaded ? eventState.events
         .filter(event => event.published && !event.internal)
         .map(event => ({
             id: event.id,
             title: event.title,
-            image: event.picture ?? DEFAULT_EVENT_IMAGE,
+            image: event.photo_url ?? DEFAULT_EVENT_IMAGE,
             start: event.start,
             end: event.end,
             event_url: event.event_url,
@@ -28,98 +25,6 @@ export default function EventsPage() {
 
     // Get the next upcoming event for countdown
     const nextEvent = events.length > 0 ? events[0] : null;
-
-    // Common styles
-    const baseCardStyle: React.CSSProperties = {
-      position: 'relative',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-    };
-
-    const baseOverlayStyle: React.CSSProperties = {
-      zIndex: 2,
-      backgroundColor: 'rgba(46, 46, 46, 0.8)',
-      padding: '20px',
-      borderRadius: '10px',
-      display: 'flex',
-      flexDirection: 'column',
-      position: 'relative',
-      height: '150px',
-      overflow: 'hidden',
-      boxSizing: 'border-box',
-    };
-
-    const baseTextStyle = {
-      lineHeight: '1.1',
-    };
-
-    const textVariants = {
-      date: {
-        color: 'yellow',
-        fontSize: isMobile ? '24px' : '34px',
-      },
-      title: {
-        color: 'white',
-        fontSize: isMobile ? '14px' : '22px',
-        fontWeight: 'bold',
-        marginBottom: '2px',
-      },
-      description: {
-        color: 'white',
-        fontSize: '10px',
-        marginTop: 'auto',
-      },
-    };
-
-    const renderEventCard = (event: typeof events[0], isFeatured = false) => {
-      const isSmall = !isFeatured;
-      const cardHeight = isFeatured ? (isMobile ? '190px' : '400px') : '190px';
-      const overlayTop = isFeatured ? (isMobile ? '0%' : '80%') : undefined;
-      const overlayMargin = isMobile ? '0' : '-10px';
-      const overlayAlign = isFeatured ? (isMobile ? 'center' : 'left') : 'center';
-      const overlayJustify = isMobile && isSmall ? 'center' : 'flex-start';
-
-      const cardStyle: React.CSSProperties = {
-        ...baseCardStyle,
-        height: cardHeight,
-        backgroundImage: `url(${event.image})`,
-      };
-
-      const overlayStyle: React.CSSProperties = {
-        ...baseOverlayStyle,
-        margin: overlayMargin,
-        textAlign: overlayAlign,
-        justifyContent: overlayJustify,
-        ...(overlayTop && { top: overlayTop }),
-        ...(isMobile && isFeatured && { width: '100%' }),
-      };
-
-      return (
-        <Card
-          hoverable
-          style={cardStyle}
-        >
-          <div 
-            style={overlayStyle}
-          >
-            <Text style={{ ...baseTextStyle, ...textVariants.date }}>
-              {event.start.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' })}
-            </Text>
-            <Text style={{ ...baseTextStyle, ...textVariants.title }}>
-              {event.title}
-            </Text>
-            {isFeatured && (
-              <Text style={{ ...baseTextStyle, ...textVariants.description }}>
-                {EVENT_INFORMATION_LABEL}
-              </Text>
-            )}
-          </div>
-        </Card>
-      );
-    };
 
   return (
     <Layout 
@@ -131,27 +36,14 @@ export default function EventsPage() {
         height: 'auto',
       }}
     >
-      <Header 
-        style={{
-          position: 'absolute',
-          top: 0,
-          width: '100%',
-          backgroundColor: 'transparent',
-          boxShadow: 'none',
-          zIndex: 3,
-          display: 'flex',
-          alignItems: 'center',
-          color: '#fff',
-        }}
-      >
-        <HeaderBar />
-      </Header>
+      <HeaderBar />
 
         <div 
           style={{
             position: 'relative',
             width: '100vw',
             height: isMobile ? '50vh' : '70vh',
+            minHeight: '350px',
             overflow: 'hidden',
           }}
         >
@@ -223,11 +115,11 @@ export default function EventsPage() {
                     gridColumn: 'span 1',
                   }}
                 >
-                  {renderEventCard(featuredEvent, true)}
+                  <EventCard event={featuredEvent} isFeatured={true} isMobile={isMobile} />
                 </div>
                 {otherEvents.map((event) => (
                   <div key={event.id}>
-                    {renderEventCard(event, false)}
+                    <EventCard event={event} isFeatured={false} isMobile={isMobile} />
                   </div>
                 ))}
               </div>

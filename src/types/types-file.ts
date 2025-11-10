@@ -88,6 +88,8 @@ export interface BaseEvent {
 
 export type Event = {
   published: boolean;
+  event_url?: string;
+  photo_url?: string;
   [id: string]: any;
 } & BaseEvent;
 

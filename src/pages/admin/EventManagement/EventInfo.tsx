@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Event } from "../../../types/types-file";
 import Title from "antd/es/typography/Title";
+import Text from "antd/es/typography/Text";
 import useEvents from "../../../hooks/useEvents";
 import {
   Button,
@@ -11,6 +12,8 @@ import {
   Modal,
   Input,
   InputNumber,
+  Upload,
+  Popconfirm,
 } from "antd";
 import dayjs from "dayjs";
 import TextArea from "antd/es/input/TextArea";
@@ -19,6 +22,7 @@ import remarkGfm from "remark-gfm";
 import useShifts from "../../../hooks/useShifts";
 import ShiftInfo from "./ShiftInfo";
 import { PlusOutlined } from "@ant-design/icons";
+import { deleteFileFromStorage, uploadEventPicture } from "../../../firebase/api/events";
 
 export default function EventInfo(props: { event: Event }) {
   const { updateEvent, removeEvent } = useEvents();
@@ -168,28 +172,81 @@ export default function EventInfo(props: { event: Event }) {
       .catch(() => message.error("Failed to add custom shift"));
   };
 
+  const tokenRegex = /(\?alt=media&token=[\w-]+)$/;
+
   return (
     <div>
-      <Button type="primary" danger onClick={() => removeEvent(props.event.id)}>
-        Delete Event
-      </Button>
-      <Title
-        level={3}
-        editable={{
-          onChange: (value) => updateEvent(props.event.id, "title", value),
-        }}
-      >
-        {props.event.title}
-      </Title>
-      <Title
-        level={4}
-        editable={{
-          onChange: (value) => updateEvent(props.event.id, "where", value),
-        }}
-      >
-        {props.event.where}
-      </Title>
-      From
+      <Popconfirm title={"Delete Event"} description={"Are you sure you want to delete this event? This action cannot be undone."}
+        onConfirm={() => removeEvent(props.event.id)}>
+        <Button type="primary" danger>
+          Delete Event
+        </Button>
+      </Popconfirm>
+      <div {...(props.event.photo_url) ?
+        {style: 
+          {backgroundImage: `url(${props.event.photo_url})`,
+          padding: '16px',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center', 
+          height: '200px',
+          borderRadius: '8px',
+          marginBottom: '16px',
+          color: 'white',
+          marginTop: '8px'}}
+        : {style: {marginBottom: '16px'}}}
+          >
+        <Title
+          level={3}
+          style={props.event.photo_url ? { color: 'white', textShadow: '1px 1px 2px rgba(0,0,0,0.7)' } : {}}
+          editable={{
+            onChange: (value) => updateEvent(props.event.id, "title", value),
+          }}
+        >
+          {props.event.title}
+        </Title>
+        <Title
+          level={4}
+          style={props.event.photo_url ? { color: 'white', textShadow: '1px 1px 2px rgba(0,0,0,0.7)' } : {}}
+          editable={{
+            onChange: (value) => updateEvent(props.event.id, "where", value),
+          }}
+        >
+          {props.event.where}
+        </Title>
+        <Upload
+          customRequest={({file}) => {
+            uploadEventPicture(file as File, props.event.id)
+              .then((url) => {
+                const previousUrl = props.event.photo_url;
+                updateEvent(props.event.id, "photo_url", url);
+                message.success("Event photo uploaded successfully");
+                if (previousUrl && previousUrl.replace(tokenRegex, '') !== url.replace(tokenRegex, '')) {
+                  deleteFileFromStorage(previousUrl);
+                }
+              })
+              .catch(() => {
+                message.error("Failed to upload event photo");
+              });
+          }}
+          showUploadList={false}
+          accept="image/*"
+        >
+          <Button type="primary">
+            {props.event.photo_url ? "Change Photo" : "Add Photo"}
+          </Button>
+        </Upload>
+        {props.event.photo_url && (
+          <Button style={{ marginLeft: '16px' }} type="primary" danger
+            onClick={() => {
+              deleteFileFromStorage(props.event.photo_url!);
+              updateEvent(props.event.id, "photo_url", null);
+            }}
+          >
+            Delete photo
+          </Button>
+        )}
+      </div>
+      {"From: "}
       <DatePicker
         format="DD-MM-YYYY HH:mm"
         showTime
@@ -198,13 +255,14 @@ export default function EventInfo(props: { event: Event }) {
           updateEvent(props.event.id, "start", value.toDate())
         }
       />
-      To
+      {" To: "}
       <DatePicker
         format="DD-MM-YYYY HH:mm"
         showTime
         value={dayjs(props.event.end)}
         onChange={(value) => updateEvent(props.event.id, "end", value.toDate())}
       />
+      <br />
       <Tabs
         activeKey={activeTab}
         onChange={setActiveTab}
@@ -234,6 +292,13 @@ export default function EventInfo(props: { event: Event }) {
           },
         ]}
       />
+      Event URL:
+      <Text editable={{
+          onChange: (value) => updateEvent(props.event.id, "event_url", value),
+        }}
+      >
+        {props.event.event_url}
+      </Text>
       <Title level={4}>Shifts</Title>
       <Space style={{ marginBottom: "16px" }}>
         <Button

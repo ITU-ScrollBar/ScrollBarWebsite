@@ -41,7 +41,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (!user) {
         setCurrentUser(null);
         setLoading(false);
-        console.log("Auth State Changed: No user");
         return;
       }
 
@@ -53,10 +52,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           if (snapshot.exists()) {
             const userdata = snapshot.data() as Tender;
             setCurrentUser({ ...userdata, uid: user.uid });
-            console.log("Fetched new current user");
           } else {
             setCurrentUser(null);
-            console.log("No user profile found in Firestore for", user.uid);
           }
           setLoading(false);
         },
@@ -66,11 +63,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setLoading(false);
         },
       });
-      console.log("Auth State Changed: User", user.uid);
     });
 
     return () => {
-      console.log("Unsubscribing Auth Listener");
       unsubscribe();
     };
   }, []);
@@ -78,7 +73,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, pass: string): Promise<void> => {
     try {
       await signInWithEmailAndPassword(auth, email, pass);
-      console.log("Login successful");
     } catch (error) {
       console.error("Login failed:", error);
       throw error;
@@ -95,7 +89,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await signOut(auth);
       setCurrentUser(null);
-      console.log("Logout successful");
     } catch (error) {
       console.error("Logout failed:", error);
       throw error;
