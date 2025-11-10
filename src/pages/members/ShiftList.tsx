@@ -241,19 +241,18 @@ export function ShiftList({
         style={{
           display: "flex",
           flexDirection: "column",
-          alignItems: isMobile ? "center" : "flex-start",
+          alignItems: "center",
           gap: 6,
-          width: isMobile ? "100%" : 120,
           boxSizing: "border-box",
         }}
       >
         <Badge
-          style={{ alignSelf: isMobile ? "center" : "flex-start" }}
+          style={{ alignSelf: "center" }}
           count={<UpForGrabsBadge isUpForGrabs={isUpForGrabs} onGrab={() => grabShift(engagement)} />}
         >
           <UserAvatar
             user={tender}
-            size={60}
+            size={72}
             backgroundColor={
               isAnchor ? COLORS.ANCHOR_BACKGROUND : COLORS.REGULAR_BACKGROUND
             }
@@ -262,7 +261,7 @@ export function ShiftList({
         <div
           style={{
             fontSize: "0.85em",
-            textAlign: isMobile ? "center" : "left",
+            textAlign: "center",
             maxWidth: 120,
             whiteSpace: "normal",
             wordBreak: "break-word",
@@ -361,7 +360,7 @@ export function ShiftList({
               gap: 16,
               alignItems: "start",
               justifyContent: "start",
-              justifyItems: isMobile ? "center" : "start",
+              justifyItems: "center",
             }}
           >
             {anchors.map((e) => renderTender(e, true))}
