@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import useSettings from "../../hooks/useSettings";
-import { Input, InputRef, Switch, Table, TableProps } from "antd";
+import { Button, Input, InputRef, message, Switch, Table, TableProps, Upload } from "antd";
 import MDEditor from "@uiw/react-md-editor";
 import { Loading } from "../../components/Loading";
 import { useWindowSize } from "../../hooks/useWindowSize";
@@ -9,21 +9,26 @@ type Setting = {
   key: string;
   label: string;
   value: string | boolean;
-  inputType?: "text" | "boolean" | "textarea";
+  inputType?: "text" | "boolean" | "textarea" | "upload";
 };
 
 const EditableCell = ({
   value,
   inputType,
   onChange,
+  settingKey,
+  uploadSettingsFile,
 }: {
   value: Setting["value"];
   inputType?: Setting["inputType"];
   onChange: (next: Setting["value"]) => void;
+  settingKey: string;
+  uploadSettingsFile: (file: File, settingsKey: string) => Promise<string>;
 }) => {
   const [editing, setEditing] = useState(false);
   const inputRef = useRef<InputRef>(null);
   const [editValue, setEditValue] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     setEditValue(value as string);
@@ -91,6 +96,29 @@ const EditableCell = ({
           />
         </div>
       );
+    } else if (inputType === "upload") {
+      return (
+        <Upload
+          customRequest={({file}) => {
+            setUploading(true);
+            uploadSettingsFile(file as File, settingKey)
+              .then((url) => {
+                onChange(url);
+              })
+              .catch(() => {
+                message.error("Failed to upload file");
+              })
+              .finally(() => {
+                setUploading(false);
+              });
+          }}
+          showUploadList={false}
+        >
+          <Button type="primary" loading={uploading}>
+            {"Upload File"}
+          </Button>
+        </Upload>
+      )
     }
     return (
       <div
@@ -112,25 +140,25 @@ const EditableCell = ({
 };
 
 const GlobalSettingsPage = () => {
-  const { settingsState, updateSetting } = useSettings();
+  const { settingsState, updateSetting, uploadSettingsFile } = useSettings();
   const { isMobile } = useWindowSize();
 
   const items: Setting[] = [
     {
       key: "hero",
-      inputType: "text",
+      inputType: "upload",
       label: "Link to hero image",
       value: settingsState.settings.hero,
     },
     {
       key: "constitution",
-      inputType: "text",
+      inputType: "upload",
       label: "Link to constitution",
       value: settingsState.settings.constitution,
     },
     {
       key: "minutes",
-      inputType: "text",
+      inputType: "upload",
       label: "Link to minutes from last GA",
       value: settingsState.settings.minutes,
     },
@@ -188,6 +216,8 @@ const GlobalSettingsPage = () => {
           value={value}
           inputType={record.inputType}
           onChange={(next) => updateSetting(record.key, record.label, next)}
+          settingKey={record.key}
+          uploadSettingsFile={uploadSettingsFile}
         />
       ),
       ellipsis: isMobile,

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { streamSettings, updateSettings } from '../firebase/api/settings';
+import { streamSettings, updateSettings, uploadFile } from '../firebase/api/settings';
 import { Settings } from '../types/types-file';
 import { message } from 'antd';
 
@@ -32,5 +32,9 @@ export default function useSettings() {
         message.success(`Updated ${displayName} successfully`);
     };
 
-    return { settingsState, updateSetting };
+    const uploadSettingsFile = async (file: File, settingsKey: string): Promise<string> => {
+        return uploadFile(file, settingsKey);
+    };
+
+    return { settingsState, updateSetting, uploadSettingsFile };
 }
