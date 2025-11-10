@@ -83,6 +83,7 @@ export interface BaseEvent {
   start: Date;
   end: Date;
   location: string;
+  event_url?: string;
 }
 
 export type Event = {
