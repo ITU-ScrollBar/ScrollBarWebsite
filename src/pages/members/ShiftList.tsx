@@ -1,4 +1,4 @@
-import { Row, Col, Typography, Button, Popconfirm, message, Badge } from "antd";
+import { Typography, Button, Popconfirm, message, Badge } from "antd";
 import {
   getEngagementsForShift,
   getTenderForEngagement,
@@ -20,6 +20,7 @@ import { UserAvatar } from "../../components/UserAvatar";
 import { UpForGrabsBadge } from "../../badges/UpForGrabsBadge";
 import useInternalEvents from "../../hooks/useInternalEvents";
 import useTeams from "../../hooks/useTeams";
+import { useWindowSize } from "../../hooks/useWindowSize";
 import Loading from "../../components/Loading";
 import { renderInternalEvent } from "../admin/InternalEventsPage";
 
@@ -56,6 +57,7 @@ export function ShiftList({
   const internalEventsState = useInternalEvents();
   const internalState = internalEventsState.internalEventState;
   const { teamState } = useTeams();
+  const { isMobile } = useWindowSize();
 
   useEffect(() => {
     if (internalState?.loading) return;
@@ -234,49 +236,43 @@ export function ShiftList({
       tender.uid !== currentUser?.uid && engagement.upForGrabs;
 
     return (
-      <Col key={engagement.id} style={{ minWidth: 56 }}>
+      <div
+        key={engagement.id}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 6,
+          boxSizing: "border-box",
+        }}
+      >
+        <Badge
+          style={{ alignSelf: "center" }}
+          count={<UpForGrabsBadge isUpForGrabs={isUpForGrabs} onGrab={() => grabShift(engagement)} />}
+        >
+          <UserAvatar
+            user={tender}
+            size={72}
+            backgroundColor={
+              isAnchor ? COLORS.ANCHOR_BACKGROUND : COLORS.REGULAR_BACKGROUND
+            }
+          />
+        </Badge>
         <div
           style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 1,
-            position: "relative",
+            fontSize: "0.85em",
+            textAlign: "center",
+            maxWidth: 120,
+            whiteSpace: "normal",
+            wordBreak: "break-word",
+            zIndex: 12,
+            backgroundColor: "rgba(255, 255, 255, 0.5)",
+            backdropFilter: "blur(4px)",
           }}
         >
-          <Badge
-            count={
-              <UpForGrabsBadge
-                isUpForGrabs={isUpForGrabs}
-                onGrab={() => grabShift(engagement)}
-              />
-            }
-          >
-            <UserAvatar
-              user={tender}
-              size={60}
-              backgroundColor={
-                isAnchor ? COLORS.ANCHOR_BACKGROUND : COLORS.REGULAR_BACKGROUND
-              }
-            />
-          </Badge>
-          <span
-            style={{
-              fontSize: "0.85em",
-              textAlign: "center",
-              maxWidth: "80px",
-              overflow: "inline-block",
-              whiteSpace: "normal",
-              wordBreak: "break-word",
-              zIndex: 12,
-              backgroundColor: "rgba(255, 255, 255, 0.5)",
-              backdropFilter: "blur(4px)",
-            }}
-          >
-            {getTenderDisplayName(tender)}
-          </span>
+          {getTenderDisplayName(tender)}
         </div>
-      </Col>
+      </div>
     );
   };
 
@@ -288,8 +284,12 @@ export function ShiftList({
 
   const renderShiftCard = (shift: Shift) => {
     const shiftEngagements = getEngagementsForShift(shift.id!, engagements);
-    const anchors = shiftEngagements.filter((e) => e.type === engagementType.ANCHOR);
-    const regulars = shiftEngagements.filter((e) => e.type !== engagementType.ANCHOR);
+    const anchors = shiftEngagements.filter(
+      (e) => e.type === engagementType.ANCHOR
+    );
+    const regulars = shiftEngagements.filter(
+      (e) => e.type !== engagementType.ANCHOR
+    );
     const myShift = shiftEngagements
       .filter((e) => e.userId === currentUser?.uid)
       .find((e) => e);
@@ -351,10 +351,21 @@ export function ShiftList({
           <Title style={{ marginBottom: 8, fontSize: "1.1em" }}>
             {shift.title}
           </Title>
-          <Row gutter={[8, 8]} style={{ flexWrap: "wrap" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile
+                ? "repeat(2, 1fr)"
+                : "repeat(auto-fill, 120px)",
+              gap: 16,
+              alignItems: "start",
+              justifyContent: "start",
+              justifyItems: "center",
+            }}
+          >
             {anchors.map((e) => renderTender(e, true))}
             {regulars.map((e) => renderTender(e, false))}
-          </Row>
+          </div>
         </div>
       </div>
     );

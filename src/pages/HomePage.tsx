@@ -97,7 +97,7 @@ export default function HomePage() {
           title: nextEvent.title,
           start: nextEvent.start,
           end: nextEvent.end,
-          event_url: nextEvent.facebook_link,
+          event_url: nextEvent.event_url,
         } : null} />}
         <Row justify="center">
           <Col
@@ -200,8 +200,6 @@ export default function HomePage() {
             <UserList users={activeTenders} />
           </Col>
         </Row>
-
-        <Divider />
       </div>
     </Layout>
   )

@@ -213,6 +213,7 @@ export default function EventInfo(props: { event: Event }) {
         >
           {props.event.where}
         </Title>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <Upload
           customRequest={({file}) => {
             uploadEventPicture(file as File, props.event.id)
@@ -236,15 +237,16 @@ export default function EventInfo(props: { event: Event }) {
           </Button>
         </Upload>
         {props.event.photo_url && (
-          <Button style={{ marginLeft: '16px' }} type="primary" danger
+          <Button type="primary" danger
             onClick={() => {
               deleteFileFromStorage(props.event.photo_url!);
               updateEvent(props.event.id, "photo_url", null);
             }}
           >
-            Delete photo
+            Delete Photo
           </Button>
         )}
+        </div>
       </div>
       {"From: "}
       <DatePicker
