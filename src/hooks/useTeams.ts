@@ -50,7 +50,7 @@ const useTeams = () => {
         });
       },
       error: (error: Error) => {
-        message.error('An error occurred: ' + error.message);
+        message.error('An error occurred loading teams: ' + error.message);
       },
     });
 

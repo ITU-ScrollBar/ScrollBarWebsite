@@ -9,6 +9,7 @@ import {
   getUserEngagementsData,
 } from '../firebase/api/engagements'; // Adjust the import path as necessary
 import { Engagement, EngagementState } from '../types/types-file'; // Make sure Engagement is defined
+import { useAuth } from '../contexts/AuthContext';
 
 const useEngagements = () => {
   const [engagementState, setEngagementState] = useState<EngagementState>({
@@ -16,8 +17,12 @@ const useEngagements = () => {
     isLoaded: false,
     engagements: [],
   });
+  const { currentUser } = useAuth();
 
   useEffect(() => {
+    if (!currentUser) {
+      return;
+    }
     setEngagementState((prev) => ({ ...prev, loading: true }));
   
     const unsubscribe = streamEngagements(
@@ -42,12 +47,12 @@ const useEngagements = () => {
         });
       },
       (error: Error) => {
-        message.error('An error occurred: ' + error.message);
+        message.error('An error occurred loading engagements: ' + error.message);
       }
     );
   
     return unsubscribe;
-  }, []);
+  }, [currentUser]);
 
   const getProfileData = (uid: string) => {
     return getUserEngagementsData(uid);

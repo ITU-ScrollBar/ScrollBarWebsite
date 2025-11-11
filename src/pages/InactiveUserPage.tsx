@@ -9,7 +9,7 @@ export const InactiveUserPage = () => {
         return <Navigate to="/login" replace />;
     }
 
-    const handleLogout = async () => {
+    const handleLogout = async (): Promise<void> => {
         await logout();
     }
 

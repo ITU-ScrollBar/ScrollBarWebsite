@@ -35,7 +35,7 @@ export default function Register() {
         );
       }
     } catch (error: any) {
-      message.error(`An error occurred: ${error.message}`);
+      message.error(`An error occurred registering: ${error.message}`);
     } finally {
       setLoading(false);
     }
