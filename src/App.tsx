@@ -23,6 +23,7 @@ import { setTwoToneColor } from "@ant-design/icons";
 import { App as AntdApp } from "antd";
 import { InternalEventsPage } from "./pages/admin/InternalEventsPage";
 import ShiftManagement from "./pages/admin/ShiftManagement/ShiftManagement";
+import { InactiveUserPage } from "./pages/InactiveUserPage";
 
 function App() {
   setTwoToneColor("#FFE600");
@@ -45,6 +46,7 @@ function App() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/events" element={<EventsPage />} /> 
+                <Route path="/deletedUser" element={<InactiveUserPage />} /> 
 
                 {/* --- Protected Routes --- */}
                 <Route element={<ProtectedRoutes />}>
