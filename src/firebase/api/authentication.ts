@@ -203,3 +203,14 @@ export const sendResetPasswordEmailToUser = ({
 }: ResetPasswordPayload): Promise<void> => {
   return sendPasswordResetEmail(auth, email);
 };
+
+// Soft-delete user
+export const deleteUser = async (userId: string): Promise<void> => {
+  return updateDoc(doc(db, 'users', userId), {
+    photoUrl: '',
+    active: false,
+    displayName: 'Deleted User',
+    email: '',
+    phone: '',
+  });
+};

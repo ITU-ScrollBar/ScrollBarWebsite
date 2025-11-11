@@ -7,9 +7,12 @@ import {
   streamInvitedUsers,
   streamUsers,
   updateUser,
+  deleteUser,
+  deleteFileFromStorage
 } from "../firebase/api/authentication";
 import { Tender, Invite, StudyLine } from "../types/types-file"; // Ensure the correct import path
 import { DocumentData } from "firebase/firestore";
+import useEngagements from "./useEngagements";
 
 type TenderState = {
   loading: boolean;
@@ -25,6 +28,8 @@ const useTenders = () => {
     tenders: [],
     studylines: [], // Initialize with an empty array or fetch from API if needed
   });
+
+  const { engagementState } = useEngagements();
 
   const [invitedTenders, setInvitedTenders] = useState<Invite[]>([]);
 
@@ -140,12 +145,46 @@ const useTenders = () => {
       });
   };
 
+  // Soft-deletes a tender
+  // Only succeeds if the tender exists and has no future shifts/engagements
+  const deleteTender = (id: string) => {
+    const tender = tenderState.tenders.find(tender => tender.uid === id);
+    if (!tender) {
+      message.error("Tender not found.");
+      return;
+    }
+
+    // Check for future shifts or engagements before deleting
+    const tenderShifts = engagementState.engagements.filter(engagement => engagement.userId === id && engagement.shiftEnd > new Date());
+
+    if (tenderShifts.length > 0) {
+      message.error(`Cannot delete ${tender.displayName ?? "tender"}. Remove them from ${tenderShifts.length} upcoming shifts first.`);
+      return;
+    }
+
+    if (tender.photoUrl) {
+      deleteFileFromStorage(tender.photoUrl).catch((error) => {
+        message.error(`Failed to delete tender photo: ${error.message}`);
+      });
+    }
+    const tenderName = tender.displayName;
+    deleteUser(tender.uid)
+      .then(() => {
+        message.success(`${tenderName ?? "Tender"} deleted successfully!`);
+      })
+      .catch((error) => {
+        message.error(`Failed to delete ${tenderName ?? "tender"}: ${error.message}`);
+      }
+    );
+  };
+
   return {
     tenderState,
     invitedTenders,
     addInvite,
     removeInvite,
     updateTender,
+    deleteTender,
   };
 };
 
