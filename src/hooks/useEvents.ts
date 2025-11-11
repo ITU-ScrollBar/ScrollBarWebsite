@@ -68,7 +68,7 @@ const useEvents = () => {
         });
       },
       error: (error: Error) => {
-        message.error('An error occurred: ' + error.message);
+        message.error('An error occurred loading events: ' + error.message);
       },
     });
 
@@ -131,7 +131,7 @@ export const useNextEvent = () => {
         setLoading(false);
       },
       error: (error: Error) => {
-        message.error('An error occurred: ' + error.message);
+        message.error('An error occurred loading next event: ' + error.message);
         setLoading(false);
       },
     });

@@ -59,7 +59,7 @@ const useInternalEvents = () => {
         });
       },
       error: (error: Error) => {
-        message.error('An error occurred: ' + error.message);
+        message.error('An error occurred loading internal events: ' + error.message);
       },
     });
 

@@ -74,7 +74,7 @@ const useShifts = () => {
         }));
       },
       error: (error: Error) => {
-        message.error('An error occurred: ' + error.message);
+        message.error('An error occurred loading shifts: ' + error.message);
         setShiftState((prevState) => ({
           ...prevState,
           loading: false,
