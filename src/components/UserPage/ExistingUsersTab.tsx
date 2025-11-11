@@ -242,7 +242,7 @@ export const ExistingUsersTab = () => {
             <Form.Item label="Roles">
               <Select
                 mode="multiple"
-                options={Object.entries(Role).map(([value, label]) => ({
+                options={Object.entries(Role).filter(([_, val]) => val != Role.ADMIN).map(([value, label]) => ({
                   value,
                   label: roleToLabel(label),
                 }))}
