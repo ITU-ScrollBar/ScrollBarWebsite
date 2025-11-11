@@ -19,6 +19,10 @@ const ProtectedRoutes: React.FC = () => {
         return <Navigate to="/login" replace />; // 'replace' prevents going back to the protected route
     }
 
+    if (!currentUser.active) {
+        return <Navigate to="/deletedUser" replace />;
+    }
+
     // If user is logged in, render the child route components
     return <EngagementProvider>
             <ShiftProvider>

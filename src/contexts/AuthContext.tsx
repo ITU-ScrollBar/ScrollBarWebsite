@@ -13,8 +13,9 @@ import {
   User
 } from "firebase/auth";
 import { auth } from "../firebase/index";
-import { getUser } from "../firebase/api/authentication";
+import { getUser, sendResetPasswordEmailToUser } from "../firebase/api/authentication";
 import { Tender } from "../types/types-file";
+import { message } from "antd";
 
 // Define and export AuthContextType and AuthProviderProps
 export interface AuthContextType {
@@ -23,6 +24,7 @@ export interface AuthContextType {
   login: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
+  resetPassword: (email: string) => Promise<void>;
 }
 
 export interface AuthProviderProps {
@@ -95,6 +97,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const resetPassword = async (email: string): Promise<void> => {
+    await sendResetPasswordEmailToUser({email});
+    message.success('Password reset email sent successfully');
+  };
+
   const value = useMemo(
     () => ({
       currentUser,
@@ -102,6 +109,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       login,
       logout,
       setUser,
+      resetPassword,
     }),
     [currentUser, loading]
   );

@@ -5,10 +5,12 @@ import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Card, Alert } from 'antd';
 
 const LoginPage: React.FC = () => {
-    const { login, currentUser } = useAuth();
+    const { login, currentUser, resetPassword } = useAuth();
     const navigate = useNavigate();
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
+    const [resettingPassword, setResettingPassword] = useState<boolean>(false);
+    const [form] = Form.useForm();
 
     useEffect(() => {
         if (!loading && currentUser) {
@@ -33,10 +35,22 @@ const LoginPage: React.FC = () => {
         }
     };
 
+    const handleResetPassword = async () => {
+        const email = form.getFieldValue('email');
+        if (!email) {
+            setError('Please enter your email to reset password.');
+            return;
+        }
+        setResettingPassword(true);
+        await resetPassword(email);
+        setResettingPassword(false);
+    };
+
     return (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
             <Card title="Tender Login" style={{ width: 350 }}>
                 <Form
+                    form={form}
                     name="login"
                     onFinish={handleLogin}
                     layout="vertical"
@@ -61,9 +75,14 @@ const LoginPage: React.FC = () => {
                     {error && <Alert message={error} type="error" showIcon style={{ marginBottom: '1rem' }} />}
 
                     <Form.Item>
-                        <Button type="primary" htmlType="submit" block loading={loading}>
-                            {loading ? 'Logging in...' : 'Log In'}
-                        </Button>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Button type="primary" htmlType="submit" loading={loading}>
+                                {loading ? 'Logging in...' : 'Log In'}
+                            </Button>
+                            <Button type="default" onClick={handleResetPassword} loading={resettingPassword}>
+                                Forgot Password?
+                            </Button>
+                        </div>
                     </Form.Item>
                 </Form>
             </Card>

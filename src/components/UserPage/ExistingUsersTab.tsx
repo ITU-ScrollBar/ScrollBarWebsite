@@ -5,6 +5,7 @@ import {
   Form,
   Input,
   notification,
+  Popconfirm,
   Select,
   Switch,
   Table,
@@ -26,7 +27,7 @@ import useTeams from "../../hooks/useTeams";
 import { Loading } from "../Loading";
 
 export const ExistingUsersTab = () => {
-  const { tenderState, updateTender } = useTenders();
+  const { tenderState, updateTender, deleteTender } = useTenders();
   const { teamState } = useTeams();
   const [studylines, setStudylines] = useState<StudyLine[]>([]);
   const [api] = notification.useNotification();
@@ -270,6 +271,22 @@ export const ExistingUsersTab = () => {
                     updateTender(editingUser.uid, "isAdmin", checked);
                 }}
               />
+            </Form.Item>
+            <Form.Item>
+              <Popconfirm
+                title="Are you sure you want to delete this user?"
+                description="This action cannot be undone."
+                onConfirm={() => {
+                  if (editingUser) {
+                    deleteTender(editingUser.uid);
+                    setIsModalOpen(false);
+                  }
+                }}
+              >
+                <Button type="primary" danger>
+                  Delete User
+                </Button>
+              </Popconfirm>
             </Form.Item>
           </Form>
         )}
