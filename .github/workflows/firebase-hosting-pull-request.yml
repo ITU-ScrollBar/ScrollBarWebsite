@@ -24,6 +24,7 @@ jobs:
       VITE_APP_FIREBASE_APP_ID: '${{ secrets.FIREBASE_APP_ID }}'
       VITE_APP_FIREBASE_MEASUREMENT_ID: '${{ secrets.FIREBASE_MESSUREMENT_ID }}'
       VITE_APP_ENV: 'dev'
+      ENV: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js environment
