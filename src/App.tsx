@@ -15,14 +15,14 @@ import Shifts from "./pages/members/Shifts";
 import Profile from "./pages/members/Profile";
 import { TenderMenu } from "./components/HomePage/TenderMenu";
 import { Role, ShiftFiltering } from "./types/types-file";
-import EventManagement from "./pages/Admin/EventManagement/EventManagement";
-import GlobalSettingsPage from "./pages/Admin/GlobalSettingsPage";
+import EventManagement from "./pages/admin/EventManagement/EventManagement";
+import GlobalSettingsPage from "./pages/admin/GlobalSettingsPage";
 import EventsPage from "./pages/EventsPage";
-import UserManagerPage from "./pages/Admin/UserManagerPage";
+import UserManagerPage from "./pages/admin/UserManagerPage";
 import { setTwoToneColor } from "@ant-design/icons";
 import { App as AntdApp } from "antd";
-import { InternalEventsPage } from "./pages/Admin/InternalEventsPage";
-import ShiftManagement from "./pages/Admin/ShiftManagement/ShiftManagement";
+import { InternalEventsPage } from "./pages/admin/InternalEventsPage";
+import ShiftManagement from "./pages/admin/ShiftManagement/ShiftManagement";
 import { InactiveUserPage } from "./pages/InactiveUserPage";
 
 function App() {
