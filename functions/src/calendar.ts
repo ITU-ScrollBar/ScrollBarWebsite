@@ -228,7 +228,7 @@ const handleInternalEvents = async (uid: string, env: string): Promise<EventAttr
       startInputType: 'utc',
       description: data.description,
       location: data.location,
-      uid: data.id,
+      uid: doc.id,
     };
 
     if (calEvent) internalEvents.push(calEvent as EventAttributes);

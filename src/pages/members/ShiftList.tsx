@@ -22,7 +22,7 @@ import useInternalEvents from "../../hooks/useInternalEvents";
 import useTeams from "../../hooks/useTeams";
 import { useWindowSize } from "../../hooks/useWindowSize";
 import Loading from "../../components/Loading";
-import { renderInternalEvent } from "../admin/InternalEventsPage";
+import { renderInternalEvent } from "../Admin/InternalEventsPage";
 
 const { Title, Paragraph } = Typography;
 
