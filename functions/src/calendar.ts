@@ -114,6 +114,10 @@ app.get('/calendar/:uid', async (req, res) => {
       return res.status(500).send('Failed to create calendar');
     }
 
+    const currentUser = (await db.collection('users').doc(uid).get()).data() as Tender;
+    currentUser.lastCalendarDownload = new Date();
+    await db.collection('users').doc(uid).set(currentUser);
+
     const filename = `calendar-${uid}.ics`;
     res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
     res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
@@ -126,17 +130,22 @@ app.get('/calendar/:uid', async (req, res) => {
   }
 });
 
+const cutoff = Timestamp.fromMillis(Date.now() - 90 * 24 * 60 * 60 * 1000);
+
 const handleShifts = async (uid: string, env: string): Promise<EventAttributes[]> => {
   // Handle shifts for the user
   const userEngagementsSnapshot = await db
-      .collection('env')
-      .doc(env)
-      .collection('engagements')
-      .where('userId', '==', uid)
-      .where('shiftEnd', '>=', Timestamp.now())
-      .get();
+    .collection('env')
+    .doc(env)
+    .collection('engagements')
+    .where('userId', '==', uid)
+    .where('shiftEnd', '>=', cutoff)
+    .get();
 
     const shiftIds = userEngagementsSnapshot.docs.map(doc => doc.data().shiftId);
+
+    // User has no assigned shifts left
+    if (shiftIds.length === 0) return [];
 
     const shiftsSnapshot = await db
       .collection('env')
@@ -154,6 +163,8 @@ const handleShifts = async (uid: string, env: string): Promise<EventAttributes[]
 
     const eventIds = shiftsSnapshot.docs.map(doc => doc.data().eventId);
 
+    if (eventIds.length === 0) return [];
+  
     const eventsSnapshot = await db
       .collection('env')
       .doc(env)
@@ -201,7 +212,7 @@ const handleInternalEvents = async (uid: string, env: string): Promise<EventAttr
     .collection('env')
     .doc(env)
     .collection('internalEvents')
-    .where('end', '>=', Timestamp.now())
+    .where('end', '>=', cutoff)
     .get();
 
   const currentUser = (await db.collection('users').doc(uid).get()).data() as Tender;
