@@ -22,7 +22,7 @@ export default function HomePage() {
   const { settingsState } = useSettings();
   const { tenderState } = useTenders();
   const { nextEvent, loading: eventLoading } = useNextEvent();
-  const activeTenders = useMemo(() => tenderState.tenders.filter(t => !t.roles?.includes(Role.PASSIVE) && !t.roles?.includes(Role.BOARD) && t?.active), [tenderState.tenders]);
+  const activeTenders = useMemo(() => tenderState.tenders.filter(t => !t.roles?.includes(Role.BOARD) && t?.active), [tenderState.tenders]);
   const boardMembers = useMemo(() => tenderState.tenders.filter(t => t.roles?.includes(Role.BOARD)), [tenderState.tenders]);
   const { state } = useLocation();
   const { targetId } = state || {};

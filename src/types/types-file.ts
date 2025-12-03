@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase-admin/firestore";
+
 // User-related types
 export interface UserProfile {
   uid: string;
@@ -158,6 +160,7 @@ export type Tender = {
   roles?: string[];
   studyline?: string;
   teamIds?: string[];
+  lastCalendarDownload?: Date;
   // Add other fields here
 };
 

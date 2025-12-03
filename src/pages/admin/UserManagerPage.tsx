@@ -18,7 +18,7 @@ const UserManagerPage = () => {
 
   useEffect(() => {
     const teamsTab = { key: "teams", label: "Teams", children: <TeamsTab /> };
-    if (currentUser?.roles?.includes(Role.TENDER_MANAGER)) {
+    if (currentUser?.roles?.includes(Role.TENDER_MANAGER) || currentUser?.isAdmin) {
       setTabItems([
         {
           key: "existingUsers",

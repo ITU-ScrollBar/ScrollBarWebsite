@@ -6,6 +6,7 @@ import Link from "antd/es/typography/Link";
 import instagramIcon from "../../assets/images/instagram.png";
 import facebookIcon from "../../assets/images/facebook.png";
 import { useNavigate } from "react-router";
+import { useWindowSize } from "../../hooks/useWindowSize";
 
 const linkcss = {
   fontWeight: "bold",
@@ -16,6 +17,7 @@ const linkcss = {
 
 export default function HeaderBar() {
   const navigate = useNavigate();
+  const { isMobile } = useWindowSize();
 
   const items = [
     {
@@ -57,23 +59,19 @@ export default function HeaderBar() {
     {
       key: "6",
       label: (
-        <a
-          href="https://www.instagram.com/scrollbaritu?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            src={instagramIcon}
-            preview={false}
-            style={{ width: "22px", marginLeft: "-12px" }}
-          />
-        </a>
-      ),
-    },
-    {
-      key: "7",
-      label: (
-        <a
+        <>
+          <a
+            href="https://www.instagram.com/scrollbaritu?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+            target="_blank"
+            rel="noopener noreferrer"
+            >
+            <Image
+              src={instagramIcon}
+              preview={false}
+              style={{ width: "22px", marginLeft: isMobile ? "10px" : "-12px", marginBottom: "12px" }}
+              />
+          </a>
+          <a
           href="https://www.facebook.com/ScrollBar/"
           target="_blank"
           rel="noopener noreferrer"
@@ -81,9 +79,10 @@ export default function HeaderBar() {
           <Image
             src={facebookIcon}
             preview={false}
-            style={{ width: "22px", marginLeft: "-12px" }}
+            style={{ width: "22px", marginLeft: "16px", marginBottom: "12px" }}
           />
         </a>
+        </>
       ),
     },
   ];
