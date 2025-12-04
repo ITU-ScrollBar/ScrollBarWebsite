@@ -31,7 +31,7 @@ export default function Profile() {
         setUserData(data);
       }
     })();
-  }, [currentUser, getProfileData]);
+  }, [currentUser]);
 
   const setStudyLine = (studyLine: string) => {
     if (!currentUser) return;
