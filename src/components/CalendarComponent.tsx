@@ -61,8 +61,8 @@ export const CalendarSection = () => {
                         e.preventDefault();
                         navigator.clipboard
                         .writeText(calendarUrl)
-                        .then(() => { notification.success({ message: "Calendar link copied to clipboard", placement: "bottom" }); })
-                        .catch(() => { notification.error({ message: "Failed to copy calendar link", placement: "bottom" }); });
+                        .then(() => { notification.success({ title: "Calendar link copied to clipboard", placement: "bottom" }); })
+                        .catch(() => { notification.error({ title: "Failed to copy calendar link", placement: "bottom" }); });
                     }}
                     >
                     <CalendarIcon icon={CopyTwoTone} alt="Copy calendar link to clipboard" />

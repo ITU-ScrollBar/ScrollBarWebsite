@@ -70,7 +70,7 @@ export default function Profile() {
     if (!currentUser) return;
     updateUser({ id: currentUser.uid, field: "teamIds", value: teamIds });
     notification.success({
-      message: "Teams updated",
+      title: "Teams updated",
       description: "Your team memberships have been updated.",
       placement: "top",
     });
