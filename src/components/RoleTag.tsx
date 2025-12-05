@@ -11,7 +11,7 @@ export default function RoleTag({ role }: RoleTagProps) {
 
     if (!(key in Role)) {
         notification.error({
-            message: "Unknown role",
+            title: "Unknown role",
             description: `The role "${role}" is not recognized.`,
         });
         return null;

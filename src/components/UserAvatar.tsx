@@ -169,7 +169,7 @@ export const UserAvatarWithUpload = ({
             })
             .catch((error) => {
               api.error({
-                message: "Error",
+                title: "Error",
                 description:
                   "Failed to upload profile picture: " + error.message,
                 placement: "top",

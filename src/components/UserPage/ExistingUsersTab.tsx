@@ -50,7 +50,7 @@ export const ExistingUsersTab = () => {
       })
       .catch((error) => {
         api.error({
-          message: "Error",
+          title: "Error",
           description: "Failed to fetch study lines: " + error.message,
           placement: "top",
         });
