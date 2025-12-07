@@ -31,10 +31,10 @@ export const CalendarSection = () => {
         return; // authentication and loading handled elsewhere
     }
 
-    const calendarUrl = `${globalThis.location.origin}/calendar/${currentUser.uid}`.replace(/^https:/, '');
+    const calendarUrl = `${globalThis.location.origin}/calendar/${currentUser.uid}`.replace(/^https:\/\//, '');
 
-    const googleCalendarUrl = `https://calendar.google.com/calendar/u/0/r?cid=${calendarUrl}`
-    const appCalendarUrl = `webcal:${calendarUrl}`;
+    const googleCalendarUrl = `https://calendar.google.com/calendar/u/0/r?cid=http://${calendarUrl}`
+    const appCalendarUrl = `${calendarUrl}`;
 
     return (
         <Card size="small" style={{ marginBottom: 16 }}>
@@ -49,10 +49,10 @@ export const CalendarSection = () => {
                 <Typography.Link href={googleCalendarUrl} target="_blank" rel="noopener noreferrer">
                     <CalendarIcon icon={googlecalendaricon} alt="Add to Google Calendar" />
                 </Typography.Link>
-                <Typography.Link href={appCalendarUrl} target="_blank" rel="noopener noreferrer">
+                <Typography.Link href={'webcal:'+appCalendarUrl} target="_blank" rel="noopener noreferrer">
                     <CalendarIcon icon={applecalendaricon} alt="Add to Apple Calendar" />
                 </Typography.Link>
-                <Typography.Link href={appCalendarUrl} target="_blank" rel="noopener noreferrer">
+                <Typography.Link href={'webcal:http://'+appCalendarUrl} target="_blank" rel="noopener noreferrer">
                     <CalendarIcon icon={outlookcalendaricon} alt="Add to Outlook Calendar" />
                 </Typography.Link>
                 <Typography.Link
