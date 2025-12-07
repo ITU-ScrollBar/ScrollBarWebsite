@@ -49,7 +49,7 @@ export const CalendarSection = () => {
                 <Typography.Link href={googleCalendarUrl} target="_blank" rel="noopener noreferrer">
                     <CalendarIcon icon={googlecalendaricon} alt="Add to Google Calendar" />
                 </Typography.Link>
-                <Typography.Link href={'webcal:'+appCalendarUrl} target="_blank" rel="noopener noreferrer">
+                <Typography.Link href={'webcal://'+appCalendarUrl} target="_blank" rel="noopener noreferrer">
                     <CalendarIcon icon={applecalendaricon} alt="Add to Apple Calendar" />
                 </Typography.Link>
                 <Typography.Link href={'webcal:http://'+appCalendarUrl} target="_blank" rel="noopener noreferrer">
@@ -60,7 +60,7 @@ export const CalendarSection = () => {
                     onClick={(e) => {
                         e.preventDefault();
                         navigator.clipboard
-                        .writeText(calendarUrl)
+                        .writeText('http://'+calendarUrl)
                         .then(() => { notification.success({ message: "Calendar link copied to clipboard", placement: "bottom" }); })
                         .catch(() => { notification.error({ message: "Failed to copy calendar link", placement: "bottom" }); });
                     }}
