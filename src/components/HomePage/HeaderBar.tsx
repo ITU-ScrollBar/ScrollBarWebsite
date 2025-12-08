@@ -113,7 +113,7 @@ export default function HeaderBar() {
       >
         <a href="/">
           <img
-          style={{ width: "250px", height: "auto", cursor: "pointer" }}
+          style={{ maxWidth: "75%", width: "250px", height: "auto", cursor: "pointer" }}
           src={logo}
         />
         </a>
