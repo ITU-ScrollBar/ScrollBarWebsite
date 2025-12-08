@@ -319,8 +319,7 @@ export function ShiftList({
               fontSize: "1em",
             }}
           >
-            {shift.start.getHours().toString().padStart(2, "0")} —{" "}
-            {shift.end.getHours().toString().padStart(2, "0")}
+            {DateToTime(shift.start)} — {DateToTime(shift.end)}
           </Paragraph>
           {myShift && (
             <Popconfirm
@@ -400,4 +399,15 @@ export function ShiftList({
       })}
     </div>
   );
+}
+
+function DateToTime(date: Date) {
+    var hours = date.getHours().toString().padStart(2, '0');
+    var minutes = date.getMinutes().toString().padStart(2, '0');
+    if (minutes != "00") {
+        return <>
+            {hours}<span style={{ verticalAlign: "super", fontSize: "0.7em", marginLeft: "2px" }}>{minutes}</span>
+        </>
+    }
+    return <>{hours}</>;
 }

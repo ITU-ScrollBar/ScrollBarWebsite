@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Layout, Tabs, Space, Select, Empty } from "antd";
+import { Layout, Space, Select, Empty } from "antd";
 import { TeamOutlined } from "@ant-design/icons";
 import useEvents from "../../../hooks/useEvents";
 import { useShiftContext } from "../../../contexts/ShiftContext";
@@ -46,20 +46,7 @@ export default function ShiftManagement() {
 
   const shiftsForEvent = shiftState.shifts.filter(
     (shift) => shift.eventId === currentEvent?.id
-  );
-
-  const tabItems = shiftsForEvent.map((shift) => ({
-    label: (
-      <div style={{ textAlign: "left" }}>
-        <div style={{ fontWeight: 600 }}>{shift.title}</div>
-        <div style={{ fontSize: "0.75em", color: "#666" }}>
-          {shift.location}
-        </div>
-      </div>
-    ),
-    key: shift.id!,
-    children: <ShiftInfo shift={shift} />,
-  }));
+  ).sort((a, b) => a.start.getTime() - b.start.getTime());
 
   return eventState.isLoaded && shiftState.isLoaded ? (
     <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
@@ -118,11 +105,9 @@ export default function ShiftManagement() {
           </Space>
 
           {shiftsForEvent.length > 0 ? (
-            <Tabs
-              items={tabItems}
-              tabPosition="left"
-              style={{ marginTop: "24px" }}
-            />
+            shiftsForEvent.map((shift) => (
+              <ShiftInfo shift={shift} />
+            ))
           ) : (
             <Empty
               style={{ margin: "60px 0" }}

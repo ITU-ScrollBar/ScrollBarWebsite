@@ -5,10 +5,11 @@ import {
   Space,
   Typography,
   List,
-  Avatar,
   Popconfirm,
   message,
   Divider,
+  Row,
+  Col,
 } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import {
@@ -21,6 +22,7 @@ import {
 import { useEngagementContext } from "../../../contexts/EngagementContext";
 import useTenders from "../../../hooks/useTenders";
 import { UserAvatar } from "../../../components/UserAvatar";
+import { useState } from "react";
 
 const { Title, Text } = Typography;
 
@@ -102,7 +104,10 @@ export default function ShiftInfo({ shift }: ShiftInfoProps) {
     return tenderState.tenders.find((t) => t.uid === userId);
   };
 
-  const renderEngagementList = (engagements: Engagement[], title: string) => (
+  const renderEngagementList = (engagements: Engagement[], title: string) => {
+    const [hovered, setHovered] = useState<string | null>(null);
+
+    return (
     <Card
       title={<Text strong>{title}</Text>}
       style={{ marginBottom: "16px" }}
@@ -110,44 +115,58 @@ export default function ShiftInfo({ shift }: ShiftInfoProps) {
     >
       {engagements.length > 0 ? (
         <List
+          itemLayout="horizontal"
+          grid={{ column: 5, xl: 4, lg: 3, md: 2, sm: 2, xs: 1 }}
           dataSource={engagements}
           renderItem={(engagement) => {
             const tender = getTenderById(engagement.userId);
             if (!tender) return null;
             return (
               <List.Item
-                actions={[
-                  <Popconfirm
-                    title="Remove this person?"
-                    onConfirm={() => handleRemove(engagement)}
-                    okText="Yes"
-                    cancelText="No"
-                  >
-                    <Button
-                      type="text"
-                      danger
-                      size="small"
-                      icon={<DeleteOutlined />}
-                    />
-                  </Popconfirm>,
-                ]}
+                onMouseEnter={() => setHovered(engagement.id)}
+                onMouseLeave={() => setHovered(null)}
               >
-                <List.Item.Meta
-                  avatar={
+                <Popconfirm
+                  title="Remove this person?"
+                  onConfirm={() => handleRemove(engagement)}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <Button
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      opacity: hovered === engagement.id ? 0.8 : 0,
+                      transition: "opacity 0.2s ease-in-out",
+                      zIndex: 2,
+                      cursor: "pointer",
+                    }}
+                    type="text"
+                    danger
+                    icon={<DeleteOutlined style={{ opacity: 1 }} />}
+                  />
+                </Popconfirm>
+                <Row style={{ opacity: hovered === engagement.id ? 1 : 1, transition: "opacity 0.2s ease-in-out" }} align="middle" gutter={8}>
+                  <Col span={4}>
                     <UserAvatar
-                      user={tender}
-                      size={40}
-                      style={{
-                        backgroundColor:
-                          engagement.type === engagementType.ANCHOR
-                            ? "#FFD600"
-                            : "#1890ff",
-                      }}
-                    />
-                  }
-                  title={tender?.displayName || "Unknown"}
-                  description={tender?.email}
-                />
+                        user={tender}
+                        size={40}
+                        style={{
+                          backgroundColor:
+                            engagement.type === engagementType.ANCHOR
+                              ? "#FFD600"
+                              : "#1890ff",
+                        }}
+                      />
+                  </Col>
+                  <Col span={18}>
+                    <Text>{tender?.displayName || "Unknown"}</Text><br />
+                    <Text type="secondary">{tender?.email}</Text>
+                  </Col>
+                </Row>
               </List.Item>
             );
           }}
@@ -161,7 +180,8 @@ export default function ShiftInfo({ shift }: ShiftInfoProps) {
         </Text>
       )}
     </Card>
-  );
+    )
+  };
 
   return (
     <div>
