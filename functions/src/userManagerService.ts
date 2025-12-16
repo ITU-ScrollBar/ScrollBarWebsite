@@ -26,7 +26,7 @@ export const adminChangeUserEmail = onCall(
 
     // Authorize caller (example: custom claim on the caller)
     const caller = (await db.doc(`users/${req.auth.uid}`).get()).data() as Tender;
-    if (!caller.roles?.includes(Role.ADMIN)) {
+    if (!(caller.isAdmin || caller.roles?.includes(Role.TENDER_MANAGER))) {
       throw new HttpsError("permission-denied", "Not allowed");
     }
 

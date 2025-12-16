@@ -25,6 +25,7 @@ import RoleTag from "../RoleTag";
 import { roleToLabel } from "../../pages/members/helpers";
 import useTeams from "../../hooks/useTeams";
 import { Loading } from "../Loading";
+import { getFunctions, httpsCallable } from "firebase/functions";
 
 export const ExistingUsersTab = () => {
   const { tenderState, updateTender, deleteTender } = useTenders();
@@ -38,6 +39,7 @@ export const ExistingUsersTab = () => {
   const [data, setData] = useState<(Tender & { teams: Team[] })[]>([]);
   const [searchValue, setSearchValue] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
+  const changeUserEmail = httpsCallable(getFunctions(), "adminChangeUserEmail");
 
   useEffect(() => {
     getStudyLines()
@@ -203,7 +205,24 @@ export const ExistingUsersTab = () => {
               />
             </Form.Item>
             <Divider />
-            <Form.Item label="Email">{editingUser?.email}</Form.Item>
+            <Form.Item label="Email">
+              <Input
+                value={editingUser?.email}
+                onChange={(e) =>
+                  setEditingUser((prev) =>
+                    prev ? { ...prev, email: e.target.value } : prev
+                  )
+                }
+                onBlur={async (e) => {
+                  if (window.confirm("Are you sure you want to change this user's email? Click OK to confirm.")) {
+                    if (editingUser) {
+                      await changeUserEmail({ targetUid: editingUser.uid, newEmail: e.target.value });
+                      await updateTender(editingUser.uid, "email", e.target.value);
+                    }
+                  }
+                }}
+              />
+            </Form.Item>
             <Form.Item label="Teams">
               <Select
                 mode="multiple"
