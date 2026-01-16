@@ -14,6 +14,7 @@ import {
   InputNumber,
   Upload,
   Popconfirm,
+  Switch,
 } from "antd";
 import dayjs from "dayjs";
 import TextArea from "antd/es/input/TextArea";
@@ -251,6 +252,10 @@ export default function EventInfo(props: { event: Event }) {
         >
           {props.event.where}
         </Title>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+          <Text>Published:</Text>
+          <Switch checked={props.event.published} onChange={(checked) => updateEvent(props.event.id, "published", checked)} />
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <Upload
           customRequest={({file}) => {

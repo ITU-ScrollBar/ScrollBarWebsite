@@ -1,14 +1,14 @@
 import React from "react";
 import { useState } from "react";
-import { Button, Tabs, Layout, Space, Segmented } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { Button, Tabs, Layout, Space, Segmented, Popconfirm, notification } from "antd";
+import { PlusOutlined, UploadOutlined } from "@ant-design/icons";
 import useEvents from "../../../hooks/useEvents";
 import EventInfo from "./EventInfo";
 import { useWindowSize } from "../../../hooks/useWindowSize";
 const { Content } = Layout;
 
 export default function EventManagement() {
-  const { addEvent, eventState } = useEvents();
+  const { addEvent, eventState, updateEvent } = useEvents();
   const [showPreviousEvents, setShowPreviousEvents] = useState<boolean>(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const { isMobile } = useWindowSize();
@@ -49,6 +49,18 @@ export default function EventManagement() {
   const displayEvents = showPreviousEvents
     ? sortedPreviousEvents
     : sortedEvents;
+
+  const publishFutureEvents = () => {
+    for (const event of sortedEvents) {
+      if (!event.published) {
+        updateEvent(event.id, "published", true);
+      }
+      notification.success({
+        message: "Success",
+        description: "All future events have been published.",
+      });
+    }
+  }
 
   const tabItems = displayEvents.map((e) => ({
     label: (
@@ -93,14 +105,30 @@ export default function EventManagement() {
               <h1 style={{ margin: 0, fontSize: "24px", fontWeight: 600 }}>
                 Event Management
               </h1>
-              <Button
-                type="primary"
-                size="large"
-                icon={<PlusOutlined />}
-                onClick={createEventFromToday}
-              >
-                Create Event
-              </Button>
+              <div style={{ display: "flex", gap: "12px" }}>
+                <Popconfirm
+                  title="Are you sure you want to publish all future events?"
+                  onConfirm={publishFutureEvents}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <Button
+                    type="default"
+                    size="large"
+                    icon={<UploadOutlined />}
+                  >
+                    Publish future events
+                  </Button>
+                </Popconfirm>
+                <Button
+                  type="primary"
+                  size="large"
+                  icon={<PlusOutlined />}
+                  onClick={createEventFromToday}
+                >
+                  Create Event
+                </Button>
+              </div>
             </div>
 
             <Segmented
