@@ -56,11 +56,13 @@ export default function EventInfo(props: { event: Event }) {
     const eventStart = new Date(props.event.start);
     const eventEnd = new Date(props.event.end);
 
-    // Calculate opening shift (event start time to start + 5 hours)
-    const openingEnd = new Date(eventStart.getTime() + 5 * 60 * 60 * 1000);
+    // Calculate opening shift (event start time minus 1 hour to start + 4 hours)
+    const hours = 60 * 60 * 1000;
+    const openingStart = new Date(eventStart.getTime() - 1 * hours);
+    const openingEnd = new Date(eventStart.getTime() + 4 * hours);
 
     // Calculate middle shift (opening end to middle end + 4 hours)
-    const middleEnd = new Date(openingEnd.getTime() + 4 * 60 * 60 * 1000);
+    const middleEnd = new Date(openingEnd.getTime() + 4 * hours);
 
     // Calculate closing shift (middle end to event end)
 
@@ -70,7 +72,7 @@ export default function EventInfo(props: { event: Event }) {
         eventId: props.event.id,
         title: "Opening",
         location: props.event.where || "Main bar",
-        start: eventStart,
+        start: openingStart,
         end: openingEnd,
         anchors: 1,
         tenders: 4,
