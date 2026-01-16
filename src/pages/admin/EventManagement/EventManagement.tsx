@@ -12,18 +12,33 @@ export default function EventManagement() {
   const [showPreviousEvents, setShowPreviousEvents] = useState<boolean>(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const { isMobile } = useWindowSize();
-
-  const findNextFridayAt15 = () => {
-    const today = new Date();
+  
+  const { events, previousEvents } = eventState;
+  const sortedEvents = [...events].sort(
+    (a, b) => a.start.getTime() - b.start.getTime()
+  );
+  const sortedPreviousEvents = [...previousEvents].sort(
+    (a, b) => b.start.getTime() - a.start.getTime()
+  );
+  
+  const displayEvents = showPreviousEvents
+  ? sortedPreviousEvents
+  : sortedEvents;
+  
+  const findNextAvailableFridayAt15 = () => {
+    console.log(sortedEvents);
+    const lastEvent = sortedEvents.length > 0
+      ? sortedEvents[sortedEvents.length - 1].end
+      : new Date(); // If no events, start from today
     const nextFriday = new Date(
-      today.setDate(today.getDate() + ((5 - today.getDay() + 7) % 7))
+      lastEvent.setDate(lastEvent.getDate() + ((5 - lastEvent.getDay() + 7) % 7))
     );
     nextFriday.setHours(15, 0, 0, 0);
     return nextFriday;
   };
 
-  const createEventFromToday = () => {
-    const nextFriday = findNextFridayAt15();
+  const createEventNextAvailableFriday = () => {
+    const nextFriday = findNextAvailableFridayAt15();
     const event = {
       start: nextFriday,
       end: new Date(nextFriday.getTime() + 60 * 60 * 11000),
@@ -38,18 +53,6 @@ export default function EventManagement() {
       if (e.id != null) setSelectedEventId(e.id);
     });
   };
-
-  const { events, previousEvents } = eventState;
-  const sortedEvents = [...events].sort(
-    (a, b) => a.start.getTime() - b.start.getTime()
-  );
-  const sortedPreviousEvents = [...previousEvents].sort(
-    (a, b) => b.start.getTime() - a.start.getTime()
-  );
-
-  const displayEvents = showPreviousEvents
-    ? sortedPreviousEvents
-    : sortedEvents;
 
   const publishFutureEvents = () => {
     for (const event of sortedEvents) {
@@ -125,7 +128,7 @@ export default function EventManagement() {
                   type="primary"
                   size="large"
                   icon={<PlusOutlined />}
-                  onClick={createEventFromToday}
+                  onClick={createEventNextAvailableFriday}
                 >
                   Create Event
                 </Button>
@@ -161,7 +164,7 @@ export default function EventManagement() {
               <p style={{ fontSize: "16px", marginBottom: "12px" }}>
                 No events found
               </p>
-              <Button type="primary" onClick={createEventFromToday}>
+              <Button type="primary" onClick={createEventNextAvailableFriday}>
                 Create the first event
               </Button>
             </div>
