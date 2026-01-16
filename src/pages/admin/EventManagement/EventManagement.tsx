@@ -32,6 +32,7 @@ export default function EventManagement() {
       where: "ScrollBar",
       published: false,
       internal: false,
+      shiftsPublished: false,
     };
     addEvent(event).then((e) => {
       if (e.id != null) setSelectedEventId(e.id);

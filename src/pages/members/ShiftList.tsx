@@ -390,10 +390,13 @@ export function ShiftList({
 
         const shiftsForEvent = shiftsByEvent[eventId] || [];
 
+        // Only display events if they have published shifts or listing all events without shifts
+        if (shiftFiltering !== ShiftFiltering.ALL_SHIFTS && !event.shiftsPublished) return null;
+
         return (
           <div key={eventId} style={{ marginBottom: 32 }}>
             {renderEventHeader(event)}
-            {shiftsForEvent.length ? shiftsForEvent.map((shift) => renderShiftCard(shift)) : "Shifts are not published yet."}
+            {shiftsForEvent.length && event.shiftsPublished ? shiftsForEvent.map((shift) => renderShiftCard(shift)) : "Shifts are not published yet."}
           </div>
         );
       })}

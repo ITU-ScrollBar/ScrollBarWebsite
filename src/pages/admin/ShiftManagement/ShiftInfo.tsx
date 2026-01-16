@@ -70,9 +70,9 @@ export default function ShiftInfo({ shift }: ShiftInfoProps) {
       upForGrabs: false,
     };
 
-    addEngagement(engagement).catch(() =>
-      message.error("Failed to add tender")
-    );
+    addEngagement(engagement)
+    .then(() => message.success("Tender added successfully"))
+    .catch(() => message.error("Failed to add tender"));
   };
 
   const handleAddAnchor = (userId: string) => {
@@ -88,9 +88,9 @@ export default function ShiftInfo({ shift }: ShiftInfoProps) {
       upForGrabs: false,
     };
 
-    addEngagement(engagement).catch(() =>
-      message.error("Failed to add anchor")
-    );
+    addEngagement(engagement)
+      .then(() => message.success("Anchor added successfully"))
+      .catch(() => message.error("Failed to add anchor"));
   };
 
   const handleRemove = (engagement: Engagement) => {
