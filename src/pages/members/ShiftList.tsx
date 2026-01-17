@@ -129,10 +129,10 @@ export function ShiftList({
     [internalEventsState.internalEventState.internalEvents]
   );
 
-  const eventsWithShifts = useMemo(
+  const events = useMemo(
     () =>
       eventState.events
-        .filter((e) => !!shiftsByEvent[e.id])
+        .filter((e) => shiftFiltering === ShiftFiltering.ALL_SHIFTS || !!shiftsByEvent[e.id]) // Show events on all shifts page
         .slice()
         .sort((a, b) => asDate(a.start).getTime() - asDate(b.start).getTime()),
     [eventState.events, shiftsByEvent]
@@ -176,8 +176,8 @@ export function ShiftList({
     const out: MergedItemLocal[] = [];
     let ei = 0;
     let ii = 0;
-    while (ei < eventsWithShifts.length || ii < internalEvents.length) {
-      const ev = eventsWithShifts[ei];
+    while (ei < events.length || ii < internalEvents.length) {
+      const ev = events[ei];
       const iv = internalEvents[ii];
 
       if (!ev && iv) {
@@ -205,7 +205,7 @@ export function ShiftList({
       }
     }
     return out;
-  }, [eventsWithShifts, internalEvents]);
+  }, [events, internalEvents]);
 
   if (internalState?.loading) {
     return <Loading resources={["internal events"]} centerOverlay={true} />;
@@ -390,10 +390,13 @@ export function ShiftList({
 
         const shiftsForEvent = shiftsByEvent[eventId] || [];
 
+        // Only display events if they have published shifts or listing all events without shifts
+        if (shiftFiltering !== ShiftFiltering.ALL_SHIFTS && !event.shiftsPublished) return null;
+
         return (
           <div key={eventId} style={{ marginBottom: 32 }}>
             {renderEventHeader(event)}
-            {shiftsForEvent.map((shift) => renderShiftCard(shift))}
+            {shiftsForEvent.length && event.shiftsPublished ? shiftsForEvent.map((shift) => renderShiftCard(shift)) : "Shifts are not published yet."}
           </div>
         );
       })}

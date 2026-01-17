@@ -90,6 +90,7 @@ export interface BaseEvent {
 
 export type Event = {
   published: boolean;
+  shiftsPublished: boolean;
   event_url?: string;
   photo_url?: string;
   [id: string]: any;
@@ -107,6 +108,7 @@ export type EventCreateParams = {
   title: string;
   where: string;
   published: boolean;
+  shiftsPublished: boolean;
   internal: boolean;
 };
 

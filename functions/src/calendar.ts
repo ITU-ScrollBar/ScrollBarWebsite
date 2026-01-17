@@ -2,7 +2,8 @@ import express from 'express';
 import * as admin from 'firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 import { createEvents, EventAttributes } from 'ics';
-import { InternalEvent, Tender } from './types/types-file';
+import { InternalEvent, Tender, Event } from './types/types-file';
+import { logger } from 'firebase-functions/v2';
 
 
 // Safe admin init (prevents multiple inits during local tests)
@@ -38,16 +39,9 @@ type User = {
   displayName: string;
 }
 
-type Event = {
-  id: string;
-  title: string;
-  description: string;
-  where: string;
-}
-
 type MapToIcsEventProps = {
   shift: Shift;
-  event?: Event;
+  event: Event;
   shiftMembers: Array<{ type: "anchor" | "tender"; name: string }>;
 }
 
@@ -66,8 +60,6 @@ function toIcsArray(d: Date): [number, number, number, number, number] {
 }
 
 function mapDocToIcsEvent({shift, event, shiftMembers}: MapToIcsEventProps): EventAttributes | null {
-  if (!shift || !event) return null;
-
   const start = toDate(shift.start);
   const end = toDate(shift.end);
   if (!start || !end) return null;
@@ -174,6 +166,7 @@ const handleShifts = async (uid: string, env: string): Promise<EventAttributes[]
 
     const eventsMap = eventsSnapshot.docs.map(doc => {
       const d = doc.data() as Event;
+      
       return {...d, id: doc.id};
     });
 
@@ -193,14 +186,15 @@ const handleShifts = async (uid: string, env: string): Promise<EventAttributes[]
 
     const events: EventAttributes[] = [];
     for (const doc of shiftsSnapshot.docs) {
-      const d = { ...doc.data(), id: doc.id } as Shift;
-      const event = eventsMap.find(event => event.id === d.eventId);
-      const relatedEngagements = relatedEngagementsMap.filter(e => e.shiftId === d.id);
+      const shift = { ...doc.data(), id: doc.id } as Shift;
+      const event = eventsMap.find(event => event.id === shift.eventId);
+      const relatedEngagements = relatedEngagementsMap.filter(e => e.shiftId === shift.id);
       const shiftMembers = relatedEngagements.map(e => {
         const user = relatedUsersMap.find(u => u.id === e.userId);
         return { type: e.type, name: user?.displayName ?? "Unknown user" };
       });
-      const e = mapDocToIcsEvent({ shift: d, event, shiftMembers });
+      if (!event || !shift || !event.shiftsPublished) continue;
+      const e = mapDocToIcsEvent({ shift: shift, event, shiftMembers });
       if (e) events.push(e);
     }
     return events;

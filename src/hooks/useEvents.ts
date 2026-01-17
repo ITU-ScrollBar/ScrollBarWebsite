@@ -25,6 +25,7 @@ type EventFirebase = {
   title: string;
   location: string;
   published: boolean;
+  shiftsPublished: boolean;
   internal: boolean;
 };
 

@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { Layout, Space, Select, Empty } from "antd";
-import { TeamOutlined } from "@ant-design/icons";
+import { Layout, Space, Select, Empty, Button, Popconfirm, notification, Switch } from "antd";
+import Text from "antd/es/typography/Text";
+import { RocketOutlined, TeamOutlined } from "@ant-design/icons";
 import useEvents from "../../../hooks/useEvents";
 import { useShiftContext } from "../../../contexts/ShiftContext";
 import ShiftInfo from "./ShiftInfo";
 const { Content } = Layout;
 
 export default function ShiftManagement() {
-  const { eventState } = useEvents();
+  const { eventState, updateEvent } = useEvents();
   const { shiftState } = useShiftContext();
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
@@ -75,6 +76,28 @@ export default function ShiftManagement() {
                 <TeamOutlined style={{ marginRight: "12px" }} />
                 Shift Management
               </h1>
+              <Popconfirm
+                title="Are you sure you want to publish all shifts"
+                onConfirm={() => {
+                  for (const event of sortedEvents) {
+                    if (!event.shiftsPublished) {
+                      updateEvent(event.id, "shiftsPublished", true);
+                    }
+                  }
+                  notification.success({
+                    message: "Success",
+                    description: "All shifts have been published.",
+                  });
+                }}
+                >
+                <Button
+                  type="primary"
+                  size="large"
+                  icon={<RocketOutlined />}
+                >
+                  Publish shifts for all events
+                </Button>
+              </Popconfirm>
             </div>
 
             <div>
@@ -103,6 +126,16 @@ export default function ShiftManagement() {
               </Select>
             </div>
           </Space>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <Text>Shifts published</Text>
+            <Switch
+              checked={currentEvent?.shiftsPublished}
+              onChange={(checked) =>
+                currentEvent &&
+                updateEvent(currentEvent.id, "shiftsPublished", checked)
+              }
+            />
+          </div>
 
           {shiftsForEvent.length > 0 ? (
             shiftsForEvent.map((shift) => (

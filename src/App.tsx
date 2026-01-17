@@ -24,8 +24,16 @@ import { App as AntdApp } from "antd";
 import { InternalEventsPage } from "./pages/admin/InternalEventsPage";
 import ShiftManagement from "./pages/admin/ShiftManagement/ShiftManagement";
 import { InactiveUserPage } from "./pages/InactiveUserPage";
+import dayjs from 'dayjs';
+import updateLocale from 'dayjs/plugin/updateLocale';
+
 
 function App() {
+  dayjs.extend(updateLocale);
+  dayjs.updateLocale('en', {
+      weekStart: 1
+  });
+
   setTwoToneColor("#FFE600");
   return (
     <AntdApp>

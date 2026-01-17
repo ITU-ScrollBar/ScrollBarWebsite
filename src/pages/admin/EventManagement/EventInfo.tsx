@@ -14,6 +14,7 @@ import {
   InputNumber,
   Upload,
   Popconfirm,
+  Switch,
 } from "antd";
 import dayjs from "dayjs";
 import TextArea from "antd/es/input/TextArea";
@@ -56,11 +57,13 @@ export default function EventInfo(props: { event: Event }) {
     const eventStart = new Date(props.event.start);
     const eventEnd = new Date(props.event.end);
 
-    // Calculate opening shift (event start time to start + 5 hours)
-    const openingEnd = new Date(eventStart.getTime() + 5 * 60 * 60 * 1000);
+    // Calculate opening shift (event start time minus 1 hour to start + 4 hours)
+    const hours = 60 * 60 * 1000;
+    const openingStart = new Date(eventStart.getTime() - 1 * hours);
+    const openingEnd = new Date(eventStart.getTime() + 4 * hours);
 
     // Calculate middle shift (opening end to middle end + 4 hours)
-    const middleEnd = new Date(openingEnd.getTime() + 4 * 60 * 60 * 1000);
+    const middleEnd = new Date(openingEnd.getTime() + 4 * hours);
 
     // Calculate closing shift (middle end to event end)
 
@@ -70,7 +73,7 @@ export default function EventInfo(props: { event: Event }) {
         eventId: props.event.id,
         title: "Opening",
         location: props.event.where || "Main bar",
-        start: eventStart,
+        start: openingStart,
         end: openingEnd,
         anchors: 1,
         tenders: 4,
@@ -106,8 +109,13 @@ export default function EventInfo(props: { event: Event }) {
     const eventStart = new Date(props.event.start);
     const eventEnd = new Date(props.event.end);
 
+    const hours = 60 * 60 * 1000;
     // Opening: event start to start + 5 hours
-    const openingEnd = new Date(eventStart.getTime() + 5 * 60 * 60 * 1000);
+    const openingStart = new Date(eventStart.getTime() - 1 * hours);
+    const openingEnd = new Date(eventStart.getTime() + 2 * hours);
+    const earlyMiddleEnd = new Date(openingEnd.getTime() + 2 * hours);
+    const middleEnd = new Date(earlyMiddleEnd.getTime() + 3 * hours);
+    const lateMiddleEnd = new Date(middleEnd.getTime() + 2 * hours);
 
     // Closing: opening end to event end
 
@@ -115,26 +123,57 @@ export default function EventInfo(props: { event: Event }) {
       {
         id: "",
         eventId: props.event.id,
-        title: "Opening",
-        location: props.event.where || "Main bar",
-        start: eventStart,
+        title: "Opening + Setup",
+        start: openingStart,
         end: openingEnd,
         anchors: 1,
-        tenders: 4,
+        tenders: 5,
       },
       {
         id: "",
         eventId: props.event.id,
-        title: "Closing",
-        location: props.event.where || "Main bar",
+        title: "Early middle + Setup",
         start: openingEnd,
-        end: eventEnd,
+        end: earlyMiddleEnd,
+        anchors: 1,
+        tenders: 6,
+      },
+      {
+        id: "",
+        eventId: props.event.id,
+        title: "Middle",
+        start: earlyMiddleEnd,
+        end: middleEnd,
         anchors: 1,
         tenders: 7,
       },
+      {
+        id: "",
+        eventId: props.event.id,
+        title: "Late middle + Cleaning",
+        start: middleEnd,
+        end: lateMiddleEnd,
+        anchors: 1,
+        tenders: 7,
+      },
+      {
+        id: "",
+        eventId: props.event.id,
+        title: "Closing + Cleaning",
+        start: lateMiddleEnd,
+        end: eventEnd,
+        anchors: 1,
+        tenders: 5,
+      },
     ];
 
-    Promise.all(bigPartyShifts.map((shift) => addShift(shift)))
+    const bigPartyShiftsWithLocations = [];
+    for (const shift of bigPartyShifts) {
+      bigPartyShiftsWithLocations.push({ ...shift, location: "Main bar" });
+      bigPartyShiftsWithLocations.push({ ...shift, location: "Satellite" });
+    }
+
+    Promise.all(bigPartyShiftsWithLocations.map((shift) => addShift(shift)))
       .then(() => message.success("Big party shifts added successfully"))
       .catch(() => message.error("Failed to add shifts"));
   };
@@ -213,6 +252,10 @@ export default function EventInfo(props: { event: Event }) {
         >
           {props.event.where}
         </Title>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+          <Text>Published:</Text>
+          <Switch checked={props.event.published} onChange={(checked) => updateEvent(props.event.id, "published", checked)} />
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <Upload
           customRequest={({file}) => {

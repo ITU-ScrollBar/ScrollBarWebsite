@@ -351,7 +351,7 @@ const toCreateParams = (
     location: values.location,
     start: values.date[0].toDate(),
     end: values.date[1].toDate(),
-    description: values.description,
+    description: values.description ?? "",
     scope: values.scope,
   };
 };
