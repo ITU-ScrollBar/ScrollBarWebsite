@@ -21,7 +21,7 @@ export default function BoardManagementPage() {
         if (!tenderState.loading && Array.isArray(tenderState.tenders)) {
             setBoardMembers(
                 tenderState.tenders.filter(
-                    (tender) => Array.isArray(tender.roles) && tender.roles.includes(Role.BOARD)
+                    (tender) => tender.roles?.includes(Role.BOARD)
                 )
             );
         }
