@@ -167,7 +167,7 @@ export const ExistingUsersTab = () => {
         onChange={(e) => setSearchValue(e.target.value)}
         style={{ marginBottom: "16px", maxWidth: "300px" }}
       />
-      <Table columns={columns} dataSource={filteredData} rowKey="id" />
+      <Table columns={columns} dataSource={filteredData} rowKey="uid" />
       <Drawer
         title="Edit User"
         open={isModalOpen}
@@ -261,21 +261,26 @@ export const ExistingUsersTab = () => {
             <Form.Item label="Roles">
               <Select
                 mode="multiple"
-                options={Object.entries(Role).filter(([_, val]) => val != Role.ADMIN).map(([value, label]) => ({
+                options={Object.values(Role).filter(val => val !== Role.ADMIN).map((value) => ({
                   value,
-                  label: roleToLabel(label),
+                  label: <RoleTag role={value} />,
                 }))}
-                value={editingUser?.roles?.map((role) => role as Role) || []}
+                value={editingUser?.roles || []}
+                labelRender={role => <RoleTag role={role.value.toString()} />}
+                onOpenChange={open => {
+                  if (!open) {
+                    if (editingUser)
+                      updateTender(
+                        editingUser.uid,
+                        "roles",
+                        editingUser.roles
+                      );
+                  }
+                }}
                 onChange={(value) => {
                   setEditingUser((prev) =>
                     prev ? { ...prev, roles: value } : prev
                   );
-                  if (editingUser)
-                    updateTender(
-                      editingUser.uid,
-                      "roles",
-                      value.map((role) => role.toLowerCase())
-                    );
                 }}
               />
             </Form.Item>
