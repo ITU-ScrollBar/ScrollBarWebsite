@@ -7,6 +7,12 @@ import { useState } from "react";
 export const InvitedUsersTab = () => {
     const { invitedTenders, removeInvite, addInvite } = useTenders();
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [mail, setMail] = useState("");
+
+    const handleAddInvite = () => {
+        addInvite(mail);
+        setMail("");
+    };
 
     const columns: TableColumnsType<Invite> = [
         { title: 'Email', dataIndex: 'id', key: 'id' },
@@ -35,18 +41,26 @@ export const InvitedUsersTab = () => {
             <Button onClick={() => setIsModalVisible(true)}>
                 Invite User
             </Button>
-            <Modal 
+            <Modal
                 title="Invite User"
                 open={isModalVisible}
                 okText="Done"
+                okType="default"
                 onOk={() => setIsModalVisible(false)}
                 cancelButtonProps={{ style: { display: 'none' } }}
                 onCancel={() => setIsModalVisible(false)}
             >
-                <Input
-                    placeholder="Enter email"
-                    onPressEnter={(e) => { addInvite((e.target as HTMLInputElement).value); (e.target as HTMLInputElement).value = '' }}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between' }}>
+                    <Input
+                        placeholder="Enter email"
+                        value={mail}
+                        onChange={(e) => setMail(e.target.value)}
+                        onPressEnter={handleAddInvite}
+                    />
+                    <Button type="primary" onClick={handleAddInvite}>
+                        Add
+                    </Button>
+                </div>
             </Modal>
             <Table columns={columns} dataSource={invitedTenders} rowKey="id" />
         </>
