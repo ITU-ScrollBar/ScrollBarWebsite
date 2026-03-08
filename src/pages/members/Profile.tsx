@@ -100,21 +100,12 @@ export default function Profile() {
                 <Row gutter={16} align="top">
                   <Col>
                     <Space direction="vertical" size="small" align="center">
-                      <div
-                        style={{
-                          width: 150,
-                          height: 150,
-                          borderRadius: "50%",
-                          background: "#f0f0f0",
+                      <UserAvatarWithUpload
+                        user={userProfile}
+                        onChange={(url) => {
+                          userProfile.photoUrl = url;
                         }}
-                      >
-                        <UserAvatarWithUpload
-                          user={userProfile}
-                          onChange={(url) => {
-                            userProfile.photoUrl = url;
-                          }}
-                        />
-                      </div>
+                      />
                     </Space>
                   </Col>
                   <Col>
