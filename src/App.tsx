@@ -26,6 +26,7 @@ import ShiftManagement from "./pages/admin/ShiftManagement/ShiftManagement";
 import { InactiveUserPage } from "./pages/InactiveUserPage";
 import dayjs from 'dayjs';
 import updateLocale from 'dayjs/plugin/updateLocale';
+import BoardManagementPage from "./pages/admin/BoardManagement/BoardManagementPage";
 
 
 function App() {
@@ -84,6 +85,12 @@ function App() {
                       <Route
                         path="admin/settings"
                         element={<GlobalSettingsPage />}
+                      />
+                    </Route>
+                    <Route element={<RoleProtectedRoute />}>
+                      <Route
+                        path="admin/board"
+                        element={<BoardManagementPage />}
                       />
                     </Route>
                     <Route
