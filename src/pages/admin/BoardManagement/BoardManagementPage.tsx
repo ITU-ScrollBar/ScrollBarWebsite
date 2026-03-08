@@ -14,6 +14,8 @@ export default function BoardManagementPage() {
     const { boardRolesState, updateBoardRole, addBoardRole, deleteBoardRole } = useBoardRoles();
     const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
     const [editingRoleValue, setEditingRoleValue] = useState<string>("");
+    const [editingSortingIndexId, setEditingSortingIndexId] = useState<string | null>(null);
+    const [editingSortingIndexValue, setEditingSortingIndexValue] = useState<number>(0);
 
     useEffect(() => {
         if (!tenderState.loading && Array.isArray(tenderState.tenders)) {
@@ -41,6 +43,48 @@ export default function BoardManagementPage() {
     };
 
     const columns = useMemo(() => [
+        {
+            title: 'Sort Index',
+            dataIndex: 'sortingIndex',
+            key: 'sortingIndex',
+            width: 80,
+            render: (_: any, record: any) => {
+                if (editingSortingIndexId === record.id) {
+                    const commit = () => {
+                        if (editingSortingIndexValue !== (record.sortingIndex ?? 0)) {
+                            updateBoardRole(record.id, { sortingIndex: editingSortingIndexValue });
+                        }
+                        setEditingSortingIndexId(null);
+                    };
+                    return (
+                        <Input
+                            type="number"
+                            min={0}
+                            value={editingSortingIndexValue}
+                            autoFocus
+                            style={{ width: 60 }}
+                            onChange={e => {
+                                const newIndex = parseInt(e.target.value, 10);
+                                setEditingSortingIndexValue(!isNaN(newIndex) ? newIndex : 0);
+                            }}
+                            onBlur={commit}
+                            onPressEnter={commit}
+                        />
+                    );
+                }
+                return (
+                    <span
+                        style={{ cursor: 'pointer', minWidth: 60, display: 'inline-block' }}
+                        onClick={() => {
+                            setEditingSortingIndexId(record.id);
+                            setEditingSortingIndexValue(record.sortingIndex ?? 0);
+                        }}
+                    >
+                        {record.sortingIndex ?? 0}
+                    </span>
+                );
+            },
+        },
         {
             title: 'Role',
             dataIndex: 'name',
@@ -119,11 +163,14 @@ export default function BoardManagementPage() {
                 </Popconfirm>
             ),
         },
-    ], [editingRoleId, editingRoleValue, boardMembers]);
+    ], [editingRoleId, editingRoleValue, editingSortingIndexId, editingSortingIndexValue, boardMembers]);
 
     if (boardRolesState.loading || tenderState.loading) {
         return <Loading />;
     }
+
+    // Sort roles by sortingIndex for display
+    const sortedRoles = [...boardRolesState.boardRoles].sort((a, b) => (a.sortingIndex ?? 0) - (b.sortingIndex ?? 0));
 
     return (
         <Layout>
@@ -146,7 +193,7 @@ export default function BoardManagementPage() {
                     </Button>
                 </div>
                 <Table
-                    dataSource={boardRolesState.boardRoles}
+                    dataSource={sortedRoles}
                     columns={columns}
                     rowKey="id"
                     pagination={false}

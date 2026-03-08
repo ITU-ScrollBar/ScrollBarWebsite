@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import { addRole, deleteRole, streamRoles, updateRole } from '../firebase/api/boardRoles';
-import { BoardRole, Settings, Tender } from '../types/types-file';
+import { BoardRole, Tender } from '../types/types-file';
 import { message } from 'antd';
-import { useNextEvent } from './useEvents';
-import { snapshot } from 'node:test';
 
 type BoardRolesState = {
     loading: boolean;
@@ -12,7 +10,7 @@ type BoardRolesState = {
 
 type UseBoardRolesReturn = {
     boardRolesState: BoardRolesState;
-    updateBoardRole: (id: string, update: { name?: string; assignedUser?: import('../types/types-file').Tender }) => void;
+    updateBoardRole: (id: string, update: { name?: string; assignedUser?: Tender; sortingIndex?: number }) => void;
     addBoardRole: (name: string) => void;
     deleteBoardRole: (id: string) => void;
 }
@@ -43,13 +41,15 @@ export default function useBoardRoles(): UseBoardRolesReturn {
         return unsubscribe;
     }, []);
 
-    const updateBoardRole = (id: string, update: { name?: string; assignedUser?: Tender }) => {
+    const updateBoardRole = (id: string, update: { name?: string; assignedUser?: Tender; sortingIndex?: number }) => {
         console.log('Updating role with id:', id, 'and update:', update); // Debug log to check the id and update being passed
         updateRole(id, update);
         if (update.name) {
             message.success(`Updated role name to ${update.name} successfully`);
         } else if (update.assignedUser) {
             message.success(`Assigned user ${update.assignedUser.displayName} to role successfully`);
+        } else if (update.sortingIndex !== undefined) {
+            message.success(`Updated role sorting index to ${update.sortingIndex} successfully`);
         } else {
             message.success('Updated board role successfully');
         }

@@ -225,7 +225,8 @@ export type TeamCreateParams = {
 };
 
 export interface BoardRole {
-    id: string;
-    name: string;
-    assignedUser?: Tender;
+  id: string;
+  name: string;
+  assignedUser?: Tender;
+  sortingIndex?: number;
 }
