@@ -173,13 +173,13 @@ export default function BoardManagementPage() {
     const sortedRoles = [...boardRolesState.boardRoles].sort((a, b) => (a.sortingIndex ?? 0) - (b.sortingIndex ?? 0));
 
     return (
-        <Layout>
+        <Layout style={{ padding: 24 }}>
             <Header style={{ background: '#fff', padding: 0 }}>
                 <Typography.Title level={3} style={{ margin: 0 }}>
                     Board Management
                 </Typography.Title>
             </Header>
-            <Content style={{ margin: 24 }}>
+            <Content>
                 <div style={{ marginBottom: 24, display: 'flex', gap: 8 }}>
                     <Input
                         placeholder="New role name"

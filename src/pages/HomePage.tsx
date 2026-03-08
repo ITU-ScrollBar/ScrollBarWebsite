@@ -267,9 +267,9 @@ const UserList = ({ users }: { users: TenderWithRole[]}) => {
             <UserAvatar user={user} size={95} showHats={false} />
             <div style={{ marginTop: 8, textAlign: 'center' }}>{getTenderDisplayName(user)}</div>
             {user.role && (
-              <div style={{ marginTop: 8, textAlign: 'center' }}>{user.role.name}</div>
+              <div style={{ marginTop: 8, textAlign: 'center', fontStyle: 'italic' }}>{user.role.name}</div>
             )}
-            <div style={{ marginTop: 8, textAlign: 'center' }}>{studylines.find(sl => sl.id === user.studyline)?.abbreviation?.toLocaleUpperCase()}</div>
+            <div style={{ marginTop: 8, textAlign: 'center', color: 'grey' }}>{studylines.find(sl => sl.id === user.studyline)?.abbreviation?.toLocaleUpperCase()}</div>
           </div>
         </List.Item>
       )}
