@@ -22,7 +22,6 @@ import StudyLinePicker from "../../pages/members/StudyLinePicker";
 import { UserAvatarWithUpload } from "../UserAvatar";
 import { useWindowSize } from "../../hooks/useWindowSize";
 import RoleTag from "../RoleTag";
-import { roleToLabel } from "../../pages/members/helpers";
 import useTeams from "../../hooks/useTeams";
 import { Loading } from "../Loading";
 import { getFunctions, httpsCallable } from "firebase/functions";
@@ -159,14 +158,35 @@ export const ExistingUsersTab = () => {
     return <Loading />;
   }
 
+  const removeAllNewbieHats = () => {
+    tenderState.tenders
+      .filter(tender => tender.roles?.includes(Role.NEWBIE))
+      .forEach(tender => {
+        let newRoles = tender.roles?.filter(role => role !== Role.NEWBIE);
+        updateTender(tender.uid, "roles", newRoles);
+      });
+  }
+
   return (
     <>
-      <Input
-        placeholder="Search by name or email..."
-        value={searchValue}
-        onChange={(e) => setSearchValue(e.target.value)}
-        style={{ marginBottom: "16px", maxWidth: "300px" }}
-      />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+        <Input
+          placeholder="Search by name or email..."
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+          style={{ marginBottom: "16px", maxWidth: "300px" }}
+          />
+        <Popconfirm
+          title="Are you sure you want to remove all newbie hats?"
+          okText="Yes"
+          cancelText="No"
+          onConfirm={removeAllNewbieHats}
+          >
+          <Button type='default'>
+            Remove all newbie hats
+          </Button>
+        </Popconfirm>
+      </div>
       <Table columns={columns} dataSource={filteredData} rowKey="uid" />
       <Drawer
         title="Edit User"

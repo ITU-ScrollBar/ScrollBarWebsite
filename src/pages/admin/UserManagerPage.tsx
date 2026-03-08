@@ -1,4 +1,4 @@
-import { Layout, Tabs, Space, TabsProps, Typography, Button, Popconfirm } from "antd";
+import { Layout, Tabs, TabsProps, Typography } from "antd";
 import { UserAddOutlined } from "@ant-design/icons";
 import { InvitedUsersTab } from "../../components/UserPage/InvitedUsersTab";
 import { ExistingUsersTab } from "../../components/UserPage/ExistingUsersTab";
@@ -44,15 +44,6 @@ const UserManagerPage = () => {
     return <Loading />;
   }
 
-  const deleteAllNewbieHats = () => {
-    tenderState.tenders
-      .filter(tender => tender.roles?.includes(Role.NEWBIE))
-      .forEach(tender => {
-        let newRoles = tender.roles?.filter(role => role !== Role.NEWBIE);
-        updateTender(tender.uid, "roles", newRoles);
-      });
-  }
-
   return (
     <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
       <Content style={{ padding: "24px" }}>
@@ -64,21 +55,11 @@ const UserManagerPage = () => {
             boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
           }}
         >
-          <Header style={{ background: '#fff', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} >
+          <Header style={{ background: '#fff', padding: 0 }} >
             <Typography.Title level={3} style={{ margin: 0 }}>
               <UserAddOutlined style={{ marginRight: "12px" }} />
               User Manager
             </Typography.Title>
-            <Popconfirm
-              title="Are you sure you want to remove all newbie hats?"
-              okText="Yes"
-              cancelText="No"
-              onConfirm={deleteAllNewbieHats}
-            >
-              <Button type='default'>
-                Remove all newbie hats
-              </Button>
-            </Popconfirm>
           </Header>
 
           <Tabs
