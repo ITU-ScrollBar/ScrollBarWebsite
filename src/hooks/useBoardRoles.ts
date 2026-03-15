@@ -29,7 +29,6 @@ export default function useBoardRoles(): UseBoardRolesReturn {
                     ...doc.data(),
                     id: doc.id
                 })) as BoardRole[];
-                console.log("Loaded data:", data);
                 const rolesArray = Array.isArray(data) ? data : [data];
                 setBoardRolesState((prev) => ({ ...prev, boardRoles: rolesArray, loading: false }));
             },
@@ -42,7 +41,6 @@ export default function useBoardRoles(): UseBoardRolesReturn {
     }, []);
 
     const updateBoardRole = (id: string, update: { name?: string; assignedUser?: Tender; sortingIndex?: number }) => {
-        console.log('Updating role with id:', id, 'and update:', update); // Debug log to check the id and update being passed
         updateRole(id, update);
         if (update.name) {
             message.success(`Updated role name to ${update.name} successfully`);

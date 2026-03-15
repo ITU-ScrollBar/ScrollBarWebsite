@@ -33,14 +33,10 @@ export const addRole = async (role: { name: string }) => {
 
 export const updateRole = async (id: string, data: Partial<{ name: string; assignedUser: Tender }>) => {
   const docRef = doc(getRolesCollection(), id);
-  console.log('Updating role with id:', id, 'and data:', data); // Debug log to check the id and data being passed
-  console.log(docRef);
   return updateDoc(docRef, data);
 };
 
 export const deleteRole = async (id: string) => {
-  console.log('Deleting role with id:', id); // Debug log to check the id being passed
-  console.log('Roles collection path:', getRolesCollection().path); // Debug log to check the collection path
   const docRef = doc(getRolesCollection(), id);
   return deleteDoc(docRef);
 };
