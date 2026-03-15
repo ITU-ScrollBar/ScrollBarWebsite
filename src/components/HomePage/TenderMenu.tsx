@@ -77,6 +77,10 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
       adminItems.push({
         label: 'System Settings',
         key: 'admin/settings',
+      },
+      {
+        label: "Board Management",
+        key: "admin/board",
       });
     }
     items.push({ label: 'Admin', key: 'admin', children: adminItems });

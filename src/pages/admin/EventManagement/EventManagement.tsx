@@ -26,7 +26,6 @@ export default function EventManagement() {
   : sortedEvents;
   
   const findNextAvailableFridayAt15 = () => {
-    console.log(sortedEvents);
     const lastEvent = sortedEvents.length > 0
       ? sortedEvents[sortedEvents.length - 1].end
       : new Date(); // If no events, start from today

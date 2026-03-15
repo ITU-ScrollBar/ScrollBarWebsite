@@ -6,9 +6,10 @@ import HeaderBar from '../components/HomePage/HeaderBar'
 import useSettings from '../hooks/useSettings'
 import MDEditor from '@uiw/react-md-editor'
 import useTenders from '../hooks/useTenders'
+import useBoardRoles from '../hooks/useBoardRoles'
 import { UserAvatar } from '../components/UserAvatar'
 import { getTenderDisplayName } from './members/helpers'
-import { Role, StudyLine, Tender } from '../types/types-file'
+import { BoardRole, Role, StudyLine, Tender } from '../types/types-file'
 import { getStudyLines } from '../firebase/api/authentication'
 import { Loading } from '../components/Loading'
 import CountDown from '../components/EventPage/EventCountDown'
@@ -17,13 +18,22 @@ import { useLocation } from 'react-router-dom'
 
 let cachedStudylines: StudyLine[] | null = null;
 let cachePromise: Promise<StudyLine[]> | null = null;
+type TenderWithRole = Tender & { role?: BoardRole };
 
 export default function HomePage() {
   const { settingsState } = useSettings();
   const { tenderState } = useTenders();
+  const { boardRolesState } = useBoardRoles();
   const { nextEvent, loading: eventLoading } = useNextEvent();
-  const activeTenders = useMemo(() => tenderState.tenders.filter(t => !t.roles?.includes(Role.BOARD) && t?.active), [tenderState.tenders]);
-  const boardMembers = useMemo(() => tenderState.tenders.filter(t => t.roles?.includes(Role.BOARD)), [tenderState.tenders]);
+  // Board members: use boardRoles, sorted by sortingIndex, showing assigned users
+  const boardMembers = useMemo(() => {
+    if (!boardRolesState.boardRoles) return [];
+    return [...boardRolesState.boardRoles]
+      .sort((a, b) => (a.sortingIndex ?? 0) - (b.sortingIndex ?? 0))
+      .filter((role) => !!role.assignedUser) // Only show for assigned roles
+      .map(role => ({ ...role.assignedUser, role } as TenderWithRole)); // Map to assigned user with role info
+  }, [boardRolesState.boardRoles]);
+  const activeTenders = useMemo(() => tenderState.tenders.filter(t => !t.roles?.includes(Role.BOARD) && t?.active && !boardMembers.includes(t)), [tenderState.tenders]);
   const { state } = useLocation();
   const { targetId } = state || {};
 
@@ -34,7 +44,7 @@ export default function HomePage() {
     }
   }, [targetId, settingsState.loading]);
 
-  if (settingsState.loading) {
+  if (settingsState.loading || boardRolesState.loading) {
     return <Loading centerOverlay={true} />;
   }
 
@@ -176,7 +186,7 @@ export default function HomePage() {
               alignItems: 'center',
             }}
           >
-            <Title level={2} style={{ scrollMarginTop: '135px' }} id="volunteers">
+            <Title level={2} style={{ scrollMarginTop: '135px' }} id="boardMembers">
               The Board
             </Title>
             <UserList users={boardMembers} />
@@ -205,8 +215,17 @@ export default function HomePage() {
   )
 }
 
-const UserList = ({ users }: { users: Tender[] }) => {
+const UserList = ({ users }: { users: TenderWithRole[]}) => {
   const [studylines, setStudylines] = React.useState<StudyLine[]>([]);
+
+  if (users.some(u => u.role)) {
+    users.sort((a, b) => {
+      if (a.role && b.role) {
+        return (a.role.sortingIndex ?? 0) - (b.role.sortingIndex ?? 0);
+      }
+      return 0;
+    });
+  }
 
   useEffect(() => {
     // If already cached, use it immediately
@@ -245,9 +264,12 @@ const UserList = ({ users }: { users: Tender[] }) => {
       renderItem={(user) => (
         <List.Item>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            {user.role && (
+              <div style={{ marginTop: 8, textAlign: 'center', fontWeight: 'bold' }}>{user.role.name}</div>
+            )}
             <UserAvatar user={user} size={95} showHats={false} />
             <div style={{ marginTop: 8, textAlign: 'center' }}>{getTenderDisplayName(user)}</div>
-            <div style={{ marginTop: 8, textAlign: 'center' }}>{studylines.find(sl => sl.id === user.studyline)?.abbreviation?.toLocaleUpperCase()}</div>
+            <div style={{ marginTop: 8, textAlign: 'center', color: 'grey' }}>{studylines.find(sl => sl.id === user.studyline)?.abbreviation?.toLocaleUpperCase()}</div>
           </div>
         </List.Item>
       )}

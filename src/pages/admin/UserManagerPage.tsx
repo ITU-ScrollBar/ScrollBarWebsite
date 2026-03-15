@@ -1,4 +1,4 @@
-import { Layout, Tabs, Space, TabsProps } from "antd";
+import { Layout, Tabs, TabsProps, Typography } from "antd";
 import { UserAddOutlined } from "@ant-design/icons";
 import { InvitedUsersTab } from "../../components/UserPage/InvitedUsersTab";
 import { ExistingUsersTab } from "../../components/UserPage/ExistingUsersTab";
@@ -8,6 +8,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { Role } from "../../types/types-file";
 import Loading from "../../components/Loading";
+import { Header } from "antd/es/layout/layout";
+import useTenders from "../../hooks/useTenders";
 
 const { Content } = Layout;
 
@@ -15,6 +17,7 @@ const UserManagerPage = () => {
   const { isMobile } = useWindowSize();
   const [tabItems, setTabItems] = useState<TabsProps["items"]>([]);
   const { currentUser, loading } = useAuth();
+  const { tenderState, updateTender } = useTenders();
 
   useEffect(() => {
     const teamsTab = { key: "teams", label: "Teams", children: <TeamsTab /> };
@@ -52,16 +55,12 @@ const UserManagerPage = () => {
             boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
           }}
         >
-          <Space
-            direction="vertical"
-            style={{ width: "100%", marginBottom: "24px" }}
-            size="large"
-          >
-            <h1 style={{ margin: 0, fontSize: "24px", fontWeight: 600 }}>
+          <Header style={{ background: '#fff', padding: 0 }} >
+            <Typography.Title level={3} style={{ margin: 0 }}>
               <UserAddOutlined style={{ marginRight: "12px" }} />
               User Manager
-            </h1>
-          </Space>
+            </Typography.Title>
+          </Header>
 
           <Tabs
             tabPosition={isMobile ? "top" : "left"}
