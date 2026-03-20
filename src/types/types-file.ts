@@ -224,6 +224,7 @@ export type TeamCreateParams = {
   name: string;
 };
 
+// BoardRole is used in the app and always has a resolved assignedUser (Tender object)
 export interface BoardRole {
   id: string;
   name: string;

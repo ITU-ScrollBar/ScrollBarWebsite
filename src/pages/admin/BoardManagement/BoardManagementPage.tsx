@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import useTenders from "../../../hooks/useTenders";
-import { Tender, Role } from "../../../types/types-file";
+import { Tender, Role, BoardRole } from "../../../types/types-file";
 import { Layout, message, Input, Button, Table, Select, Popconfirm, Typography } from "antd";
 import useBoardRoles from "../../../hooks/useBoardRoles";
 import Loading from "../../../components/Loading";
@@ -132,7 +132,7 @@ export default function BoardManagementPage() {
             render: (_: any, record: any) => (
                 <Select
                     style={{ minWidth: 160 }}
-                    value={record.assignedUser ? record.assignedUser.uid : ''}
+                    value={record.assignedUser ? record.assignedUser.id : ''}
                     onChange={(uid) => {
                         const selectedUser = boardMembers.find((user) => user.uid === uid);
                         handleAssignUser(record.id, selectedUser as Tender);
