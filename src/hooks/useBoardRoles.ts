@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { addRole, deleteRole, streamRoles, updateRole } from '../firebase/api/boardRoles';
 import { BoardRole, Tender } from '../types/types-file';
+import { getDocument } from '../firebase/api/common';
 import { message } from 'antd';
+import { DocumentReference, getDoc } from 'firebase/firestore';
 
 type BoardRolesState = {
     loading: boolean;
@@ -15,6 +17,15 @@ type UseBoardRolesReturn = {
     deleteBoardRole: (id: string) => void;
 }
 
+// Type used to represent a board role but with a reference to the user
+// Must be converted to BoardRole and never exported in this format
+interface FirebaseBoardRole {
+  id: string;
+  name: string;
+  assignedUserRef?: DocumentReference;
+  sortingIndex?: number;
+}
+
 export default function useBoardRoles(): UseBoardRolesReturn {
     const [boardRolesState, setBoardRolesState] = useState<BoardRolesState>({
         loading: true,
@@ -24,13 +35,25 @@ export default function useBoardRoles(): UseBoardRolesReturn {
     useEffect(() => {
         setBoardRolesState((prev) => ({ ...prev, loading: true }));
         const unsubscribe = streamRoles(
-            (snapshot) => {
-                const data = snapshot.docs.map((doc) => ({
-                    ...doc.data(),
-                    id: doc.id
-                })) as BoardRole[];
-                const rolesArray = Array.isArray(data) ? data : [data];
-                setBoardRolesState((prev) => ({ ...prev, boardRoles: rolesArray, loading: false }));
+            async (snapshot) => {
+                // Map FirebaseBoardRole and resolve assignedUser
+                const roles = await Promise.all(snapshot.docs.map(async (doc) => {
+                    const data = doc.data() as FirebaseBoardRole;
+                    let snapshot = await getDoc(data.assignedUserRef as DocumentReference);
+                    let assignedUser: Tender | undefined = undefined;
+                    if (snapshot.exists()) {
+                        assignedUser = { uid: snapshot.id, ...snapshot.data() } as unknown as Tender;
+                    };
+
+                    return {
+                        id: doc.id,
+                        name: data.name,
+                        assignedUser,
+                        sortingIndex: data.sortingIndex,
+                    } as BoardRole;
+                }));
+
+                setBoardRolesState((prev) => ({ ...prev, boardRoles: roles, loading: false }));
             },
             (error: Error) => {
                 message.error('An error occurred loading board roles: ' + error.message);

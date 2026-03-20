@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import useTenders from "../../../hooks/useTenders";
-import { Tender, Role } from "../../../types/types-file";
+import { Tender, Role, BoardRole } from "../../../types/types-file";
 import { Layout, message, Input, Button, Table, Select, Popconfirm, Typography } from "antd";
 import useBoardRoles from "../../../hooks/useBoardRoles";
 import Loading from "../../../components/Loading";
@@ -48,7 +48,7 @@ export default function BoardManagementPage() {
             dataIndex: 'sortingIndex',
             key: 'sortingIndex',
             width: 80,
-            render: (_: any, record: any) => {
+            render: (_: any, record: BoardRole) => {
                 if (editingSortingIndexId === record.id) {
                     const commit = () => {
                         if (editingSortingIndexValue !== (record.sortingIndex ?? 0)) {
@@ -89,7 +89,7 @@ export default function BoardManagementPage() {
             title: 'Role',
             dataIndex: 'name',
             key: 'name',
-            render: (_: string, record: any) => {
+            render: (_: string, record: BoardRole) => {
                 if (editingRoleId === record.id) {
                     return (
                         <Input
@@ -129,7 +129,7 @@ export default function BoardManagementPage() {
             title: 'Assigned User',
             dataIndex: 'assignedUser',
             key: 'assignedUser',
-            render: (_: any, record: any) => (
+            render: (_: any, record: BoardRole) => (
                 <Select
                     style={{ minWidth: 160 }}
                     value={record.assignedUser ? record.assignedUser.uid : ''}
@@ -152,7 +152,7 @@ export default function BoardManagementPage() {
         {
             title: 'Actions',
             key: 'actions',
-            render: (_: any, record: any) => (
+            render: (_: any, record: BoardRole) => (
                 <Popconfirm
                     title="Are you sure to delete this role?"
                     onConfirm={() => handleDeleteRole(record.id)}
