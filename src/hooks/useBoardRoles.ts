@@ -3,6 +3,7 @@ import { addRole, deleteRole, streamRoles, updateRole } from '../firebase/api/bo
 import { BoardRole, Tender } from '../types/types-file';
 import { getDocument } from '../firebase/api/common';
 import { message } from 'antd';
+import { DocumentReference, getDoc } from 'firebase/firestore';
 
 type BoardRolesState = {
     loading: boolean;
@@ -21,7 +22,7 @@ type UseBoardRolesReturn = {
 interface FirebaseBoardRole {
   id: string;
   name: string;
-  assignedUserId?: string;
+  assignedUserRef?: DocumentReference;
   sortingIndex?: number;
 }
 
@@ -37,17 +38,13 @@ export default function useBoardRoles(): UseBoardRolesReturn {
             async (snapshot) => {
                 // Map FirebaseBoardRole and resolve assignedUser
                 const roles = await Promise.all(snapshot.docs.map(async (doc) => {
-                    const data = doc.data() as any;
-                    // Always extract assignedUserId from assignedUserRef.id if present
-                    let assignedUserId: string | undefined = undefined;
-                    if (data.assignedUserRef?.id) {
-                        assignedUserId = data.assignedUserRef.id;
-                    }
+                    const data = doc.data() as FirebaseBoardRole;
+                    let snapshot = await getDoc(data.assignedUserRef as DocumentReference);
                     let assignedUser: Tender | undefined = undefined;
-                    if (assignedUserId) {
-                        const user = await getDocument('users', assignedUserId, false);
-                        if (user) assignedUser = user as unknown as Tender;
-                    }
+                    if (snapshot.exists()) {
+                        assignedUser = { id: snapshot.id, ...snapshot.data() } as unknown as Tender;
+                    };
+
                     return {
                         id: doc.id,
                         name: data.name,

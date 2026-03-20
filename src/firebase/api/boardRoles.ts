@@ -32,31 +32,27 @@ export const streamRoles = (next: (snapshot: QuerySnapshot<DocumentData>) => voi
   return onSnapshot(q, next, error);
 };
 
-
-/**
- * Add a board role. If assignedUserId is provided, stores a reference to the user.
- */
-export const addRole = async (role: { name: string; assignedUserId?: string }) => {
+export const addRole = async (role: { name: string }) => {
   const data: any = { name: role.name };
-  if (role.assignedUserId) {
-    data.assignedUserRef = getUserRef(role.assignedUserId);
-  }
   return addDoc(getRolesCollection(), data);
 };
 
 
 /**
- * Update a board role. If assignedUserId is provided, stores a reference to the user.
+ * Update a board role. If assignedUser is provided, stores a reference to the user.
  */
 export const updateRole = async (
   id: string,
-  data: Partial<{ name: string; assignedUser: Tender }>
+  data: Partial<{ name: string; assignedUser: Tender; sortingIndex: number }>
 ) => {
   const docRef = doc(getRolesCollection(), id);
   const updateData: any = {};
   if (data.name !== undefined) updateData.name = data.name;
   if (data.assignedUser?.uid !== undefined) {
     updateData.assignedUserRef = data.assignedUser.uid ? getUserRef(data.assignedUser.uid) : null;
+  }
+  if (data.sortingIndex !== undefined) {
+    updateData.sortingIndex = data.sortingIndex;
   }
   return updateDoc(docRef, updateData);
 };
