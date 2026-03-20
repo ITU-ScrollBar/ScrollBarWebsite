@@ -42,7 +42,7 @@ export default function useBoardRoles(): UseBoardRolesReturn {
                     let snapshot = await getDoc(data.assignedUserRef as DocumentReference);
                     let assignedUser: Tender | undefined = undefined;
                     if (snapshot.exists()) {
-                        assignedUser = { id: snapshot.id, ...snapshot.data() } as unknown as Tender;
+                        assignedUser = { uid: snapshot.id, ...snapshot.data() } as unknown as Tender;
                     };
 
                     return {
