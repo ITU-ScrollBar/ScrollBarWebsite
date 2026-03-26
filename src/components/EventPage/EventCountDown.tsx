@@ -29,9 +29,12 @@ export default function CountDown({ nextEvent }: CountDownProps) {
 
   if (!nextEvent) return null;
 
+  const endDiff = nextEvent.end.getTime() - new Date().getTime();
+  const endDiffDays = Math.floor(endDiff / (1000 * 60 * 60 * 24));
+
   const showClosedWeekMessage = !timeLeft.loading
     && !timeLeft.isOpen
-    && (timeLeft.days >= 7 && new Date().getDay() !== 5);
+    && endDiffDays >= 7;
 
   return (
     <div
