@@ -2,7 +2,6 @@ import {
   collection,
   doc,
   addDoc,
-  deleteDoc,
   updateDoc,
   query,
   onSnapshot,
@@ -35,11 +34,11 @@ export const createEvent = (event: EventCreateParams): Promise<DocumentData> => 
 };
 
 /**
- * Deletes an event by ID.
+ * Soft deletes an event by ID.
  */
 export const deleteEvent = (id: string): Promise<void> => {
   const docRef = doc(getEventsCollection(), id);
-  return deleteDoc(docRef);
+  return updateDoc(docRef, { deleted: true });
 };
 
 /**
@@ -64,7 +63,10 @@ export const updateEvent = ({
 
 export const streamEvents = (observer: { next: (snapshot: QuerySnapshot<DocumentData>) => void; error: (error: Error) => void }): Unsubscribe => {
   const eventsRef = collection(db, 'env', env, 'events');
-  const q = query(eventsRef); // Add any additional filters or ordering as needed
+  const q = query(
+    eventsRef,
+    where('deleted', '!=', true)
+  );
 
   // Return the unsubscribe function from onSnapshot
   return onSnapshot(q, observer.next, observer.error);
@@ -80,6 +82,7 @@ export const streamNextEvent = (observer: { next: (snapshot: QuerySnapshot<Docum
     eventsRef,
     where('end', '>', now),
     where('published', '==', true),
+    where('deleted', '!=', true),
     orderBy('start', 'asc'),
     limit(1)
   );

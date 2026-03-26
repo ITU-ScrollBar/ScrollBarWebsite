@@ -3,8 +3,6 @@ import * as admin from 'firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 import { createEvents, EventAttributes } from 'ics';
 import { InternalEvent, Tender, Event } from './types/types-file';
-import { logger } from 'firebase-functions/v2';
-
 
 // Safe admin init (prevents multiple inits during local tests)
 if (!admin.apps.length) {
@@ -39,9 +37,11 @@ type User = {
   displayName: string;
 }
 
+type FirebaseEvent = Event & { deleted: boolean }
+
 type MapToIcsEventProps = {
   shift: Shift;
-  event: Event;
+  event: FirebaseEvent;
   shiftMembers: Array<{ type: "anchor" | "tender"; name: string }>;
 }
 
@@ -165,7 +165,7 @@ const handleShifts = async (uid: string, env: string): Promise<EventAttributes[]
       .get();
 
     const eventsMap = eventsSnapshot.docs.map(doc => {
-      const d = doc.data() as Event;
+      const d = doc.data() as FirebaseEvent;
       
       return {...d, id: doc.id};
     });
@@ -193,7 +193,7 @@ const handleShifts = async (uid: string, env: string): Promise<EventAttributes[]
         const user = relatedUsersMap.find(u => u.id === e.userId);
         return { type: e.type, name: user?.displayName ?? "Unknown user" };
       });
-      if (!event || !shift || !event.shiftsPublished) continue;
+      if (!event || event.deleted || !shift || !event.shiftsPublished) continue;
       const e = mapDocToIcsEvent({ shift: shift, event, shiftMembers });
       if (e) events.push(e);
     }
