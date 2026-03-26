@@ -297,7 +297,7 @@ export default function EventInfo(props: { event: Event }) {
         showTime
         value={dayjs(props.event.start)}
         onChange={(value) =>
-          updateEvent(props.event.id, "start", value.toDate())
+          updateEvent(props.event.id, "start", value?.toDate())
         }
       />
       {" To: "}
@@ -305,7 +305,7 @@ export default function EventInfo(props: { event: Event }) {
         format="DD-MM-YYYY HH:mm"
         showTime
         value={dayjs(props.event.end)}
-        onChange={(value) => updateEvent(props.event.id, "end", value.toDate())}
+        onChange={(value) => updateEvent(props.event.id, "end", value?.toDate())}
       />
       <br />
       <Tabs

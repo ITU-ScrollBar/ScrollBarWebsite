@@ -57,14 +57,16 @@ const useEvents = () => {
           };
         });
 
+        const now = new Date(Date.now());
+
         setEventState({
           loading: false,
           isLoaded: true,
           events: updatedEvents.filter(
-            (_event) => _event.end >= new Date(Date.now())
+            (_event) => _event.end >= now
           ),
           previousEvents: updatedEvents.filter(
-            (_event) => _event.end < new Date(Date.now())
+            (_event) => _event.end < now
           ),
         });
       },
