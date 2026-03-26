@@ -27,7 +27,6 @@ type EventFirebase = {
   published: boolean;
   shiftsPublished: boolean;
   internal: boolean;
-  deleted?: boolean;
 };
 
 
