@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import useTenders from "../../../hooks/useTenders";
 import { Tender, Role, BoardRole } from "../../../types/types-file";
 import { Layout, message, Input, Button, Table, Select, Popconfirm, Typography } from "antd";
@@ -33,14 +33,14 @@ export default function BoardManagementPage() {
         setNewRole("");
     };
 
-    const handleAssignUser = async (roleId: string, user: Tender) => {
+    const handleAssignUser = useCallback(async (roleId: string, user: Tender) => {
         await updateBoardRole(roleId, { assignedUser: user });
-    };
+    }, [updateBoardRole]);
 
-    const handleDeleteRole = async (roleId: string) => {
+    const handleDeleteRole = useCallback(async (roleId: string) => {
         message.info('Deleting role... ' + roleId);
         deleteBoardRole(roleId);
-    };
+    }, [deleteBoardRole]);
 
     const columns = useMemo(() => [
         {
@@ -163,7 +163,7 @@ export default function BoardManagementPage() {
                 </Popconfirm>
             ),
         },
-    ], [editingRoleId, editingRoleValue, editingSortingIndexId, editingSortingIndexValue, boardMembers]);
+    ], [editingRoleId, editingRoleValue, editingSortingIndexId, editingSortingIndexValue, boardMembers, handleAssignUser, handleDeleteRole, updateBoardRole]);
 
     if (boardRolesState.loading || tenderState.loading) {
         return <Loading />;

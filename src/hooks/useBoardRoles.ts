@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { addRole, deleteRole, streamRoles, updateRole } from '../firebase/api/boardRoles';
 import { BoardRole, Tender } from '../types/types-file';
-import { getDocument } from '../firebase/api/common';
 import { message } from 'antd';
 import { DocumentReference, getDoc } from 'firebase/firestore';
 
@@ -39,7 +38,7 @@ export default function useBoardRoles(): UseBoardRolesReturn {
                 // Map FirebaseBoardRole and resolve assignedUser
                 const roles = await Promise.all(snapshot.docs.map(async (doc) => {
                     const data = doc.data() as FirebaseBoardRole;
-                    let snapshot = await getDoc(data.assignedUserRef as DocumentReference);
+                    const snapshot = await getDoc(data.assignedUserRef as DocumentReference);
                     let assignedUser: Tender | undefined = undefined;
                     if (snapshot.exists()) {
                         assignedUser = { uid: snapshot.id, ...snapshot.data() } as unknown as Tender;

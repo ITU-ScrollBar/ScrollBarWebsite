@@ -4,7 +4,7 @@ import './index.css'
 import App from './App.tsx'
 import '@ant-design/v5-patch-for-react-19';
 
-import { AuthProvider } from './contexts/AuthContext'; // Adjust path
+import { AuthProvider } from './contexts/AuthContext';
 import { EventProvider } from './contexts/EventContext.tsx';
 import { TenderProvider } from './contexts/TenderContext.tsx';
 

@@ -33,7 +33,9 @@ export default function HomePage() {
       .filter((role) => !!role.assignedUser) // Only show for assigned roles
       .map(role => ({ ...role.assignedUser, role } as TenderWithRole)); // Map to assigned user with role info
   }, [boardRolesState.boardRoles]);
-  const activeTenders = useMemo(() => tenderState.tenders.filter(t => !t.roles?.includes(Role.BOARD) && t?.active && !boardMembers.includes(t)), [tenderState.tenders]);
+  const activeTenders = useMemo(() => { 
+    return tenderState.tenders.filter(t => !t.roles?.includes(Role.BOARD) && t?.active && !boardMembers.includes(t))
+  }, [tenderState.tenders, boardMembers]);
   const { state } = useLocation();
   const { targetId } = state || {};
 

@@ -1,7 +1,7 @@
 import { Tooltip, Button, TableColumnType, Table, Modal, Form, Input, Popconfirm, Select } from "antd";
 import useTeams from "../../hooks/useTeams";
 import { Team } from "../../types/types-file";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import useTenders from "../../hooks/useTenders";
 
@@ -12,9 +12,9 @@ export const TeamsTab = () => {
     const [form] = Form.useForm<Team & { members: string[] }>();
     const { tenderState, updateTender } = useTenders();
 
-    const teamWithTenders = (team: Team) => {
+    const teamWithTenders = useCallback((team: Team) => {
         return tenderState.tenders.filter(tender => tender.teamIds?.includes(team.id));
-    }
+    }, [tenderState.tenders]);
 
     const columns: TableColumnType<Team>[] = [
         { title: 'Team Name', dataIndex: 'name', key: 'name' },
@@ -51,7 +51,7 @@ export const TeamsTab = () => {
                 members: teamWithTenders(editingTeam).map(tender => tender.uid),
             });
         }
-    }, [editingTeam]);
+    }, [editingTeam, form, teamWithTenders]);
 
     return <>
         <Table columns={columns} dataSource={teamState.teams} rowKey="id" footer={() => <Button type="primary" onClick={() => {setEditingTeam(null); setIsModalOpen(true)}}>Add team</Button>} />

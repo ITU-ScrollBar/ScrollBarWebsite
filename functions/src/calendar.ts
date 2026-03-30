@@ -3,7 +3,6 @@ import * as admin from 'firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 import { createEvents, EventAttributes } from 'ics';
 import { InternalEvent, Tender, Event } from './types/types-file';
-import { logger } from 'firebase-functions/v2';
 
 
 // Safe admin init (prevents multiple inits during local tests)

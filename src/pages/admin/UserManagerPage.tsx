@@ -9,7 +9,6 @@ import { useAuth } from "../../contexts/AuthContext";
 import { Role } from "../../types/types-file";
 import Loading from "../../components/Loading";
 import { Header } from "antd/es/layout/layout";
-import useTenders from "../../hooks/useTenders";
 
 const { Content } = Layout;
 
@@ -17,7 +16,6 @@ const UserManagerPage = () => {
   const { isMobile } = useWindowSize();
   const [tabItems, setTabItems] = useState<TabsProps["items"]>([]);
   const { currentUser, loading } = useAuth();
-  const { tenderState, updateTender } = useTenders();
 
   useEffect(() => {
     const teamsTab = { key: "teams", label: "Teams", children: <TeamsTab /> };

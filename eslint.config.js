@@ -9,7 +9,7 @@ import unusedImports from 'eslint-plugin-unused-imports';
 export default [
   // Global ignores
   {
-    ignores: ['node_modules/**', 'dist/**', 'build/**', 'coverage/**'],
+    ignores: ['node_modules/**', 'dist/**', 'build/**', 'coverage/**', 'functions/**', 'public/assets/**'],
   },
 
   // Base JS rules
@@ -43,7 +43,7 @@ export default [
       // Hooks
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'off', // Allow 'any' for flexibility, but consider enabling with exceptions later
       'no-useless-catch': 'warn',
 
 

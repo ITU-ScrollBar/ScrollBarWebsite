@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import type { MenuProps } from 'antd';
 import { ConfigProvider, Menu } from "antd";
@@ -17,14 +17,9 @@ interface TenderMenuProps {
 type MenuItem = Required<MenuProps>['items'][number];
 
 export const TenderMenu = ({ children }: TenderMenuProps) => {
-  const [current, setCurrent] = useState('tab');
   const { currentUser, loading, logout } = useAuth();
   const navigate = useNavigate();
   const { isMobile } = useWindowSize();
-
-  if (loading || !currentUser) {
-    return <Loading />
-  }
 
   const items: MenuItem[] = [
     {
@@ -40,6 +35,10 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
       key: 'tenders/upforgrabs',
     }
   ];
+
+  if (loading || !currentUser) {
+    return <Loading />
+  }
 
   if (
     currentUser?.isAdmin 
@@ -86,15 +85,6 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
     items.push({ label: 'Admin', key: 'admin', children: adminItems });
   }
 
-  useEffect(() => {
-    const currentPage = items.find(item => item?.key?.toString() && location.pathname.endsWith(item?.key?.toString()));
-    if (currentPage) {
-      setCurrent(currentPage.key as string);
-    } else {
-      setCurrent(''); // Navigating to a route not in the menu
-    }
-  }, [location.pathname, items]);
-  
   const avatarMenuItems: MenuItem[] = [
     {
       key: 'avatar',
@@ -113,9 +103,10 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
   ];
 
   const onClick: MenuProps['onClick'] = e => {
-    setCurrent(e.key);
     navigate(`/${e.key}`);
   }
+
+  const currentPage = items.find(item => item?.key?.toString() && location.pathname.endsWith(item?.key?.toString()));
 
   return (
     <div>
@@ -144,7 +135,7 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
               items={items}
               disabledOverflow={!isMobile}
               overflowedIndicator={<MenuOutlined style={{ color: 'white', fontSize: '24px' }} />}
-              selectedKeys={[current]}
+              selectedKeys={[currentPage?.key as string]}
               mode="horizontal"
             />
             <Menu

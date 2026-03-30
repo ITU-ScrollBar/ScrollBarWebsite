@@ -1,4 +1,3 @@
-import { Timestamp } from "firebase-admin/firestore";
 
 // User-related types
 export interface UserProfile {

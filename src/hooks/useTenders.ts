@@ -13,7 +13,6 @@ import {
 import { Tender, Invite, StudyLine } from "../types/types-file"; // Ensure the correct import path
 import { DocumentData } from "firebase/firestore";
 import useEngagements from "./useEngagements";
-import { useAuth } from "../contexts/AuthContext";
 
 type TenderState = {
   loading: boolean;
@@ -31,7 +30,6 @@ const useTenders = () => {
   });
 
   const { engagementState } = useEngagements();
-  const { currentUser } = useAuth();
 
   const [invitedTenders, setInvitedTenders] = useState<Invite[]>([]);
 
