@@ -6,6 +6,7 @@ on:
   pull_request:
     branches-ignore: 
       - main
+      - dev
 permissions:
   checks: write
   contents: read
