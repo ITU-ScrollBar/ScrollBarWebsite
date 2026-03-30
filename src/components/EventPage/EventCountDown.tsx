@@ -29,6 +29,13 @@ export default function CountDown({ nextEvent }: CountDownProps) {
 
   if (!nextEvent) return null;
 
+  const endDiff = nextEvent.end.getTime() - new Date().getTime();
+  const endDiffDays = Math.floor(endDiff / (1000 * 60 * 60 * 24));
+
+  const showClosedWeekMessage = !timeLeft.loading
+    && !timeLeft.isOpen
+    && endDiffDays >= 7;
+
   return (
     <div
       style={{
@@ -58,6 +65,24 @@ export default function CountDown({ nextEvent }: CountDownProps) {
         >
           {nextEvent.title}
         </Title>
+        {showClosedWeekMessage && (
+          <Text
+            style={{
+              color: '#fffde7',
+              fontSize: isMobile ? 14 : 17,
+              fontWeight: 600,
+              lineHeight: 1.45,
+              maxWidth: 560,
+              background: 'linear-gradient(90deg, rgba(255, 196, 0, 0.28), rgba(255, 196, 0, 0.12))',
+              border: '1px solid rgba(255, 220, 110, 0.7)',
+              borderRadius: 999,
+              padding: isMobile ? '7px 12px' : '9px 15px',
+              textShadow: TEXT_SHADOW,
+            }}
+          >
+            We're closed this week, but we'll be back in
+          </Text>
+        )}
         {timeLeft.isOpen && (
           <Text
             style={{
@@ -73,6 +98,7 @@ export default function CountDown({ nextEvent }: CountDownProps) {
         )}
         {!timeLeft.isOpen && !timeLeft.loading && (
           <Space
+            style={{ marginTop: 8 }}
             align="center"
             size={isMobile ? 6 : 8}
             split={
