@@ -135,7 +135,7 @@ export function ShiftList({
         .filter((e) => shiftFiltering === ShiftFiltering.ALL_SHIFTS || !!shiftsByEvent[e.id]) // Show events on all shifts page
         .slice()
         .sort((a, b) => asDate(a.start).getTime() - asDate(b.start).getTime()),
-    [eventState.events, shiftsByEvent]
+    [eventState.events, shiftsByEvent, shiftFiltering]
   );
 
   const normalizedInternalEvents = useMemo(() => {
@@ -405,12 +405,12 @@ export function ShiftList({
 }
 
 function DateToTime(date: Date) {
-    var hours = date.getHours().toString().padStart(2, '0');
-    var minutes = date.getMinutes().toString().padStart(2, '0');
-    if (minutes != "00") {
-        return <>
-            {hours}<span style={{ verticalAlign: "super", fontSize: "0.7em", marginLeft: "2px" }}>{minutes}</span>
-        </>
-    }
-    return <>{hours}</>;
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  if (minutes != "00") {
+    return <>
+      {hours}<span style={{ verticalAlign: "super", fontSize: "0.7em", marginLeft: "2px" }}>{minutes}</span>
+    </>
+  }
+  return <>{hours}</>;
 }

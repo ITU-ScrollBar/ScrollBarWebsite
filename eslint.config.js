@@ -9,7 +9,7 @@ import unusedImports from 'eslint-plugin-unused-imports';
 export default [
   // Global ignores
   {
-    ignores: ['node_modules/**', 'dist/**', 'build/**', 'coverage/**'],
+    ignores: ['node_modules/**', 'dist/**', 'build/**', 'coverage/**', 'functions/**', 'public/assets/**'],
   },
 
   // Base JS rules
@@ -36,6 +36,12 @@ export default [
       react: { version: 'detect' },
     },
     rules: {
+      // Formatting consistency
+      indent: ['error', 2, { SwitchCase: 1 }],
+      'no-tabs': 'error',
+      'react/jsx-indent': ['error', 2],
+      'react/jsx-indent-props': ['error', 2],
+
       // React/TS defaults that play nicely together
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
@@ -43,7 +49,11 @@ export default [
       // Hooks
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
-      '@typescript-eslint/no-explicit-any': 'warn',
+      'no-restricted-globals': ['error', {
+        name: 'location',
+        message: 'Use useLocation() from react-router-dom instead of global location in React components.',
+      }],
+      '@typescript-eslint/no-explicit-any': 'off', // Allow 'any' for flexibility, but consider enabling with exceptions later
       'no-useless-catch': 'warn',
 
 

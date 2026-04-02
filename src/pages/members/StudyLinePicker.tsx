@@ -18,11 +18,11 @@ export default function StudyLinePicker({ value, onChange, fontSize = 16, bold =
   const [studyLines, setStudyLines] = useState<StudyLine[]>([]);
 
   useEffect(() => {
-      getStudyLines().then((response) => {
-        const studylines: StudyLine[] = response.map((doc: any) => doc as StudyLine);
-        setStudyLines(studylines);
-      });
-    }, []);
+    getStudyLines().then((response) => {
+      const studylines: StudyLine[] = response.map((doc: any) => doc as StudyLine);
+      setStudyLines(studylines);
+    });
+  }, []);
 
   const handleMenuClick: MenuProps['onClick'] = (e) => {
     const selectedStudyLine = e.key;

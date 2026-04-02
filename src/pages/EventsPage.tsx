@@ -10,21 +10,21 @@ import DEFAULT_EVENT_IMAGE from '../assets/images/background.png';
 import { EventCard } from '../components/EventPage/EventCard';
 
 export default function EventsPage() {
-    const { eventState } = useEvents();
-    const { isMobile } = useWindowSize();
-    const events = eventState.isLoaded ? eventState.events
-        .filter(event => event.published && !event.internal)
-        .map(event => ({
-            id: event.id,
-            title: event.title,
-            image: event.photo_url ?? DEFAULT_EVENT_IMAGE,
-            start: event.start,
-            end: event.end,
-            event_url: event.event_url,
-        })).sort((a, b) => a.start.getTime() - b.start.getTime()) : [];
+  const { eventState } = useEvents();
+  const { isMobile } = useWindowSize();
+  const events = eventState.isLoaded ? eventState.events
+    .filter(event => event.published && !event.internal)
+    .map(event => ({
+      id: event.id,
+      title: event.title,
+      image: event.photo_url ?? DEFAULT_EVENT_IMAGE,
+      start: event.start,
+      end: event.end,
+      event_url: event.event_url,
+    })).sort((a, b) => a.start.getTime() - b.start.getTime()) : [];
 
-    // Get the next upcoming event for countdown
-    const nextEvent = events.length > 0 ? events[0] : null;
+  // Get the next upcoming event for countdown
+  const nextEvent = events.length > 0 ? events[0] : null;
 
   return (
     <Layout 
@@ -38,41 +38,41 @@ export default function EventsPage() {
     >
       <HeaderBar />
 
+      <div 
+        style={{
+          position: 'relative',
+          width: '100vw',
+          height: isMobile ? '50vh' : '70vh',
+          minHeight: '350px',
+          overflow: 'hidden',
+        }}
+      >
+        <img
+          src={nextEvent ? nextEvent.image : DEFAULT_EVENT_IMAGE}
+          alt="Event background"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center',
+          }}
+        />
         <div 
           style={{
-            position: 'relative',
-            width: '100vw',
-            height: isMobile ? '50vh' : '70vh',
-            minHeight: '350px',
-            overflow: 'hidden',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 1,
           }}
-        >
-          <img
-            src={nextEvent ? nextEvent.image : DEFAULT_EVENT_IMAGE}
-            alt="Event background"
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              objectPosition: 'center',
-            }}
-          />
-          <div 
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-              zIndex: 1,
-            }}
-          />
-          {nextEvent && <CountDown nextEvent={nextEvent} />}
-        </div>
+        />
+        {nextEvent && <CountDown nextEvent={nextEvent} />}
+      </div>
 
       <Row justify="center">
         <Col

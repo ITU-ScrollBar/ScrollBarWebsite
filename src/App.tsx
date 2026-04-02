@@ -32,7 +32,7 @@ import BoardManagementPage from "./pages/admin/BoardManagement/BoardManagementPa
 function App() {
   dayjs.extend(updateLocale);
   dayjs.updateLocale('en', {
-      weekStart: 1
+    weekStart: 1
   });
 
   setTwoToneColor("#FFE600");

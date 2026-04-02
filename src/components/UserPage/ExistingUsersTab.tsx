@@ -44,7 +44,7 @@ export const ExistingUsersTab = () => {
     getStudyLines()
       .then((response) => {
         const studylines: StudyLine[] = response.map(
-          (doc: any) => doc as StudyLine
+          (doc: StudyLine) => doc
         );
         setStudylines(studylines);
         setLoading(false);
@@ -55,8 +55,9 @@ export const ExistingUsersTab = () => {
           description: "Failed to fetch study lines: " + error.message,
           placement: "top",
         });
+        setLoading(false);
       });
-  }, []);
+  }, [api]);
 
   useEffect(() => {
     const updatedData = tenderState.tenders.map((tender) => {
@@ -74,67 +75,67 @@ export const ExistingUsersTab = () => {
     }
     return record.roles?.includes(value.toString()) ?? false;
   };
-  const nameColumn = {
-    title: "Name",
-    dataIndex: "displayName",
-    key: "displayName",
-  };
-  const emailColumn = { title: "Email", dataIndex: "email", key: "email" };
-  const teamsColumn = {
-    title: "Teams",
-    dataIndex: "teams",
-    key: "teams",
-    render: (teams: Team[]) => {
-      return teams.map((team) => team.name).join(", ") || "No teams";
-    },
-  };
-  const rolesColumn = {
-    title: "Role",
-    dataIndex: "roles",
-    key: "roles",
-    render: (roles: string[], record: Tender) =>
-      (record.isAdmin ? ["admin", ...roles] : roles).map((role) => (
-        <RoleTag key={role} role={role} />
-      )) || "No roles",
-    filters: [
-      { text: "Admins", value: Role.ADMIN },
-      { text: "Board members", value: Role.BOARD },
-      { text: "Newbies", value: Role.NEWBIE },
-      { text: "Anchors", value: Role.ANCHOR },
-    ],
-    onFilter: userFilterMatch,
-  };
-  const editColumn: TableColumnType<Tender> = {
-    title: "Edit user",
-    key: "edit",
-    render: (_text, record) => (
-      <Tooltip title="Edit user">
-        <Button
-          type="text"
-          shape="circle"
-          icon={<EditOutlined />}
-          onClick={() => {
-            setEditingUser(record);
-            setIsModalOpen(true);
-          }}
-        />
-      </Tooltip>
-    ),
-  };
-
+  
   useEffect(() => {
+    const nameColumn = {
+      title: "Name",
+      dataIndex: "displayName",
+      key: "displayName",
+    };
+    const emailColumn = { title: "Email", dataIndex: "email", key: "email" };
+    const teamsColumn = {
+      title: "Teams",
+      dataIndex: "teams",
+      key: "teams",
+      render: (teams: Team[]) => {
+        return teams.map((team) => team.name).join(", ") || "No teams";
+      },
+    };
+    const rolesColumn = {
+      title: "Role",
+      dataIndex: "roles",
+      key: "roles",
+      render: (roles: string[] | undefined, record: Tender) =>
+        (record.isAdmin ? ["admin", ...roles ?? []] : roles ?? []).map((role) => (
+          <RoleTag key={role} role={role} />
+        )) || "No roles",
+      filters: [
+        { text: "Admins", value: Role.ADMIN },
+        { text: "Board members", value: Role.BOARD },
+        { text: "Newbies", value: Role.NEWBIE },
+        { text: "Anchors", value: Role.ANCHOR },
+      ],
+      onFilter: userFilterMatch,
+    };
+    const editColumn: TableColumnType<Tender> = {
+      title: "Edit user",
+      key: "edit",
+      render: (_text, record) => (
+        <Tooltip title="Edit user">
+          <Button
+            type="text"
+            shape="circle"
+            icon={<EditOutlined />}
+            onClick={() => {
+              setEditingUser(record);
+              setIsModalOpen(true);
+            }}
+          />
+        </Tooltip>
+      ),
+    };
     const studylineColumn = {
-    title: "Studyline",
-    dataIndex: "studyline",
-    render: (_: any, record: Tender) => {
-      const studyline = studylines.find(
-        (line) => line.id === record.studyline
-      );
-      return studyline?.prefix ? `${studyline.prefix} in ${studyline.name}` : studyline?.name || "No studyline";
-    },
-    key: "studyline",
-  };
-  if (isMobile) {
+      title: "Studyline",
+      dataIndex: "studyline",
+      render: (_key: string, record: Tender) => {
+        const studyline = studylines.find(
+          (line) => line.id === record.studyline
+        );
+        return studyline?.prefix ? `${studyline.prefix} in ${studyline.name}` : studyline?.name || "No studyline";
+      },
+      key: "studyline",
+    };
+    if (isMobile) {
       setColumns([nameColumn, emailColumn, editColumn]);
     } else {
       setColumns([
@@ -162,7 +163,7 @@ export const ExistingUsersTab = () => {
     tenderState.tenders
       .filter(tender => tender.roles?.includes(Role.NEWBIE))
       .forEach(tender => {
-        let newRoles = tender.roles?.filter(role => role !== Role.NEWBIE);
+        const newRoles = tender.roles?.filter(role => role !== Role.NEWBIE);
         updateTender(tender.uid, "roles", newRoles);
       });
   }
@@ -175,13 +176,13 @@ export const ExistingUsersTab = () => {
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
           style={{ marginBottom: "16px", maxWidth: "300px" }}
-          />
+        />
         <Popconfirm
           title="Are you sure you want to remove all newbie hats?"
           okText="Yes"
           cancelText="No"
           onConfirm={removeAllNewbieHats}
-          >
+        >
           <Button type='default'>
             Remove all newbie hats
           </Button>

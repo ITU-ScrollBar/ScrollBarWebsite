@@ -11,7 +11,7 @@ import {
   Unsubscribe,
 } from 'firebase/firestore';
 import { db } from '..';
-import { InternalEvent, InternalEventCreateParams, InternalEventUpdateParams } from '../../types/types-file'; // Assuming you define your Event type here
+import { InternalEvent, InternalEventCreateParams } from '../../types/types-file';
 
 const env =import.meta.env.VITE_APP_ENV as string;
 

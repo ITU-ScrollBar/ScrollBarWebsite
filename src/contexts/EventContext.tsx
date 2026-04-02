@@ -3,7 +3,7 @@
 import { createContext, useContext, useMemo, ReactNode } from "react";
 import { DocumentData } from "firebase/firestore";
 import { Event, EventCreateParams } from "../types/types-file";
-import useEvents from "../hooks/useEvents"; // You already have this
+import useEvents from "../hooks/useEvents";
 
 // Context type definition
 export interface EventContextType {

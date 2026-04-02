@@ -50,16 +50,18 @@ export default function ShiftInfo(props: {
           <DatePicker
             format="DD-MM-YYYY HH:mm"
             showTime
+            allowClear={false}
             value={dayjs(shift.start)}
-            onChange={(value) => updateShift(shift.id, "start", value.toDate())}
+            onChange={(value) => updateShift(shift.id, "start", value?.toDate())}
           />
 
           <span>To</span>
           <DatePicker
             format="DD-MM-YYYY HH:mm"
+            allowClear={false}
             showTime
             value={dayjs(shift.end)}
-            onChange={(value) => updateShift(shift.id, "end", value.toDate())}
+            onChange={(value) => updateShift(shift.id, "end", value?.toDate())}
           />
         </div>
 

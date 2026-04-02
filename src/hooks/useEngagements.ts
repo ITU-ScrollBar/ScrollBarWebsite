@@ -28,16 +28,16 @@ const useEngagements = () => {
     const unsubscribe = streamEngagements(
       (snapshot) => {
         const updatedEngagements = snapshot.docs.map((doc) => {
-            const data = doc.data();
-            const id = doc.id;
+          const data = doc.data();
+          const id = doc.id;
           
-            return {
-              ...data,
-              shiftEnd: data.shiftEnd.toDate(), // Convert Firestore Timestamp to JS Date
-              id,
-              key: id, // key guaranteed to be string
-            } as Engagement;
-          });
+          return {
+            ...data,
+            shiftEnd: data.shiftEnd.toDate(), // Convert Firestore Timestamp to JS Date
+            id,
+            key: id, // key guaranteed to be string
+          } as Engagement;
+        });
           
   
         setEngagementState({

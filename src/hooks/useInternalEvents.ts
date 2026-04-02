@@ -66,17 +66,17 @@ const useInternalEvents = () => {
     return unsubscribe;
   }, []); // Empty dependency array ensures this runs only once on mount
 
-const addInternalEvent = (internalEvent: InternalEventCreateParams) => {
-  return createInternalEvent(internalEvent)
-    .then((docData) => {
-      message.success('InternalEvent created successfully!');
-      return docData; // Return the DocumentData here
-    })
-    .catch((error) => {
-      message.error('Error creating internalEvent: ' + error.message);
-      return Promise.reject(error);
-    });
-};
+  const addInternalEvent = (internalEvent: InternalEventCreateParams) => {
+    return createInternalEvent(internalEvent)
+      .then((docData) => {
+        message.success('InternalEvent created successfully!');
+        return docData; // Return the DocumentData here
+      })
+      .catch((error) => {
+        message.error('Error creating internalEvent: ' + error.message);
+        return Promise.reject(error);
+      });
+  };
 
   const removeInternalEvent = (internalEvent: InternalEvent) => {
     return deleteInternalEvent(internalEvent);

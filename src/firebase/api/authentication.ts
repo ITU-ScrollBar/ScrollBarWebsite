@@ -73,24 +73,20 @@ export interface UserProfile {
 
 // Create an account for a new user
 export const createAccount = async (form: FormData): Promise<User> => {
-  try {
-    const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, form.email, form.password);
-    const userData: UserProfile = {
-      displayName: `${form.firstname} ${form.surname}`,
-      email: form.email,
-      studyline: form.studyline,
-      isAdmin: false,
-      roles: [Role.REGULAR_ACCESS, Role.TENDER, Role.NEWBIE],
-      active: true,
-      photoUrl: '',
-    };
+  const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, form.email, form.password);
+  const userData: UserProfile = {
+    displayName: `${form.firstname} ${form.surname}`,
+    email: form.email,
+    studyline: form.studyline,
+    isAdmin: false,
+    roles: [Role.REGULAR_ACCESS, Role.TENDER, Role.NEWBIE],
+    active: true,
+    photoUrl: '',
+  };
 
-    await updateDoc(doc(db, 'invites', form.email), { registered: true });
-    await saveUser(userCredential.user.uid, userData);
-    return userCredential.user;
-  } catch (error) {
-    throw error;
-  }
+  await updateDoc(doc(db, 'invites', form.email), { registered: true });
+  await saveUser(userCredential.user.uid, userData);
+  return userCredential.user;
 };
 
 // Login a user with email and password
@@ -98,13 +94,9 @@ export const loginWithEmailAndPassword = async (
   email: string,
   password: string
 ): Promise<any> => {
-  try {
-    const userCredential: UserCredential = await signInWithEmailAndPassword(auth, email, password);
-    const userData = await getDocument('/users', userCredential.user.uid, false);
-    return userData;
-  } catch (error) {
-    throw error;
-  }
+  const userCredential: UserCredential = await signInWithEmailAndPassword(auth, email, password);
+  const userData = await getDocument('/users', userCredential.user.uid, false);
+  return userData;
 };
 
 // Check if the email is already invited

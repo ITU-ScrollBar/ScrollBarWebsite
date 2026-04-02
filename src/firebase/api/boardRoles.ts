@@ -6,11 +6,8 @@ import {
   updateDoc,
   query,
   onSnapshot,
-  getDocs,
-  setDoc,
   DocumentData,
   Unsubscribe,
-  DocumentSnapshot,
   QuerySnapshot,
 } from 'firebase/firestore';
 import { db } from '..';

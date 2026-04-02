@@ -224,16 +224,16 @@ export default function EventInfo(props: { event: Event }) {
       <div {...(props.event.photo_url) ?
         {style: 
           {backgroundImage: `url(${props.event.photo_url})`,
-          padding: '16px',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center', 
-          height: '200px',
-          borderRadius: '8px',
-          marginBottom: '16px',
-          color: 'white',
-          marginTop: '8px'}}
+            padding: '16px',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center', 
+            height: '200px',
+            borderRadius: '8px',
+            marginBottom: '16px',
+            color: 'white',
+            marginTop: '8px'}}
         : {style: {marginBottom: '16px'}}}
-          >
+      >
         <Title
           level={3}
           style={props.event.photo_url ? { color: 'white', textShadow: '1px 1px 2px rgba(0,0,0,0.7)' } : {}}
@@ -257,44 +257,45 @@ export default function EventInfo(props: { event: Event }) {
           <Switch checked={props.event.published} onChange={(checked) => updateEvent(props.event.id, "published", checked)} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <Upload
-          customRequest={({file}) => {
-            uploadEventPicture(file as File, props.event.id)
-              .then((url) => {
-                const previousUrl = props.event.photo_url;
-                updateEvent(props.event.id, "photo_url", url);
-                message.success("Event photo uploaded successfully");
-                if (previousUrl && previousUrl.replace(tokenRegex, '') !== url.replace(tokenRegex, '')) {
-                  deleteFileFromStorage(previousUrl);
-                }
-              })
-              .catch(() => {
-                message.error("Failed to upload event photo");
-              });
-          }}
-          showUploadList={false}
-          accept="image/*"
-        >
-          <Button type="primary">
-            {props.event.photo_url ? "Change Photo" : "Add Photo"}
-          </Button>
-        </Upload>
-        {props.event.photo_url && (
-          <Button type="primary" danger
-            onClick={() => {
-              deleteFileFromStorage(props.event.photo_url!);
-              updateEvent(props.event.id, "photo_url", null);
+          <Upload
+            customRequest={({file}) => {
+              uploadEventPicture(file as File, props.event.id)
+                .then((url) => {
+                  const previousUrl = props.event.photo_url;
+                  updateEvent(props.event.id, "photo_url", url);
+                  message.success("Event photo uploaded successfully");
+                  if (previousUrl && previousUrl.replace(tokenRegex, '') !== url.replace(tokenRegex, '')) {
+                    deleteFileFromStorage(previousUrl);
+                  }
+                })
+                .catch(() => {
+                  message.error("Failed to upload event photo");
+                });
             }}
+            showUploadList={false}
+            accept="image/*"
           >
-            Delete Photo
-          </Button>
-        )}
+            <Button type="primary">
+              {props.event.photo_url ? "Change Photo" : "Add Photo"}
+            </Button>
+          </Upload>
+          {props.event.photo_url && (
+            <Button type="primary" danger
+              onClick={() => {
+                deleteFileFromStorage(props.event.photo_url!);
+                updateEvent(props.event.id, "photo_url", null);
+              }}
+            >
+              Delete Photo
+            </Button>
+          )}
         </div>
       </div>
       {"From: "}
       <DatePicker
         format="DD-MM-YYYY HH:mm"
         showTime
+        allowClear={false}
         value={dayjs(props.event.start)}
         onChange={(value) =>
           updateEvent(props.event.id, "start", value?.toDate())
@@ -304,6 +305,7 @@ export default function EventInfo(props: { event: Event }) {
       <DatePicker
         format="DD-MM-YYYY HH:mm"
         showTime
+        allowClear={false}
         value={dayjs(props.event.end)}
         onChange={(value) => updateEvent(props.event.id, "end", value?.toDate())}
       />
@@ -339,8 +341,8 @@ export default function EventInfo(props: { event: Event }) {
       />
       Event URL:
       <Text editable={{
-          onChange: (value) => updateEvent(props.event.id, "event_url", value),
-        }}
+        onChange: (value) => updateEvent(props.event.id, "event_url", value),
+      }}
       >
         {props.event.event_url}
       </Text>

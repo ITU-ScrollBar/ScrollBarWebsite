@@ -89,7 +89,7 @@ export default function ShiftManagement() {
                     description: "All shifts have been published.",
                   });
                 }}
-                >
+              >
                 <Button
                   type="primary"
                   size="large"
