@@ -1,10 +1,8 @@
-import { Image, Menu } from "antd";
-import { MenuOutlined } from "@ant-design/icons";
+import { Button, Menu } from "antd";
+import { MenuOutlined, InstagramOutlined, FacebookOutlined } from "@ant-design/icons";
 import { Header } from "antd/es/layout/layout";
 import logo from "../../assets/images/logo.png";
 import Link from "antd/es/typography/Link";
-import instagramIcon from "../../assets/images/instagram.png";
-import facebookIcon from "../../assets/images/facebook.png";
 import { useNavigate } from "react-router";
 import { useWindowSize } from "../../hooks/useWindowSize";
 
@@ -15,9 +13,25 @@ const linkcss = {
   padding: "0 10px",
 };
 
+const socialLinkStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  lineHeight: 1,
+};
+
+const socialMenuContainerStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+};
+
 export default function HeaderBar() {
   const navigate = useNavigate();
   const { isMobile } = useWindowSize();
+
+  const openSocial = (url: string) => {
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
 
   const items = [
     {
@@ -59,30 +73,28 @@ export default function HeaderBar() {
     {
       key: "6",
       label: (
-        <>
-          <a
-            href="https://www.instagram.com/scrollbaritu?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
-            target="_blank"
-            rel="noopener noreferrer"
-            >
-            <Image
-              src={instagramIcon}
-              preview={false}
-              style={{ width: "22px", marginLeft: isMobile ? "10px" : "-12px", marginBottom: "12px" }}
-              />
-          </a>
-          <a
-          href="https://www.facebook.com/ScrollBar/"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            src={facebookIcon}
-            preview={false}
-            style={{ width: "22px", marginLeft: "16px", marginBottom: "12px" }}
+        <div style={socialMenuContainerStyle}>
+          <Button
+            type="text"
+            aria-label="Instagram"
+            style={socialLinkStyle}
+            icon={<InstagramOutlined style={{ fontSize: "22px", color: "white", marginLeft: isMobile ? "10px" : "0" }} />}
+            onClick={(e) => {
+              e.stopPropagation();
+              openSocial("https://www.instagram.com/scrollbaritu");
+            }}
           />
-        </a>
-        </>
+          <Button
+            type="text"
+            aria-label="Facebook"
+            style={socialLinkStyle}
+            icon={<FacebookOutlined style={{ fontSize: "22px", color: "white", marginLeft: "16px" }} />}
+            onClick={(e) => {
+              e.stopPropagation();
+              openSocial("https://www.facebook.com/ScrollBar/");
+            }}
+          />
+        </div>
       ),
     },
   ];
