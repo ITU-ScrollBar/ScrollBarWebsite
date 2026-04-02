@@ -34,6 +34,10 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
     {
       label: "Up for grabs",
       key: 'tenders/upforgrabs',
+    },
+    {
+      label: "Get help",
+      key: 'tenders/gethelp',
     }
   ];
 

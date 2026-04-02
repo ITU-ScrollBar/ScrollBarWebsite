@@ -30,7 +30,7 @@ export const streamRoles = (next: (snapshot: QuerySnapshot<DocumentData>) => voi
 };
 
 export const addRole = async (role: { name: string }) => {
-  const data: any = { name: role.name };
+  const data: any = { name: role.name, contactEmail: "" };
   return addDoc(getRolesCollection(), data);
 };
 
@@ -40,7 +40,7 @@ export const addRole = async (role: { name: string }) => {
  */
 export const updateRole = async (
   id: string,
-  data: Partial<{ name: string; assignedUser: Tender; sortingIndex: number }>
+  data: Partial<{ name: string; assignedUser: Tender; sortingIndex: number; contactEmail: string }>
 ) => {
   const docRef = doc(getRolesCollection(), id);
   const updateData: any = {};
@@ -50,6 +50,9 @@ export const updateRole = async (
   }
   if (data.sortingIndex !== undefined) {
     updateData.sortingIndex = data.sortingIndex;
+  }
+  if (data.contactEmail !== undefined) {
+    updateData.contactEmail = data.contactEmail;
   }
   return updateDoc(docRef, updateData);
 };
