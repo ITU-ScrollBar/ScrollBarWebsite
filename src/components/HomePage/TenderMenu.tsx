@@ -9,6 +9,7 @@ import { useWindowSize } from "../../hooks/useWindowSize";
 import { UserAvatar } from "../UserAvatar";
 import { Loading } from "../Loading";
 import { Role } from "../../types/types-file";
+import useSettings from "../../hooks/useSettings";
 
 interface TenderMenuProps {
   children?: ReactNode;
@@ -18,9 +19,11 @@ type MenuItem = Required<MenuProps>['items'][number];
 
 export const TenderMenu = ({ children }: TenderMenuProps) => {
   const { currentUser, loading, logout } = useAuth();
+  const { settingsState } = useSettings();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { isMobile } = useWindowSize();
+  const getHelpLabel = settingsState.settings.getHelpTitle || "Get help";
 
   const items: MenuItem[] = [
     {
@@ -36,7 +39,7 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
       key: 'tenders/upforgrabs',
     },
     {
-      label: "Get help",
+      label: getHelpLabel,
       key: 'tenders/gethelp',
     }
   ];
