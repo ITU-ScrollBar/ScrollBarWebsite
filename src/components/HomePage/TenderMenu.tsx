@@ -135,7 +135,7 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
               items={items}
               disabledOverflow={!isMobile}
               overflowedIndicator={<MenuOutlined style={{ color: 'white', fontSize: '24px' }} />}
-              selectedKeys={[currentPage?.key as string]}
+              selectedKeys={currentPage?.key ? [currentPage?.key as string] : []}
               mode="horizontal"
             />
             <Menu
