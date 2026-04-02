@@ -61,7 +61,6 @@ function App() {
                 {/* --- Protected Routes --- */}
                 <Route element={<ProtectedRoutes />}>
                   <Route element={<TenderMenu />}>
-                    <Route path="/members/profile" element={<Profile />} />
                     <Route
                       path="/tenders/allshifts"
                       element={
