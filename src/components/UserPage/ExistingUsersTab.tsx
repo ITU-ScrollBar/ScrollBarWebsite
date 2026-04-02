@@ -55,6 +55,7 @@ export const ExistingUsersTab = () => {
           description: "Failed to fetch study lines: " + error.message,
           placement: "top",
         });
+        setLoading(false);
       });
   }, [api]);
 
