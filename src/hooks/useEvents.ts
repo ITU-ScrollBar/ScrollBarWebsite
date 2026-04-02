@@ -78,17 +78,17 @@ const useEvents = () => {
     return unsubscribe;
   }, []); // Empty dependency array ensures this runs only once on mount
 
-const addEvent = (event: EventCreateParams) => {
-  return createEvent(event)
-    .then((docData) => {
-      message.success('Event created successfully!');
-      return docData; // Return the DocumentData here
-    })
-    .catch((error) => {
-      message.error('Error creating event: ' + error.message);
-      return Promise.reject(error);
-    });
-};
+  const addEvent = (event: EventCreateParams) => {
+    return createEvent(event)
+      .then((docData) => {
+        message.success('Event created successfully!');
+        return docData; // Return the DocumentData here
+      })
+      .catch((error) => {
+        message.error('Error creating event: ' + error.message);
+        return Promise.reject(error);
+      });
+  };
 
   const removeEvent = (id: string) => {
     return deleteEvent(id);

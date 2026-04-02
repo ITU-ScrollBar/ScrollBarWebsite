@@ -63,8 +63,8 @@ export default function ShiftInfo({ shift }: ShiftInfoProps) {
     };
 
     addEngagement(engagement)
-    .then(() => message.success("Tender added successfully"))
-    .catch(() => message.error("Failed to add tender"));
+      .then(() => message.success("Tender added successfully"))
+      .catch(() => message.error("Failed to add tender"));
   };
 
   const handleAddAnchor = (userId: string) => {

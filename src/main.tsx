@@ -11,7 +11,7 @@ import { TenderProvider } from './contexts/TenderContext.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-     <AuthProvider>
+    <AuthProvider>
       <EventProvider>
         <TenderProvider>
           <App />

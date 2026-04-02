@@ -117,29 +117,29 @@ export const renderInternalEvent = ({
 
   const actions = onEdit
     ? [
-        <Button
-          key="edit"
-          type="link"
-          onClick={() => {
-            onEdit(internalEvent);
-          }}
-        >
-          Edit Event
-        </Button>,
-        <Popconfirm
-          key="delete"
-          title="Are you sure to delete this internal event?"
-          onConfirm={() => {
-            deleteInternalEvent(internalEvent);
-          }}
-          okText="Yes"
-          cancelText="No"
-        >
-          <Button icon={<DeleteOutlined />} type="link" danger>
-            Delete Event
-          </Button>
-        </Popconfirm>,
-      ]
+      <Button
+        key="edit"
+        type="link"
+        onClick={() => {
+          onEdit(internalEvent);
+        }}
+      >
+        Edit Event
+      </Button>,
+      <Popconfirm
+        key="delete"
+        title="Are you sure to delete this internal event?"
+        onConfirm={() => {
+          deleteInternalEvent(internalEvent);
+        }}
+        okText="Yes"
+        cancelText="No"
+      >
+        <Button icon={<DeleteOutlined />} type="link" danger>
+          Delete Event
+        </Button>
+      </Popconfirm>,
+    ]
     : [];
 
   const team = teams.find((team) => team.id === internalEvent.scope);
@@ -233,7 +233,7 @@ const CreateOrEditModal = ({
   const { teamState } = useTeams();
   const [availableScopes, setAvailableScopes] = useState<
     (Team | (typeof scopeOptions)[number])[]
-  >([]);
+      >([]);
   const { isMobile } = useWindowSize();
 
   useEffect(() => {

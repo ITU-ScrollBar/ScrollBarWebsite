@@ -405,12 +405,12 @@ export function ShiftList({
 }
 
 function DateToTime(date: Date) {
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    if (minutes != "00") {
-        return <>
-            {hours}<span style={{ verticalAlign: "super", fontSize: "0.7em", marginLeft: "2px" }}>{minutes}</span>
-        </>
-    }
-    return <>{hours}</>;
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  if (minutes != "00") {
+    return <>
+      {hours}<span style={{ verticalAlign: "super", fontSize: "0.7em", marginLeft: "2px" }}>{minutes}</span>
+    </>
+  }
+  return <>{hours}</>;
 }

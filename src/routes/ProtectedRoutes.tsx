@@ -7,28 +7,28 @@ import { ShiftProvider } from '../contexts/ShiftContext';
 import { Loading } from '../components/Loading';
 
 const ProtectedRoutes: React.FC = () => {
-    const { currentUser, loading } = useAuth();
+  const { currentUser, loading } = useAuth();
 
-    if (loading) {
-        // Show a loading indicator while checking auth state
-        return <Loading />;
-    }
+  if (loading) {
+    // Show a loading indicator while checking auth state
+    return <Loading />;
+  }
 
-    // If not loading and no user, redirect to login
-    if (!currentUser) {
-        return <Navigate to="/login" replace />; // 'replace' prevents going back to the protected route
-    }
+  // If not loading and no user, redirect to login
+  if (!currentUser) {
+    return <Navigate to="/login" replace />; // 'replace' prevents going back to the protected route
+  }
 
-    if (!currentUser.active) {
-        return <Navigate to="/deletedUser" replace />;
-    }
+  if (!currentUser.active) {
+    return <Navigate to="/deletedUser" replace />;
+  }
 
-    // If user is logged in, render the child route components
-    return <EngagementProvider>
-            <ShiftProvider>
-                <Outlet />
-            </ShiftProvider>
-        </EngagementProvider>;
+  // If user is logged in, render the child route components
+  return <EngagementProvider>
+    <ShiftProvider>
+      <Outlet />
+    </ShiftProvider>
+  </EngagementProvider>;
 };
 
 export default ProtectedRoutes;

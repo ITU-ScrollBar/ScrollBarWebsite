@@ -175,7 +175,7 @@ const useTenders = () => {
       .catch((error) => {
         message.error(`Failed to delete ${tenderName ?? "tender"}: ${error.message}`);
       }
-    );
+      );
   };
 
   return {

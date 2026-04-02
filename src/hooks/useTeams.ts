@@ -57,17 +57,17 @@ const useTeams = () => {
     return unsubscribe;
   }, []); // Empty dependency array ensures this runs only once on mount
 
-const addTeam = (team: TeamCreateParams) => {
-  return createTeam(team)
-    .then((docData) => {
-      message.success('Team created successfully!');
-      return docData; // Return the DocumentData here
-    })
-    .catch((error) => {
-      message.error('Error creating Team: ' + error.message);
-      return Promise.reject(error);
-    });
-};
+  const addTeam = (team: TeamCreateParams) => {
+    return createTeam(team)
+      .then((docData) => {
+        message.success('Team created successfully!');
+        return docData; // Return the DocumentData here
+      })
+      .catch((error) => {
+        message.error('Error creating Team: ' + error.message);
+        return Promise.reject(error);
+      });
+  };
 
   const removeTeam = (team: Team) => {
     return deleteTeam(team);

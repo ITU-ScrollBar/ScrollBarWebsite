@@ -36,6 +36,12 @@ export default [
       react: { version: 'detect' },
     },
     rules: {
+      // Formatting consistency
+      indent: ['error', 2, { SwitchCase: 1 }],
+      'no-tabs': 'error',
+      'react/jsx-indent': ['error', 2],
+      'react/jsx-indent-props': ['error', 2],
+
       // React/TS defaults that play nicely together
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',

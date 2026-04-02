@@ -22,8 +22,8 @@ export default function EventManagement() {
   );
   
   const displayEvents = showPreviousEvents
-  ? sortedPreviousEvents
-  : sortedEvents;
+    ? sortedPreviousEvents
+    : sortedEvents;
   
   const findNextAvailableFridayAt15 = () => {
     const lastEvent = sortedEvents.length > 0

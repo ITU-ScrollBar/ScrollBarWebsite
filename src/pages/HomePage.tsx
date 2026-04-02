@@ -53,46 +53,46 @@ export default function HomePage() {
 
   return (
     <Layout style={{ minHeight: '100vh', width: '100%', flexDirection: 'column', height: 'auto'}}>
-       <HeaderBar />
-     {/* Hero video section */}
-<div
-  style={{
-    position: 'relative',
-    width: '100%',
-    height: '100vh', // increased from 91vh → 100vh (10% taller)
-    overflow: 'hidden',
-  }}
->
-  <video
-    autoPlay
-    loop
-    muted
-    playsInline
-    style={{
-      width: '100%',
-      height: '100%',
-      objectFit: 'cover',
-    }}
-  >
-    <source
-      src={settingsState.settings.hero}
-      type="video/mp4"
-    />
-  </video>
+      <HeaderBar />
+      {/* Hero video section */}
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: '100vh', // increased from 91vh → 100vh (10% taller)
+          overflow: 'hidden',
+        }}
+      >
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+          }}
+        >
+          <source
+            src={settingsState.settings.hero}
+            type="video/mp4"
+          />
+        </video>
 
-  {/* Black transparent overlay */}
-  <div
-    style={{
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      backgroundColor: 'rgba(0, 0, 0, 0.5)', // 50% transparent black
-      zIndex: 2,
-    }}
-  />
-</div>
+        {/* Black transparent overlay */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)', // 50% transparent black
+            zIndex: 2,
+          }}
+        />
+      </div>
 
 
       {/* White content area below video */}
@@ -137,45 +137,45 @@ export default function HomePage() {
         </Row>
 
         {settingsState.settings.openForSignups && (
-        <>
-          <Divider />
+          <>
+            <Divider />
 
-          <Row justify="center">
-            <Col
-              md={24}
-              lg={12}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-              }}
-            >
-              <Title id="join_scrollbar" level={2} style={{ scrollMarginTop: '135px' }}>
-                {settingsState.settings.joinScrollBarTitle}
-              </Title>
-
-              <MDEditor.Markdown
+            <Row justify="center">
+              <Col
+                md={24}
+                lg={12}
                 style={{
-                  fontSize: '18px',
-                  lineHeight: '36px',
-                  textAlign: 'center',
-                  color: 'black',
-                  background: 'white',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
                 }}
-                source={settingsState.settings.joinScrollBarText}
-              />
-
-              <Button
-                type="primary"
-                size="large"
-                href={settingsState.settings.joinScrollBarLink}
-                target="_blank"
               >
-                Apply now!
-              </Button>
-            </Col>
-          </Row>
-        </>)}
+                <Title id="join_scrollbar" level={2} style={{ scrollMarginTop: '135px' }}>
+                  {settingsState.settings.joinScrollBarTitle}
+                </Title>
+
+                <MDEditor.Markdown
+                  style={{
+                    fontSize: '18px',
+                    lineHeight: '36px',
+                    textAlign: 'center',
+                    color: 'black',
+                    background: 'white',
+                  }}
+                  source={settingsState.settings.joinScrollBarText}
+                />
+
+                <Button
+                  type="primary"
+                  size="large"
+                  href={settingsState.settings.joinScrollBarLink}
+                  target="_blank"
+                >
+                  Apply now!
+                </Button>
+              </Col>
+            </Row>
+          </>)}
 
         <Divider />
 

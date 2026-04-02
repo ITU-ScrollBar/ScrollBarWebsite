@@ -21,14 +21,14 @@ type FirebaseShift = {
 }
 
 export const sortShifts = (a:Shift, b:Shift) => {
-    if (a.start > b.start) {
-      return 1;
-    } else if (a.start < b.start) {
-      return -1;
-    } else {
-      return 0;
-    }
-  };
+  if (a.start > b.start) {
+    return 1;
+  } else if (a.start < b.start) {
+    return -1;
+  } else {
+    return 0;
+  }
+};
 
   
 
@@ -54,17 +54,17 @@ const useShifts = () => {
     const unsubscribe = streamShifts({
       next: (snapshot: QuerySnapshot<DocumentData>) => {
         const updatedShifts: Shift[] = snapshot.docs
-        .map((doc) => {
-          const data = doc.data() as FirebaseShift;
-          return {
-            ...data,
-            id: doc.id,
-            key: doc.id,
-            start: data.start?.toDate(),
-            end: data.end?.toDate(),
-          } as Shift;
-        })
-        .sort(sortShifts);
+          .map((doc) => {
+            const data = doc.data() as FirebaseShift;
+            return {
+              ...data,
+              id: doc.id,
+              key: doc.id,
+              start: data.start?.toDate(),
+              end: data.end?.toDate(),
+            } as Shift;
+          })
+          .sort(sortShifts);
 
         setShiftState((prevState) => ({
           ...prevState,

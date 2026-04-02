@@ -12,8 +12,8 @@ import  useTenders from '../hooks/useTenders';
 export default function Register() {
   const { setUser } = useAuth();
   const [loading, setLoading] = useState(false);
-    const { tenderState } = useTenders();
-    const { studylines: studyLines } = tenderState;
+  const { tenderState } = useTenders();
+  const { studylines: studyLines } = tenderState;
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
   const rowGutter: [number, number] = isMobile ? [16, 8] : [16, 16];

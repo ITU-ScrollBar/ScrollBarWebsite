@@ -124,17 +124,17 @@ export const ExistingUsersTab = () => {
       ),
     };
     const studylineColumn = {
-    title: "Studyline",
-    dataIndex: "studyline",
-    render: (_key: string, record: Tender) => {
-      const studyline = studylines.find(
-        (line) => line.id === record.studyline
-      );
-      return studyline?.prefix ? `${studyline.prefix} in ${studyline.name}` : studyline?.name || "No studyline";
-    },
-    key: "studyline",
-  };
-  if (isMobile) {
+      title: "Studyline",
+      dataIndex: "studyline",
+      render: (_key: string, record: Tender) => {
+        const studyline = studylines.find(
+          (line) => line.id === record.studyline
+        );
+        return studyline?.prefix ? `${studyline.prefix} in ${studyline.name}` : studyline?.name || "No studyline";
+      },
+      key: "studyline",
+    };
+    if (isMobile) {
       setColumns([nameColumn, emailColumn, editColumn]);
     } else {
       setColumns([
@@ -175,13 +175,13 @@ export const ExistingUsersTab = () => {
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
           style={{ marginBottom: "16px", maxWidth: "300px" }}
-          />
+        />
         <Popconfirm
           title="Are you sure you want to remove all newbie hats?"
           okText="Yes"
           cancelText="No"
           onConfirm={removeAllNewbieHats}
-          >
+        >
           <Button type='default'>
             Remove all newbie hats
           </Button>

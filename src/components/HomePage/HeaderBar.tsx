@@ -125,9 +125,9 @@ export default function HeaderBar() {
       >
         <a href="/">
           <img
-          style={{ maxWidth: "75%", width: "250px", height: "auto", cursor: "pointer" }}
-          src={logo}
-        />
+            style={{ maxWidth: "75%", width: "250px", height: "auto", cursor: "pointer" }}
+            src={logo}
+          />
         </a>
         <Menu
           theme="dark"
