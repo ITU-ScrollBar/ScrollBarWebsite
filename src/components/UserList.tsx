@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { List } from "antd";
 import { MailOutlined } from "@ant-design/icons";
 import { UserAvatar } from "./UserAvatar";
@@ -20,14 +20,18 @@ type UserListProps = {
 export function UserList({ users, className, getContactEmail }: UserListProps) {
   const [studylines, setStudylines] = React.useState<StudyLine[]>([]);
 
-  if (users.some((u) => u.role)) {
-    users.sort((a, b) => {
+  const sortedUsers = useMemo(() => {
+    if (!users.some((u) => u.role)) {
+      return users;
+    }
+
+    return [...users].sort((a, b) => {
       if (a.role && b.role) {
         return (a.role.sortingIndex ?? 0) - (b.role.sortingIndex ?? 0);
       }
       return 0;
     });
-  }
+  }, [users]);
 
   useEffect(() => {
     // If already cached, use it immediately
@@ -63,7 +67,7 @@ export function UserList({ users, className, getContactEmail }: UserListProps) {
     <List
       className={className}
       grid={{ gutter: 16, column: 10, xs: 3, sm: 3, md: 5, lg: 8, xl: 10 }}
-      dataSource={users}
+      dataSource={sortedUsers}
       renderItem={(user) => {
         const contactEmail = getContactEmail?.(user);
 
