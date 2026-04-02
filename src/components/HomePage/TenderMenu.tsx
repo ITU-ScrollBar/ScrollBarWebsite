@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import type { MenuProps } from 'antd';
 import { ConfigProvider, Menu } from "antd";
 import logo from '../../assets/images/logo.png';
@@ -19,6 +19,7 @@ type MenuItem = Required<MenuProps>['items'][number];
 export const TenderMenu = ({ children }: TenderMenuProps) => {
   const { currentUser, loading, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const { isMobile } = useWindowSize();
 
   const items: MenuItem[] = [
@@ -106,7 +107,7 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
     navigate(`/${e.key}`);
   }
 
-  const currentPage = items.find(item => item?.key?.toString() && location.pathname.endsWith(item?.key?.toString()));
+  const currentPage = items.find((item) => item?.key?.toString() && pathname.endsWith(item?.key?.toString()));
 
   return (
     <div>

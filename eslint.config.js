@@ -49,6 +49,10 @@ export default [
       // Hooks
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+      'no-restricted-globals': ['error', {
+        name: 'location',
+        message: 'Use useLocation() from react-router-dom instead of global location in React components.',
+      }],
       '@typescript-eslint/no-explicit-any': 'off', // Allow 'any' for flexibility, but consider enabling with exceptions later
       'no-useless-catch': 'warn',
 
