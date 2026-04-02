@@ -18,6 +18,7 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 export const adminChangeUserEmail = onCall(
+  { region: "europe-west1" },
   async (req: CallableRequest<ChangeEmailData>) => {
     // Must be signed in
     if (!req.auth) {
