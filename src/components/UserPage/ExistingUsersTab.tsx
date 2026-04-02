@@ -94,8 +94,8 @@ export const ExistingUsersTab = () => {
       title: "Role",
       dataIndex: "roles",
       key: "roles",
-      render: (roles: string[], record: Tender) =>
-        (record.isAdmin ? ["admin", ...roles] : roles).map((role) => (
+      render: (roles: string[] | undefined, record: Tender) =>
+        (record.isAdmin ? ["admin", ...roles ?? []] : roles ?? []).map((role) => (
           <RoleTag key={role} role={role} />
         )) || "No roles",
       filters: [
