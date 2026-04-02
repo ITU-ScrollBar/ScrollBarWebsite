@@ -295,6 +295,7 @@ export default function EventInfo(props: { event: Event }) {
       <DatePicker
         format="DD-MM-YYYY HH:mm"
         showTime
+        allowClear={false}
         value={dayjs(props.event.start)}
         onChange={(value) =>
           updateEvent(props.event.id, "start", value?.toDate())
@@ -304,6 +305,7 @@ export default function EventInfo(props: { event: Event }) {
       <DatePicker
         format="DD-MM-YYYY HH:mm"
         showTime
+        allowClear={false}
         value={dayjs(props.event.end)}
         onChange={(value) => updateEvent(props.event.id, "end", value?.toDate())}
       />
