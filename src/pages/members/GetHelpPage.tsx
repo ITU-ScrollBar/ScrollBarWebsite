@@ -7,6 +7,7 @@ import { Loading } from "../../components/Loading";
 import { getTenderDisplayName } from "./helpers";
 import { BoardRole, Role, Tender } from "../../types/types-file";
 import { TenderWithRole, UserList } from "../../components/UserList";
+import { useWindowSize } from "../../hooks/useWindowSize";
 
 const { Content } = Layout;
 const { Title, Paragraph } = Typography;
@@ -15,6 +16,7 @@ export default function GetHelpPage() {
   const { settingsState } = useSettings();
   const { boardRolesState } = useBoardRoles();
   const { tenderState } = useTenders();
+  const { isMobile } = useWindowSize();
 
   const boardMembers = useMemo<TenderWithRole[]>(() => {
     if (!boardRolesState.boardRoles) return [];
@@ -68,6 +70,7 @@ export default function GetHelpPage() {
                 users={boardMembers}
                 className="user-list-centered"
                 getContactEmail={(user) => user.role?.contactEmail}
+                columns={isMobile ? 2 : 5}
               />
             ) : (
               <Empty description="No board members available right now." />
@@ -85,6 +88,7 @@ export default function GetHelpPage() {
                 users={hrMembers}
                 className="user-list-centered"
                 getContactEmail={(user) => user.email}
+                columns={isMobile ? 2 : 4}
               />
             ) : (
               <Empty description="No HR contacts available right now." />

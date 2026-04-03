@@ -13,12 +13,15 @@ import CountDown from '../components/EventPage/EventCountDown'
 import {useNextEvent}  from '../hooks/useEvents'
 import { useLocation } from 'react-router-dom'
 import { UserList, TenderWithRole } from '../components/UserList'
+import { useWindowSize } from '../hooks/useWindowSize'
 
 export default function HomePage() {
   const { settingsState } = useSettings();
   const { tenderState } = useTenders();
   const { boardRolesState } = useBoardRoles();
   const { nextEvent, loading: eventLoading } = useNextEvent();
+  const { isMobile } = useWindowSize();
+
   // Board members: use boardRoles, sorted by sortingIndex, showing assigned users
   const boardMembers = useMemo(() => {
     if (!boardRolesState.boardRoles) return [];
@@ -185,7 +188,7 @@ export default function HomePage() {
             <Title level={2} style={{ scrollMarginTop: '135px' }} id="boardMembers">
               The Board
             </Title>
-            <UserList users={boardMembers} />
+            <UserList users={boardMembers} columns={isMobile ? 3 : 10} />
           </Col>
         </Row>
 
@@ -203,7 +206,7 @@ export default function HomePage() {
             <Title level={2} style={{ scrollMarginTop: '135px' }} id="volunteers">
               The Volunteers
             </Title>
-            <UserList users={activeTenders} />
+            <UserList users={activeTenders} columns={isMobile ? 3 : 10} />
           </Col>
         </Row>
       </div>
