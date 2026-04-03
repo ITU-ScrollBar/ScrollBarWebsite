@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Col, Divider, Empty, Layout, Row, Typography } from "antd";
+import MDEditor from "@uiw/react-md-editor";
 import useBoardRoles from "../../hooks/useBoardRoles";
 import useSettings from "../../hooks/useSettings";
 import useTenders from "../../hooks/useTenders";
@@ -10,7 +11,7 @@ import { TenderWithRole, UserList } from "../../components/UserList";
 import { useWindowSize } from "../../hooks/useWindowSize";
 
 const { Content } = Layout;
-const { Title, Paragraph } = Typography;
+const { Title } = Typography;
 
 export default function GetHelpPage() {
   const { settingsState } = useSettings();
@@ -54,9 +55,18 @@ export default function GetHelpPage() {
         <Row justify="center">
           <Col xs={24} lg={18}>
             <Title level={2} style={{ textAlign: "center" }}>{settingsState.settings.getHelpTitle}</Title>
-            <Paragraph style={{ fontSize: 16, maxWidth: 840, textAlign: "center", margin: "0 auto" }}>
-              {settingsState.settings.getHelpDescription}
-            </Paragraph>
+            <MDEditor.Markdown
+              style={{
+                fontSize: "16px",
+                lineHeight: "32px",
+                textAlign: "center",
+                color: "black",
+                background: "white",
+                maxWidth: 840,
+                margin: "0 auto",
+              }}
+              source={settingsState.settings.getHelpDescription}
+            />
           </Col>
         </Row>
 
