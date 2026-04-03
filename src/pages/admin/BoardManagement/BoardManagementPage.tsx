@@ -16,6 +16,8 @@ export default function BoardManagementPage() {
   const [editingRoleValue, setEditingRoleValue] = useState<string>("");
   const [editingSortingIndexId, setEditingSortingIndexId] = useState<string | null>(null);
   const [editingSortingIndexValue, setEditingSortingIndexValue] = useState<number>(0);
+  const [editingContactEmailId, setEditingContactEmailId] = useState<string | null>(null);
+  const [editingContactEmailValue, setEditingContactEmailValue] = useState<string>("");
 
   useEffect(() => {
     if (!tenderState.loading && Array.isArray(tenderState.tenders)) {
@@ -150,6 +152,46 @@ export default function BoardManagementPage() {
       ),
     },
     {
+      title: 'Contact Email',
+      dataIndex: 'contactEmail',
+      key: 'contactEmail',
+      render: (_: string, record: BoardRole) => {
+        if (editingContactEmailId === record.id) {
+          const commit = () => {
+            const trimmed = editingContactEmailValue.trim();
+            if (trimmed !== (record.contactEmail ?? "")) {
+              updateBoardRole(record.id, { contactEmail: trimmed });
+            }
+            setEditingContactEmailId(null);
+          };
+
+          return (
+            <Input
+              value={editingContactEmailValue}
+              autoFocus
+              placeholder="role-email@scrollbar.dk"
+              style={{ minWidth: 220 }}
+              onChange={(e) => setEditingContactEmailValue(e.target.value)}
+              onBlur={commit}
+              onPressEnter={commit}
+            />
+          );
+        }
+
+        return (
+          <span
+            style={{ cursor: 'pointer', minWidth: 220, display: 'inline-block' }}
+            onClick={() => {
+              setEditingContactEmailId(record.id);
+              setEditingContactEmailValue(record.contactEmail ?? "");
+            }}
+          >
+            {record.contactEmail || "Click to set"}
+          </span>
+        );
+      },
+    },
+    {
       title: 'Actions',
       key: 'actions',
       render: (_: any, record: BoardRole) => (
@@ -163,7 +205,7 @@ export default function BoardManagementPage() {
         </Popconfirm>
       ),
     },
-  ], [editingRoleId, editingRoleValue, editingSortingIndexId, editingSortingIndexValue, boardMembers, handleAssignUser, handleDeleteRole, updateBoardRole]);
+  ], [editingRoleId, editingRoleValue, editingSortingIndexId, editingSortingIndexValue, editingContactEmailId, editingContactEmailValue, boardMembers, handleAssignUser, handleDeleteRole, updateBoardRole]);
 
   if (boardRolesState.loading || tenderState.loading) {
     return <Loading />;

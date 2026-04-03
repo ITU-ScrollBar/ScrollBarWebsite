@@ -7,6 +7,7 @@ import '@ant-design/v5-patch-for-react-19';
 import { AuthProvider } from './contexts/AuthContext';
 import { EventProvider } from './contexts/EventContext.tsx';
 import { TenderProvider } from './contexts/TenderContext.tsx';
+import { SettingsProvider } from './contexts/SettingsContext.tsx';
 
 
 createRoot(document.getElementById('root')!).render(
@@ -14,7 +15,9 @@ createRoot(document.getElementById('root')!).render(
     <AuthProvider>
       <EventProvider>
         <TenderProvider>
-          <App />
+          <SettingsProvider>
+            <App />
+          </SettingsProvider>
         </TenderProvider>
       </EventProvider>
     </AuthProvider>
