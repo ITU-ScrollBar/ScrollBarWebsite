@@ -121,6 +121,32 @@ const useTenders = () => {
       });
   };
 
+  const addInvites = (emails: string[]) => {
+    return Promise.allSettled(
+      emails.map((email) =>
+        inviteUser(email).catch((error) => {
+          throw { email, error };
+        })
+      )
+    ).then((inviteResults) => {
+      const failedInvites = inviteResults.filter((result) => result.status === "rejected");
+      const successfulInvites = inviteResults.filter((result) => result.status === "fulfilled");
+
+      if (failedInvites.length) {
+        failedInvites.forEach((result) => {
+          if (result.status === "rejected") {
+            const reason = result.reason as { email?: string; error?: { message?: string } };
+            message.error(`Failed to invite ${reason.email}: ${reason.error?.message}`);
+          }
+        });
+      } else {
+        message.success(
+          `Invited ${successfulInvites.length} accepted applicant${successfulInvites.length === 1 ? "" : "s"}.`
+        );
+      }
+    });
+  };
+
   // Remove invite
   const removeInvite = (row: string) => {
     return deleteInvite({id: row})
@@ -182,6 +208,7 @@ const useTenders = () => {
     tenderState,
     invitedTenders,
     addInvite,
+    addInvites,
     removeInvite,
     updateTender,
     deleteTender,

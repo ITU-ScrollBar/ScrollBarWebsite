@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import type { MenuProps } from 'antd';
-import { Dropdown, Space, Typography } from 'antd';
+import { Dropdown, Space } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 
 import { StudyLine } from "../../types/types-file";
@@ -11,9 +11,16 @@ interface StudyLinePickerProps {
   onChange?: (studyLine: string) => void;
   fontSize?: number;
   bold?: boolean;
+  filterStudyLine?: (studyLine: StudyLine) => boolean;
 }
 
-export default function StudyLinePicker({ value, onChange, fontSize = 16, bold = false }: StudyLinePickerProps) {
+export default function StudyLinePicker({
+  value,
+  onChange,
+  fontSize = 16,
+  bold = false,
+  filterStudyLine,
+}: StudyLinePickerProps) {
   const [selectedValue, setSelectedValue] = useState<string | undefined>(value);
   const [studyLines, setStudyLines] = useState<StudyLine[]>([]);
 
@@ -24,6 +31,31 @@ export default function StudyLinePicker({ value, onChange, fontSize = 16, bold =
     });
   }, []);
 
+  useEffect(() => {
+    setSelectedValue(value);
+  }, [value]);
+
+  const visibleStudyLines = useMemo(() => {
+    const filtered = filterStudyLine ? studyLines.filter(filterStudyLine) : studyLines;
+
+    return [...filtered].sort((a, b) => {
+      const prefixA = (a.prefix ?? "").trim();
+      const prefixB = (b.prefix ?? "").trim();
+      const hasPrefixA = prefixA.length > 0;
+      const hasPrefixB = prefixB.length > 0;
+
+      if (hasPrefixA && !hasPrefixB) return -1;
+      if (!hasPrefixA && hasPrefixB) return 1;
+
+      if (hasPrefixA && hasPrefixB) {
+        const byPrefix = prefixA.localeCompare(prefixB, undefined, { sensitivity: "base" });
+        if (byPrefix !== 0) return byPrefix;
+      }
+
+      return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+    });
+  }, [studyLines, filterStudyLine]);
+
   const handleMenuClick: MenuProps['onClick'] = (e) => {
     const selectedStudyLine = e.key;
     setSelectedValue(selectedStudyLine);
@@ -32,12 +64,12 @@ export default function StudyLinePicker({ value, onChange, fontSize = 16, bold =
     }
   };
 
-  const items: MenuProps['items'] = studyLines.map((sl) => ({
+  const items: MenuProps['items'] = visibleStudyLines.map((sl) => ({
     key: sl.id,
     label: sl.prefix ? `${sl.prefix} in ${sl.name}` : sl.name,
   }));
 
-  const selectedStudyLine = studyLines.find(sl => sl.id === selectedValue);
+  const selectedStudyLine = visibleStudyLines.find(sl => sl.id === selectedValue);
   const displayText = (selectedStudyLine?.prefix ? `${selectedStudyLine.prefix} in ` : "") + (selectedStudyLine?.name || "Select study line");
 
   return (
@@ -50,8 +82,12 @@ export default function StudyLinePicker({ value, onChange, fontSize = 16, bold =
       }}
       trigger={['click']}
     >
-      <Typography.Link
+      <button
+        type="button"
         style={{
+          background: "transparent",
+          border: "none",
+          padding: 0,
           fontSize: `${fontSize}px`,
           fontWeight: bold ? "bold" : "normal",
           color: "inherit",
@@ -63,7 +99,7 @@ export default function StudyLinePicker({ value, onChange, fontSize = 16, bold =
           {displayText}
           <DownOutlined />
         </Space>
-      </Typography.Link>
+      </button>
     </Dropdown>
   );
 }

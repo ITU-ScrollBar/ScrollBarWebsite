@@ -114,3 +114,33 @@ button:focus-visible {
   background: #e5e7eb;
   color: #111827;
 }
+
+.ant-btn.ant-btn-primary.home-apply-button {
+  margin-top: 16px;
+  min-height: 46px;
+  padding: 9px 34px;
+  border-radius: 999px;
+  border: 1px solid #b7ae00;
+  background: #d7ce00;
+  color: #1f1f1f;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.ant-btn.ant-btn-primary.home-apply-button:hover,
+.ant-btn.ant-btn-primary.home-apply-button:focus,
+.ant-btn.ant-btn-primary.home-apply-button:focus-visible {
+  background: #e4dc2c;
+  color: #161616;
+  border-color: #a79e00;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.16);
+}
+
+.ant-btn.ant-btn-primary.home-apply-button:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.14);
+}
