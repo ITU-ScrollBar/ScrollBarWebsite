@@ -65,20 +65,43 @@ const uploadApplicationFile = async (file: File, applicantEmail: string, fileTag
   return { path };
 };
 
-export const submitApplication = async (payload: SubmitApplicationPayload) => {
-  const uploaded = await uploadApplicationFile(payload.file, payload.email, "application");
-  const uploadedPhoto = await uploadApplicationFile(payload.photoFile, payload.email, "photo");
+const safeDeleteStoragePath = async (path?: string) => {
+  if (!path) return;
+  try {
+    await deleteObject(ref(storage, path));
+  } catch (error) {
+    console.error("Failed deleting partially uploaded file", error);
+  }
+};
 
-  return addDoc(getApplicationsCollection(), {
-    fullName: payload.fullName,
-    email: payload.email,
-    studyline: payload.studyline,
-    comment: payload.comment ?? "",
-    applicationFilePath: uploaded.path,
-    photoPath: uploadedPhoto.path,
-    decision: "pending",
-    createdAt: serverTimestamp(),
-  });
+export const submitApplication = async (payload: SubmitApplicationPayload) => {
+  let uploadedApplicationPath: string | undefined;
+  let uploadedPhotoPath: string | undefined;
+
+  try {
+    const uploaded = await uploadApplicationFile(payload.file, payload.email, "application");
+    uploadedApplicationPath = uploaded.path;
+
+    const uploadedPhoto = await uploadApplicationFile(payload.photoFile, payload.email, "photo");
+    uploadedPhotoPath = uploadedPhoto.path;
+
+    return await addDoc(getApplicationsCollection(), {
+      fullName: payload.fullName,
+      email: payload.email,
+      studyline: payload.studyline,
+      comment: payload.comment ?? "",
+      applicationFilePath: uploadedApplicationPath,
+      photoPath: uploadedPhotoPath,
+      decision: "pending",
+      createdAt: serverTimestamp(),
+    });
+  } catch (error) {
+    await Promise.all([
+      safeDeleteStoragePath(uploadedApplicationPath),
+      safeDeleteStoragePath(uploadedPhotoPath),
+    ]);
+    throw error;
+  }
 };
 
 export const streamApplications = (

@@ -51,6 +51,8 @@ export default function ApplyPage() {
       form.resetFields();
       setFileList([]);
       setPhotoFileList([]);
+    } catch (error: any) {
+      message.error(error?.message || "Failed to submit application. Nothing was saved, please try again.");
     } finally {
       setSubmitting(false);
     }
