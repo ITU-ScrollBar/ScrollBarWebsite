@@ -53,8 +53,9 @@ type QueueTemplateTestEmailPayload = {
 
 const uploadApplicationFile = async (file: File, applicantEmail: string, fileTag: string) => {
   const extension = getExtension(file.name);
+  const extensionSuffix = extension ? `.${extension}` : "";
   const safeEmail = applicantEmail.replace(/[^a-zA-Z0-9._-]/g, "_").toLowerCase();
-  const path = `applications/${env}/${Date.now()}-${safeEmail}-${fileTag}.${extension}`;
+  const path = `applications/${env}/${Date.now()}-${safeEmail}-${fileTag}${extensionSuffix}`;
   const storageRef = ref(storage, path);
 
   await uploadBytes(storageRef, file, {
