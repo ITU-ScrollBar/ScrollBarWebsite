@@ -18,6 +18,21 @@ const mailgun = new Mailgun(FormData).client({
 
 const mailgunDomain = process.env.MAILGUN_DOMAIN || 'dev.scrollbar.dk';
 
+const updateApplicationDeliveryStatus = async (
+    envName: string | undefined,
+    applicationId: string | undefined,
+    status: 'success' | 'failed'
+) => {
+    if (!envName || !applicationId) return;
+    try {
+        await db.doc(`env/${envName}/applications/${applicationId}`).update({
+            emailDeliveryStatus: status,
+        });
+    } catch (error) {
+        console.error('updateApplicationDeliveryStatus error', error);
+    }
+};
+
 export const sendEmailInvite = onDocumentCreated(
     { document: 'invites/{email}', region: 'europe-west1' },
     async (event: any) => {
@@ -25,6 +40,8 @@ export const sendEmailInvite = onDocumentCreated(
         const data = event.data?.data ? event.data.data() : {};
         const fullName = data?.fullName || 'ScrollBar Applicant';
         const bodyText = data?.bodyText?.trim?.() || "You have been invited to ScrollBar Tender site. Please follow your invitation link to continue.";
+        const applicationId = data?.applicationId;
+        const applicationEnv = data?.applicationEnv;
         if (!email) {
             console.warn('sendEmailInvite: missing email param');
             return;
@@ -40,9 +57,11 @@ export const sendEmailInvite = onDocumentCreated(
                     bodyText,
                 }),
             });
+            await updateApplicationDeliveryStatus(applicationEnv, applicationId, 'success');
             return;
         } catch (err) {
             console.error('sendEmailInvite error', err);
+            await updateApplicationDeliveryStatus(applicationEnv, applicationId, 'failed');
         }
     }
 );
@@ -86,7 +105,9 @@ export const sendShiftGrabbedConfirmation = onDocumentUpdated(
 export const sendRejectedApplicationEmail = onDocumentCreated(
     { document: 'env/{_env}/applicationRejectionEmails/{docId}', region: 'europe-west1' },
     async (event: any) => {
+        const envName = event.params?._env;
         const data = event.data?.data ? event.data.data() : {};
+        const applicationId = data?.applicationId;
         const email = data?.email;
         const fullName = data?.fullName || 'ScrollBar Applicant';
         const bodyText = data?.bodyText?.trim?.() || 'Thank you for your application. Unfortunately, we are not able to offer you a position at this time.';
@@ -107,9 +128,11 @@ export const sendRejectedApplicationEmail = onDocumentCreated(
                     bodyText,
                 }),
             });
+            await updateApplicationDeliveryStatus(envName, applicationId, 'success');
             return;
         } catch (err) {
             console.error('sendRejectedApplicationEmail error', err);
+            await updateApplicationDeliveryStatus(envName, applicationId, 'failed');
         }
     }
 );

@@ -27,6 +27,7 @@ type AddInvitesResult = {
 };
 
 const useTenders = () => {
+  const appEnv = import.meta.env.VITE_APP_ENV as string;
   const [tenderState, setTenderState] = useState<TenderState>({
     loading: false,
     isLoaded: false,
@@ -132,7 +133,12 @@ const useTenders = () => {
   ): Promise<AddInvitesResult> => {
     return Promise.allSettled(
       recipients.map((recipient) =>
-        inviteUser(recipient.email, { bodyText, fullName: recipient.fullName })
+        inviteUser(recipient.email, {
+          bodyText,
+          fullName: recipient.fullName,
+          applicationId: recipient.id,
+          applicationEnv: appEnv,
+        })
       )
     ).then((inviteResults) => {
       const successful: string[] = [];

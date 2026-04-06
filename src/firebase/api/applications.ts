@@ -149,6 +149,7 @@ export const queueRejectedApplicationEmails = async (rejections: QueueRejectedEm
   const results = await Promise.allSettled(
     rejections.map((rejection) =>
       addDoc(collectionRef, {
+        applicationId: rejection.id,
         email: rejection.email,
         fullName: rejection.fullName,
         bodyText: rejection.bodyText ?? "",

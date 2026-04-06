@@ -73,7 +73,7 @@ export default function ApplicationsReviewPage() {
   const renderDeliveryIcon = (status: "pending" | "success" | "failed") => {
     if (status === "success") {
       return (
-        <Tooltip title="Email queued/sent successfully.">
+        <Tooltip title="Email was sent successfully by mail service.">
           <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 18 }} />
         </Tooltip>
       );
@@ -87,7 +87,7 @@ export default function ApplicationsReviewPage() {
     }
     if (status === "pending") {
       return (
-        <Tooltip title="Email has not been processed yet.">
+        <Tooltip title="Email is queued and awaiting mail service processing.">
           <ClockCircleOutlined style={{ color: "#faad14", fontSize: 18 }} />
         </Tooltip>
       );
@@ -441,13 +441,13 @@ export default function ApplicationsReviewPage() {
                       ...grouped.accept.map((application) => ({
                         id: application.id,
                         emailDeliveryStatus: inviteResult.successful.includes(application.id)
-                          ? ("success" as const)
+                          ? ("pending" as const)
                           : ("failed" as const),
                       })),
                       ...grouped.reject.map((application) => ({
                         id: application.id,
                         emailDeliveryStatus: rejectResult.successful.includes(application.id)
-                          ? ("success" as const)
+                          ? ("pending" as const)
                           : ("failed" as const),
                       })),
                     ]);
@@ -455,8 +455,10 @@ export default function ApplicationsReviewPage() {
                     const failedTotal = inviteResult.failed.length + rejectResult.failed.length;
                     if (failedTotal) {
                       message.warning(
-                        `${failedTotal} email${failedTotal === 1 ? "" : "s"} failed. You can retry failed entries.`
+                        `${failedTotal} email${failedTotal === 1 ? "" : "s"} could not be queued. You can retry failed entries.`
                       );
+                    } else {
+                      message.success("Emails queued. Delivery status will update automatically when mail service completes.");
                     }
 
                     await submitRound(currentUser.uid);
@@ -522,13 +524,13 @@ export default function ApplicationsReviewPage() {
                         ...failedInvites.map((application) => ({
                           id: application.id,
                           emailDeliveryStatus: inviteRetryResult.successful.includes(application.id)
-                            ? ("success" as const)
+                            ? ("pending" as const)
                             : ("failed" as const),
                         })),
                         ...failedRejections.map((application) => ({
                           id: application.id,
                           emailDeliveryStatus: rejectRetryResult.successful.includes(application.id)
-                            ? ("success" as const)
+                            ? ("pending" as const)
                             : ("failed" as const),
                         })),
                       ]);
@@ -536,10 +538,10 @@ export default function ApplicationsReviewPage() {
                       const failedTotal = inviteRetryResult.failed.length + rejectRetryResult.failed.length;
                       if (failedTotal) {
                         message.warning(
-                          `${failedTotal} email${failedTotal === 1 ? "" : "s"} still failed after retry.`
+                          `${failedTotal} email${failedTotal === 1 ? "" : "s"} still could not be queued after retry.`
                         );
                       } else {
-                        message.success("All previously failed email entries were sent successfully.");
+                        message.success("All previously failed email entries are queued. Delivery status will update automatically.");
                       }
                     } finally {
                       setRetryingFailed(false);

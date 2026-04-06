@@ -74,6 +74,8 @@ export interface UserProfile {
 type InviteUserOptions = {
   bodyText?: string;
   fullName?: string;
+  applicationId?: string;
+  applicationEnv?: string;
 };
 
 // Create an account for a new user
@@ -148,10 +150,14 @@ export const streamInvitedUsers = (observer: Observer<QuerySnapshot>) => {
 export const inviteUser = (email: string, options?: InviteUserOptions): Promise<void> => {
   const bodyText = options?.bodyText?.trim();
   const fullName = options?.fullName?.trim();
+  const applicationId = options?.applicationId?.trim();
+  const applicationEnv = options?.applicationEnv?.trim();
   return setDoc(doc(db, 'invites', email), {
     registered: false,
     ...(bodyText ? { bodyText } : {}),
     ...(fullName ? { fullName } : {}),
+    ...(applicationId ? { applicationId } : {}),
+    ...(applicationEnv ? { applicationEnv } : {}),
   });
 };
 
