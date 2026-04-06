@@ -238,6 +238,8 @@ export interface BoardRole {
 
 export type ApplicationDecision = "pending" | "maybe" | "accept" | "reject";
 
+export type EmailDeliveryStatus = "pending" | "success" | "failed";
+
 export interface IntakeApplication {
   id: string;
   fullName: string;
@@ -247,5 +249,6 @@ export interface IntakeApplication {
   applicationFilePath: string;
   photoPath: string;
   decision: ApplicationDecision;
+  emailDeliveryStatus: EmailDeliveryStatus;
   createdAt?: Date;
 }

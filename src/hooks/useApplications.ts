@@ -3,15 +3,17 @@ import { DocumentData, DocumentSnapshot, QuerySnapshot, Timestamp } from "fireba
 import { useEffect, useMemo, useState } from "react";
 import {
   queueTemplateTestEmail,
+  QueueEmailResult,
   queueRejectedApplicationEmails,
   resetAndDeleteApplicationRound,
   streamApplicationRoundMeta,
   streamApplications,
   submitApplication,
   submitApplicationRound,
+  updateApplicationEmailDeliveryStatuses,
   updateApplicationDecision,
 } from "../firebase/api/applications";
-import { ApplicationDecision, IntakeApplication } from "../types/types-file";
+import { ApplicationDecision, EmailDeliveryStatus, IntakeApplication } from "../types/types-file";
 
 type ApplicationsState = {
   loading: boolean;
@@ -39,6 +41,7 @@ export default function useApplications() {
             applicationFilePath: data.applicationFilePath,
             photoPath: data.photoPath,
             decision: (data.decision ?? "pending") as ApplicationDecision,
+            emailDeliveryStatus: (data.emailDeliveryStatus ?? "pending") as EmailDeliveryStatus,
             createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : undefined,
           };
         });
@@ -91,18 +94,30 @@ export default function useApplications() {
   };
 
   const queueRejectedEmails = async (
-    rejections: Array<{ email: string; fullName: string }>,
+    rejections: Array<{ id: string; email: string; fullName: string }>,
     bodyText?: string
-  ) => {
-    if (!rejections.length) return;
+  ): Promise<QueueEmailResult> => {
+    if (!rejections.length) {
+      return { successful: [], failed: [] };
+    }
 
-    await queueRejectedApplicationEmails(
+    return queueRejectedApplicationEmails(
       rejections.map((rejection) => ({
+        id: rejection.id,
         email: rejection.email,
         fullName: rejection.fullName,
         bodyText,
       }))
     );
+  };
+
+  const setEmailDeliveryStatuses = async (
+    updates: Array<{
+      id: string;
+      emailDeliveryStatus?: "pending" | "success" | "failed";
+    }>
+  ) => {
+    await updateApplicationEmailDeliveryStatuses(updates);
   };
 
   const sendTemplateTestEmail = async (payload: {
@@ -142,6 +157,7 @@ export default function useApplications() {
     setDecision,
     submitRound,
     queueRejectedEmails,
+    setEmailDeliveryStatuses,
     sendTemplateTestEmail,
     deleteRound,
   };

@@ -5,6 +5,7 @@ import {
   DocumentData,
   DocumentSnapshot,
   doc,
+  writeBatch,
   onSnapshot,
   orderBy,
   QuerySnapshot,
@@ -39,9 +40,15 @@ type SubmitApplicationPayload = {
 };
 
 type QueueRejectedEmailPayload = {
+  id: string;
   email: string;
   fullName: string;
   bodyText?: string;
+};
+
+export type QueueEmailResult = {
+  successful: string[];
+  failed: Array<{ id: string; email: string; error: unknown }>;
 };
 
 type QueueTemplateTestEmailPayload = {
@@ -93,6 +100,7 @@ export const submitApplication = async (payload: SubmitApplicationPayload) => {
       applicationFilePath: uploadedApplicationPath,
       photoPath: uploadedPhotoPath,
       decision: "pending",
+      emailDeliveryStatus: "pending",
       createdAt: serverTimestamp(),
     });
   } catch (error) {
@@ -135,10 +143,10 @@ export const submitApplicationRound = async (submittedByUid: string) => {
   }, { merge: true });
 };
 
-export const queueRejectedApplicationEmails = async (rejections: QueueRejectedEmailPayload[]) => {
+export const queueRejectedApplicationEmails = async (rejections: QueueRejectedEmailPayload[]): Promise<QueueEmailResult> => {
   const collectionRef = collection(doc(collection(db, "env"), env), "applicationRejectionEmails");
 
-  await Promise.all(
+  const results = await Promise.allSettled(
     rejections.map((rejection) =>
       addDoc(collectionRef, {
         email: rejection.email,
@@ -148,6 +156,39 @@ export const queueRejectedApplicationEmails = async (rejections: QueueRejectedEm
       })
     )
   );
+
+  const successful: string[] = [];
+  const failed: Array<{ id: string; email: string; error: unknown }> = [];
+
+  results.forEach((result, index) => {
+    const rejection = rejections[index];
+    if (result.status === "fulfilled") {
+      successful.push(rejection.id);
+    } else {
+      failed.push({ id: rejection.id, email: rejection.email, error: result.reason });
+    }
+  });
+
+  return { successful, failed };
+};
+
+export const updateApplicationEmailDeliveryStatuses = async (
+  updates: Array<{
+    id: string;
+    emailDeliveryStatus?: "pending" | "success" | "failed";
+  }>
+) => {
+  if (!updates.length) return;
+
+  const batch = writeBatch(db);
+  updates.forEach((update) => {
+    const docRef = doc(getApplicationsCollection(), update.id);
+    const payload: Record<string, string> = {};
+    if (update.emailDeliveryStatus) payload.emailDeliveryStatus = update.emailDeliveryStatus;
+    batch.update(docRef, payload);
+  });
+
+  await batch.commit();
 };
 
 export const queueTemplateTestEmail = async (payload: QueueTemplateTestEmailPayload) => {

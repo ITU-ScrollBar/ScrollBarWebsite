@@ -1,4 +1,10 @@
 import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ClockCircleOutlined,
+  RedoOutlined,
+} from "@ant-design/icons";
+import {
   Button,
   Divider,
   Image,
@@ -29,12 +35,22 @@ const { Title, Paragraph } = Typography;
 
 export default function ApplicationsReviewPage() {
   const { currentUser } = useAuth();
-  const { applicationsState, grouped, setDecision, submitRound, deleteRound, queueRejectedEmails, sendTemplateTestEmail } = useApplications();
+  const {
+    applicationsState,
+    grouped,
+    setDecision,
+    submitRound,
+    deleteRound,
+    queueRejectedEmails,
+    sendTemplateTestEmail,
+    setEmailDeliveryStatuses,
+  } = useApplications();
   const { addInvites } = useTenders();
   const { settingsState } = useSettings();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [submittingRound, setSubmittingRound] = useState(false);
   const [deletingRound, setDeletingRound] = useState(false);
+  const [retryingFailed, setRetryingFailed] = useState(false);
   const [sendingInviteTest, setSendingInviteTest] = useState(false);
   const [sendingRejectionTest, setSendingRejectionTest] = useState(false);
   const [studyLines, setStudyLines] = useState<StudyLine[]>([]);
@@ -49,6 +65,34 @@ export default function ApplicationsReviewPage() {
       (application) => application.decision === "accept" || application.decision === "reject"
     );
   }, [applicationsState.applications, applicationsState.submittedAt, isAdmin]);
+
+  const hasFailedDeliveries = useMemo(() => {
+    return applicationsState.applications.some((application) => application.emailDeliveryStatus === "failed");
+  }, [applicationsState.applications]);
+
+  const renderDeliveryIcon = (status: "pending" | "success" | "failed") => {
+    if (status === "success") {
+      return (
+        <Tooltip title="Email queued/sent successfully.">
+          <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 18 }} />
+        </Tooltip>
+      );
+    }
+    if (status === "failed") {
+      return (
+        <Tooltip title="Email queue/send failed. Admin can retry failed entries.">
+          <CloseCircleOutlined style={{ color: "#ff4d4f", fontSize: 18 }} />
+        </Tooltip>
+      );
+    }
+    if (status === "pending") {
+      return (
+        <Tooltip title="Email has not been processed yet.">
+          <ClockCircleOutlined style={{ color: "#faad14", fontSize: 18 }} />
+        </Tooltip>
+      );
+    }
+  };
 
   useEffect(() => {
     getStudyLines()
@@ -160,7 +204,19 @@ export default function ApplicationsReviewPage() {
         return <Tag>Pending</Tag>;
       },
     },
-    ...(isAdmin
+    ...(applicationsState.submittedAt
+      ? [
+          {
+            title: "Email status",
+            key: "emailStatus",
+            render: (_: unknown, record: IntakeApplication) => {
+              if (record.decision === "accept" || record.decision === "reject") {
+                return renderDeliveryIcon(record.emailDeliveryStatus);
+              }
+            },
+          },
+        ]
+      : isAdmin
       ? [
           {
             title: "Actions",
@@ -364,20 +420,45 @@ export default function ApplicationsReviewPage() {
                   if (!currentUser?.uid) return;
                   setSubmittingRound(true);
                   try {
-                    await addInvites(
+                    const inviteResult = await addInvites(
                       grouped.accept.map((application) => ({
+                        id: application.id,
                         email: application.email,
                         fullName: application.fullName,
                       })),
                       settingsState.settings.inviteEmailBodyText
                     );
-                    await queueRejectedEmails(
+                    const rejectResult = await queueRejectedEmails(
                       grouped.reject.map((application) => ({
+                        id: application.id,
                         email: application.email,
                         fullName: application.fullName,
                       })),
                       settingsState.settings.rejectionEmailBodyText
                     );
+
+                    await setEmailDeliveryStatuses([
+                      ...grouped.accept.map((application) => ({
+                        id: application.id,
+                        emailDeliveryStatus: inviteResult.successful.includes(application.id)
+                          ? ("success" as const)
+                          : ("failed" as const),
+                      })),
+                      ...grouped.reject.map((application) => ({
+                        id: application.id,
+                        emailDeliveryStatus: rejectResult.successful.includes(application.id)
+                          ? ("success" as const)
+                          : ("failed" as const),
+                      })),
+                    ]);
+
+                    const failedTotal = inviteResult.failed.length + rejectResult.failed.length;
+                    if (failedTotal) {
+                      message.warning(
+                        `${failedTotal} email${failedTotal === 1 ? "" : "s"} failed. You can retry failed entries.`
+                      );
+                    }
+
                     await submitRound(currentUser.uid);
                   } finally {
                     setSubmittingRound(false);
@@ -401,6 +482,75 @@ export default function ApplicationsReviewPage() {
                   Submit
                 </Button>
               </Popconfirm>
+
+              {applicationsState.submittedAt && hasFailedDeliveries && (
+                <Popconfirm
+                  title="Retry failed email entries"
+                  description="Retry sending only entries that previously failed?"
+                  okText="Retry"
+                  onConfirm={async () => {
+                    setRetryingFailed(true);
+                    try {
+                      const failedInvites = applicationsState.applications.filter(
+                        (application) =>
+                          application.decision === "accept" && application.emailDeliveryStatus === "failed"
+                      );
+                      const failedRejections = applicationsState.applications.filter(
+                        (application) =>
+                          application.decision === "reject" && application.emailDeliveryStatus === "failed"
+                      );
+
+                      const inviteRetryResult = await addInvites(
+                        failedInvites.map((application) => ({
+                          id: application.id,
+                          email: application.email,
+                          fullName: application.fullName,
+                        })),
+                        settingsState.settings.inviteEmailBodyText
+                      );
+
+                      const rejectRetryResult = await queueRejectedEmails(
+                        failedRejections.map((application) => ({
+                          id: application.id,
+                          email: application.email,
+                          fullName: application.fullName,
+                        })),
+                        settingsState.settings.rejectionEmailBodyText
+                      );
+
+                      await setEmailDeliveryStatuses([
+                        ...failedInvites.map((application) => ({
+                          id: application.id,
+                          emailDeliveryStatus: inviteRetryResult.successful.includes(application.id)
+                            ? ("success" as const)
+                            : ("failed" as const),
+                        })),
+                        ...failedRejections.map((application) => ({
+                          id: application.id,
+                          emailDeliveryStatus: rejectRetryResult.successful.includes(application.id)
+                            ? ("success" as const)
+                            : ("failed" as const),
+                        })),
+                      ]);
+
+                      const failedTotal = inviteRetryResult.failed.length + rejectRetryResult.failed.length;
+                      if (failedTotal) {
+                        message.warning(
+                          `${failedTotal} email${failedTotal === 1 ? "" : "s"} still failed after retry.`
+                        );
+                      } else {
+                        message.success("All previously failed email entries were sent successfully.");
+                      }
+                    } finally {
+                      setRetryingFailed(false);
+                    }
+                  }}
+                >
+                  <Button icon={<RedoOutlined />} loading={retryingFailed}>
+                    Retry failed emails
+                  </Button>
+                </Popconfirm>
+              )}
 
               <Popconfirm
                 title="Delete application round"
