@@ -394,7 +394,7 @@ export default function ApplicationsReviewPage() {
                     ? "No applications to submit"
                     : canSubmit
                     ? "Submit the round and invite accepted applicants"
-                    : "All applications must be classified and at least one must be accepted to submit"
+                    : "All applications must be classified as accepted or rejected to submit"
                   }
                   loading={submittingRound}
                 >
