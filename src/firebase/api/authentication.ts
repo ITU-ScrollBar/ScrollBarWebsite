@@ -71,6 +71,11 @@ export interface UserProfile {
   photoUrl: string;
 }
 
+type InviteUserOptions = {
+  bodyText?: string;
+  fullName?: string;
+};
+
 // Create an account for a new user
 export const createAccount = async (form: FormData): Promise<User> => {
   const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, form.email, form.password);
@@ -140,8 +145,14 @@ export const streamInvitedUsers = (observer: Observer<QuerySnapshot>) => {
   });
 };
 // Invite a user by email
-export const inviteUser = (email: string): Promise<void> => {
-  return setDoc(doc(db, 'invites', email), { registered: false });
+export const inviteUser = (email: string, options?: InviteUserOptions): Promise<void> => {
+  const bodyText = options?.bodyText?.trim();
+  const fullName = options?.fullName?.trim();
+  return setDoc(doc(db, 'invites', email), {
+    registered: false,
+    ...(bodyText ? { bodyText } : {}),
+    ...(fullName ? { fullName } : {}),
+  });
 };
 
 // Delete an invite by its ID

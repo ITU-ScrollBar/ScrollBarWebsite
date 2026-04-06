@@ -124,7 +124,7 @@ const EditableCell = ({
           }}
         >
           <MDEditor.Markdown
-            source={value}
+            source={value.trim().length > 0 ? value.trim() : "Click to edit"}
             style={{ background: "white", color: "black", textWrap: "wrap" }}
           />
         </div>
@@ -166,7 +166,7 @@ const EditableCell = ({
           }
         }}
       >
-        {value}
+        {value.trim().length > 0 ? value.trim() : "Click to edit"}
       </div>
     );
   }
@@ -230,6 +230,18 @@ const GlobalSettingsPage = () => {
       inputType: "textarea",
       label: "Join ScrollBar text",
       value: settingsState.settings.joinScrollBarText,
+    },
+    {
+      key: "inviteEmailBodyText",
+      inputType: "textarea",
+      label: "Invite email body text",
+      value: settingsState.settings.inviteEmailBodyText || "",
+    },
+    {
+      key: "rejectionEmailBodyText",
+      inputType: "textarea",
+      label: "Rejection email body text",
+      value: settingsState.settings.rejectionEmailBodyText || "",
     },
     {
       key: "openForSignupsStart",

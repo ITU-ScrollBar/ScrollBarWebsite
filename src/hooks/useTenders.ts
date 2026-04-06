@@ -109,8 +109,8 @@ const useTenders = () => {
   }, []);
 
   // Add invite
-  const addInvite = (email: string) => {
-    return inviteUser(email)
+  const addInvite = (email: string, bodyText?: string, fullName?: string) => {
+    return inviteUser(email, { bodyText, fullName })
       .then((response) => {
         message.success("Invite sent successfully!");
         return response; // Return the response from the inviteUser function
@@ -121,11 +121,11 @@ const useTenders = () => {
       });
   };
 
-  const addInvites = (emails: string[]) => {
+  const addInvites = (recipients: Array<{ email: string; fullName?: string }>, bodyText?: string) => {
     return Promise.allSettled(
-      emails.map((email) =>
-        inviteUser(email).catch((error) => {
-          throw { email, error };
+      recipients.map((recipient) =>
+        inviteUser(recipient.email, { bodyText, fullName: recipient.fullName }).catch((error) => {
+          throw { email: recipient.email, error };
         })
       )
     ).then((inviteResults) => {

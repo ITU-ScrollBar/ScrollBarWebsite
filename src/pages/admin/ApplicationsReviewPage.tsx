@@ -16,6 +16,7 @@ import { Content } from "antd/es/layout/layout";
 import { useEffect, useMemo, useState } from "react";
 import useApplications from "../../hooks/useApplications";
 import useTenders from "../../hooks/useTenders";
+import useSettings from "../../hooks/useSettings";
 import { IntakeApplication, StudyLine } from "../../types/types-file";
 import { useAuth } from "../../contexts/AuthContext";
 import Loading from "../../components/Loading";
@@ -28,11 +29,14 @@ const { Title, Paragraph } = Typography;
 
 export default function ApplicationsReviewPage() {
   const { currentUser } = useAuth();
-  const { applicationsState, grouped, setDecision, submitRound, deleteRound } = useApplications();
+  const { applicationsState, grouped, setDecision, submitRound, deleteRound, queueRejectedEmails, sendTemplateTestEmail } = useApplications();
   const { addInvites } = useTenders();
+  const { settingsState } = useSettings();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [submittingRound, setSubmittingRound] = useState(false);
   const [deletingRound, setDeletingRound] = useState(false);
+  const [sendingInviteTest, setSendingInviteTest] = useState(false);
+  const [sendingRejectionTest, setSendingRejectionTest] = useState(false);
   const [studyLines, setStudyLines] = useState<StudyLine[]>([]);
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
 
@@ -163,12 +167,12 @@ export default function ApplicationsReviewPage() {
             key: "actions",
             render: (_: unknown, record: IntakeApplication) => (
               <Space>
-                <Button
-                  size="small"
-                  type={record.decision === "accept" ? "primary" : "default"}
+                <Popconfirm
+                  title="Set decision to Accept"
+                  description={`Mark ${record.fullName} as accepted?`}
+                  okText="Accept"
                   disabled={!!applicationsState.submittedAt}
-                  loading={busyId === `${record.id}-accept`}
-                  onClick={async () => {
+                  onConfirm={async () => {
                     setBusyId(`${record.id}-accept`);
                     try {
                       await setDecision(record.id, "accept");
@@ -177,14 +181,21 @@ export default function ApplicationsReviewPage() {
                     }
                   }}
                 >
-                  Accept
-                </Button>
-                <Button
-                  size="small"
-                  type={record.decision === "maybe" ? "primary" : "default"}
+                  <Button
+                    size="small"
+                    type={record.decision === "accept" ? "primary" : "default"}
+                    disabled={!!applicationsState.submittedAt}
+                    loading={busyId === `${record.id}-accept`}
+                  >
+                    Accept
+                  </Button>
+                </Popconfirm>
+                <Popconfirm
+                  title="Set decision to Maybe"
+                  description={`Mark ${record.fullName} as maybe?`}
+                  okText="Set maybe"
                   disabled={!!applicationsState.submittedAt}
-                  loading={busyId === `${record.id}-maybe`}
-                  onClick={async () => {
+                  onConfirm={async () => {
                     setBusyId(`${record.id}-maybe`);
                     try {
                       await setDecision(record.id, "maybe");
@@ -193,15 +204,22 @@ export default function ApplicationsReviewPage() {
                     }
                   }}
                 >
-                  Maybe
-                </Button>
-                <Button
-                  size="small"
-                  danger
-                  type={record.decision === "reject" ? "primary" : "default"}
+                  <Button
+                    size="small"
+                    type={record.decision === "maybe" ? "primary" : "default"}
+                    disabled={!!applicationsState.submittedAt}
+                    loading={busyId === `${record.id}-maybe`}
+                  >
+                    Maybe
+                  </Button>
+                </Popconfirm>
+                <Popconfirm
+                  title="Set decision to Reject"
+                  description={`Mark ${record.fullName} as rejected?`}
+                  okText="Reject"
+                  okButtonProps={{ danger: true }}
                   disabled={!!applicationsState.submittedAt}
-                  loading={busyId === `${record.id}-reject`}
-                  onClick={async () => {
+                  onConfirm={async () => {
                     setBusyId(`${record.id}-reject`);
                     try {
                       await setDecision(record.id, "reject");
@@ -210,8 +228,16 @@ export default function ApplicationsReviewPage() {
                     }
                   }}
                 >
-                  Reject
-                </Button>
+                  <Button
+                    size="small"
+                    danger
+                    type={record.decision === "reject" ? "primary" : "default"}
+                    disabled={!!applicationsState.submittedAt}
+                    loading={busyId === `${record.id}-reject`}
+                  >
+                    Reject
+                  </Button>
+                </Popconfirm>
               </Space>
             ),
           },
@@ -275,32 +301,106 @@ export default function ApplicationsReviewPage() {
           <>
             <Divider />
             <Space>
-              <Button
-                type="primary"
+              <Popconfirm
+                title="Send invite test email"
+                description="Send the invite template to yourself?"
+                okText="Send test"
+                onConfirm={async () => {
+                  if (!currentUser?.email) {
+                    message.error("Your user account has no email configured.");
+                    return;
+                  }
+                  setSendingInviteTest(true);
+                  try {
+                    await sendTemplateTestEmail({
+                      templateType: "invite",
+                      email: currentUser.email,
+                      fullName: currentUser.displayName ?? "ScrollBar Applicant",
+                      bodyText: settingsState.settings.inviteEmailBodyText,
+                    });
+                  } finally {
+                    setSendingInviteTest(false);
+                  }
+                }}
+              >
+                <Button type="default" loading={sendingInviteTest}>
+                  Send Invite Test To Me
+                </Button>
+              </Popconfirm>
+
+              <Popconfirm
+                title="Send rejection test email"
+                description="Send the rejection template to your own email using your name variables?"
+                okText="Send test"
+                onConfirm={async () => {
+                  if (!currentUser?.email) {
+                    message.error("Your user account has no email configured.");
+                    return;
+                  }
+                  setSendingRejectionTest(true);
+                  try {
+                    await sendTemplateTestEmail({
+                      templateType: "rejection",
+                      email: currentUser.email,
+                      fullName: currentUser.displayName ?? "ScrollBar Applicant",
+                      bodyText: settingsState.settings.rejectionEmailBodyText,
+                    });
+                  } finally {
+                    setSendingRejectionTest(false);
+                  }
+                }}
+              >
+                <Button type="default" loading={sendingRejectionTest}>
+                  Send Rejection Test To Me
+                </Button>
+              </Popconfirm>
+
+              <Popconfirm
+                title="Submit application round"
+                description="This will send invite emails to accepted applicants and rejection emails to rejected applicants, then mark the round as submitted. Continue?"
+                okText="Submit"
                 disabled={!canSubmit}
-                title={
-                  applicationsState.submittedAt
-                  ? "This round has already been submitted"
-                  : !applicationsState.applications.length
-                  ? "No applications to submit"
-                  : canSubmit
-                  ? "Submit the round and invite accepted applicants"
-                  : "All applications must be classified and at least one must be accepted to submit"
-                }
-                loading={submittingRound}
-                onClick={async () => {
+                onConfirm={async () => {
                   if (!currentUser?.uid) return;
                   setSubmittingRound(true);
                   try {
-                    await addInvites(grouped.accept.map((application) => application.email));
+                    await addInvites(
+                      grouped.accept.map((application) => ({
+                        email: application.email,
+                        fullName: application.fullName,
+                      })),
+                      settingsState.settings.inviteEmailBodyText
+                    );
+                    await queueRejectedEmails(
+                      grouped.reject.map((application) => ({
+                        email: application.email,
+                        fullName: application.fullName,
+                      })),
+                      settingsState.settings.rejectionEmailBodyText
+                    );
                     await submitRound(currentUser.uid);
                   } finally {
                     setSubmittingRound(false);
                   }
                 }}
               >
-                Submit
-              </Button>
+                <Button
+                  type="primary"
+                  disabled={!canSubmit}
+                  title={
+                    applicationsState.submittedAt
+                    ? "This round has already been submitted"
+                    : !applicationsState.applications.length
+                    ? "No applications to submit"
+                    : canSubmit
+                    ? "Submit the round and invite accepted applicants"
+                    : "All applications must be classified and at least one must be accepted to submit"
+                  }
+                  loading={submittingRound}
+                >
+                  Submit
+                </Button>
+              </Popconfirm>
 
               <Popconfirm
                 title="Delete application round"

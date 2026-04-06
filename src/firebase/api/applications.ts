@@ -38,6 +38,19 @@ type SubmitApplicationPayload = {
   photoFile: File;
 };
 
+type QueueRejectedEmailPayload = {
+  email: string;
+  fullName: string;
+  bodyText?: string;
+};
+
+type QueueTemplateTestEmailPayload = {
+  templateType: "invite" | "rejection";
+  email: string;
+  fullName: string;
+  bodyText?: string;
+};
+
 const uploadApplicationFile = async (file: File, applicantEmail: string, fileTag: string) => {
   const extension = getExtension(file.name);
   const safeEmail = applicantEmail.replace(/[^a-zA-Z0-9._-]/g, "_").toLowerCase();
@@ -96,6 +109,32 @@ export const submitApplicationRound = async (submittedByUid: string) => {
     submittedAt: serverTimestamp(),
     submittedByUid,
   }, { merge: true });
+};
+
+export const queueRejectedApplicationEmails = async (rejections: QueueRejectedEmailPayload[]) => {
+  const collectionRef = collection(doc(collection(db, "env"), env), "applicationRejectionEmails");
+
+  await Promise.all(
+    rejections.map((rejection) =>
+      addDoc(collectionRef, {
+        email: rejection.email,
+        fullName: rejection.fullName,
+        bodyText: rejection.bodyText ?? "",
+        createdAt: serverTimestamp(),
+      })
+    )
+  );
+};
+
+export const queueTemplateTestEmail = async (payload: QueueTemplateTestEmailPayload) => {
+  const collectionRef = collection(doc(collection(db, "env"), env), "emailTemplateTests");
+  return addDoc(collectionRef, {
+    templateType: payload.templateType,
+    email: payload.email,
+    fullName: payload.fullName,
+    bodyText: payload.bodyText ?? "",
+    createdAt: serverTimestamp(),
+  });
 };
 
 export const resetAndDeleteApplicationRound = async (

@@ -51,6 +51,8 @@ export interface Settings {
   getHelpDescription: string;
   joinScrollBarText: string;
   joinScrollBarTitle: string;
+  inviteEmailBodyText?: string;
+  rejectionEmailBodyText?: string;
   minutes: string;
   openForSignupsStart?: string;
   openForSignupsEnd?: string;

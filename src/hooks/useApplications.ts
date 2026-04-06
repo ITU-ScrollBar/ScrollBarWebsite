@@ -2,6 +2,8 @@ import { message } from "antd";
 import { DocumentData, DocumentSnapshot, QuerySnapshot, Timestamp } from "firebase/firestore";
 import { useEffect, useMemo, useState } from "react";
 import {
+  queueTemplateTestEmail,
+  queueRejectedApplicationEmails,
   resetAndDeleteApplicationRound,
   streamApplicationRoundMeta,
   streamApplications,
@@ -88,6 +90,31 @@ export default function useApplications() {
     message.success("Application round submitted.");
   };
 
+  const queueRejectedEmails = async (
+    rejections: Array<{ email: string; fullName: string }>,
+    bodyText?: string
+  ) => {
+    if (!rejections.length) return;
+
+    await queueRejectedApplicationEmails(
+      rejections.map((rejection) => ({
+        email: rejection.email,
+        fullName: rejection.fullName,
+        bodyText,
+      }))
+    );
+  };
+
+  const sendTemplateTestEmail = async (payload: {
+    templateType: "invite" | "rejection";
+    email: string;
+    fullName: string;
+    bodyText?: string;
+  }) => {
+    await queueTemplateTestEmail(payload);
+    message.success("Test email has been sent.");
+  };
+
   const deleteRound = async () => {
     await resetAndDeleteApplicationRound(
       state.applications.map((application) => ({
@@ -114,6 +141,8 @@ export default function useApplications() {
     submitNewApplication,
     setDecision,
     submitRound,
+    queueRejectedEmails,
+    sendTemplateTestEmail,
     deleteRound,
   };
 }

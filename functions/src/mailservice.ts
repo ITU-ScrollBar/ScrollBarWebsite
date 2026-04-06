@@ -1,6 +1,5 @@
 import FormData from 'form-data';
 import Mailgun from 'mailgun.js';
-import * as functions from 'firebase-functions/v2';
 import * as admin from 'firebase-admin';
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { Tender } from '../src/types/types-file';
@@ -23,6 +22,9 @@ export const sendEmailInvite = onDocumentCreated(
     { document: 'invites/{email}', region: 'europe-west1' },
     async (event: any) => {
         const email = event.params?.email;
+        const data = event.data?.data ? event.data.data() : {};
+        const fullName = data?.fullName || 'ScrollBar Applicant';
+        const bodyText = data?.bodyText?.trim?.() || "You have been invited to ScrollBar Tender site. Please follow your invitation link to continue.";
         if (!email) {
             console.warn('sendEmailInvite: missing email param');
             return;
@@ -30,9 +32,13 @@ export const sendEmailInvite = onDocumentCreated(
         try {
             await mailgun.messages.create(mailgunDomain, {
                 to: email,
-                from: `ScrollBar Web <no-reply@${mailgunDomain}>`,
+                from: `ScrollBar Web <board@${mailgunDomain}>`,
                 subject: 'You have been invited to ScrollBar Tender site',
                 template: 'invite_template',
+                'h:X-Mailgun-Variables': JSON.stringify({
+                    name: fullName,
+                    bodyText,
+                }),
             });
             return;
         } catch (err) {
@@ -73,6 +79,74 @@ export const sendShiftGrabbedConfirmation = onDocumentUpdated(
             return;
         } catch (err) {
             console.error('sendShiftGrabbedConfirmation error', err);
+        }
+    }
+);
+
+export const sendRejectedApplicationEmail = onDocumentCreated(
+    { document: 'env/{_env}/applicationRejectionEmails/{docId}', region: 'europe-west1' },
+    async (event: any) => {
+        const data = event.data?.data ? event.data.data() : {};
+        const email = data?.email;
+        const fullName = data?.fullName || 'ScrollBar Applicant';
+        const bodyText = data?.bodyText?.trim?.() || 'Thank you for your application. Unfortunately, we are not able to offer you a position at this time.';
+
+        if (!email) {
+            console.warn('sendRejectedApplicationEmail: missing email');
+            return;
+        }
+
+        try {
+            await mailgun.messages.create(mailgunDomain, {
+                to: email,
+                from: `ScrollBar Web <board@${mailgunDomain}>`,
+                subject: 'Regarding your ScrollBar application',
+                template: 'application_rejected_template',
+                'h:X-Mailgun-Variables': JSON.stringify({
+                    name: fullName,
+                    bodyText,
+                }),
+            });
+            return;
+        } catch (err) {
+            console.error('sendRejectedApplicationEmail error', err);
+        }
+    }
+);
+
+export const sendTemplateTestEmail = onDocumentCreated(
+    { document: 'env/{_env}/emailTemplateTests/{docId}', region: 'europe-west1' },
+    async (event: any) => {
+        const data = event.data?.data ? event.data.data() : {};
+        const templateType = data?.templateType;
+        const email = data?.email;
+        const fullName = data?.fullName || 'ScrollBar Applicant';
+        const bodyText = data?.bodyText?.trim?.() || '';
+
+        if (!email || (templateType !== 'invite' && templateType !== 'rejection')) {
+            console.warn('sendTemplateTestEmail: invalid payload');
+            return;
+        }
+
+        try {
+            const template = templateType === 'invite' ? 'invite_template' : 'application_rejected_template';
+            const subject = templateType === 'invite'
+                ? '[TEST] You have been invited to ScrollBar Tender site'
+                : '[TEST] Regarding your ScrollBar application';
+
+            await mailgun.messages.create(mailgunDomain, {
+                to: email,
+                from: `ScrollBar Web <board@${mailgunDomain}>`,
+                subject,
+                template,
+                'h:X-Mailgun-Variables': JSON.stringify({
+                    name: fullName,
+                    bodyText,
+                }),
+            });
+            return;
+        } catch (err) {
+            console.error('sendTemplateTestEmail error', err);
         }
     }
 );
