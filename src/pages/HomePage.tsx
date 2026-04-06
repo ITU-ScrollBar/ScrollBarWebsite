@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo } from 'react'
-import { Button, Col, Divider, Layout, Row, List } from 'antd'
+import { useEffect, useMemo } from 'react'
+import { Button, Col, Divider, Layout, Row } from 'antd'
 import Title from 'antd/es/typography/Title'
 import Paragraph from 'antd/es/typography/Paragraph'
 import HeaderBar from '../components/HomePage/HeaderBar'
@@ -7,24 +7,21 @@ import useSettings from '../hooks/useSettings'
 import MDEditor from '@uiw/react-md-editor'
 import useTenders from '../hooks/useTenders'
 import useBoardRoles from '../hooks/useBoardRoles'
-import { UserAvatar } from '../components/UserAvatar'
-import { getTenderDisplayName } from './members/helpers'
-import { BoardRole, Role, StudyLine, Tender } from '../types/types-file'
-import { getStudyLines } from '../firebase/api/authentication'
+import { Role } from '../types/types-file'
 import { Loading } from '../components/Loading'
 import CountDown from '../components/EventPage/EventCountDown'
 import {useNextEvent}  from '../hooks/useEvents'
 import { useLocation } from 'react-router-dom'
-
-let cachedStudylines: StudyLine[] | null = null;
-let cachePromise: Promise<StudyLine[]> | null = null;
-type TenderWithRole = Tender & { role?: BoardRole };
+import { UserList, TenderWithRole } from '../components/UserList'
+import { useWindowSize } from '../hooks/useWindowSize'
 
 export default function HomePage() {
   const { settingsState } = useSettings();
   const { tenderState } = useTenders();
   const { boardRolesState } = useBoardRoles();
   const { nextEvent, loading: eventLoading } = useNextEvent();
+  const { isMobile } = useWindowSize();
+
   // Board members: use boardRoles, sorted by sortingIndex, showing assigned users
   const boardMembers = useMemo(() => {
     if (!boardRolesState.boardRoles) return [];
@@ -191,7 +188,7 @@ export default function HomePage() {
             <Title level={2} style={{ scrollMarginTop: '135px' }} id="boardMembers">
               The Board
             </Title>
-            <UserList users={boardMembers} />
+            <UserList users={boardMembers} columns={isMobile ? 3 : 10} />
           </Col>
         </Row>
 
@@ -209,72 +206,10 @@ export default function HomePage() {
             <Title level={2} style={{ scrollMarginTop: '135px' }} id="volunteers">
               The Volunteers
             </Title>
-            <UserList users={activeTenders} />
+            <UserList users={activeTenders} columns={isMobile ? 3 : 10} />
           </Col>
         </Row>
       </div>
     </Layout>
   )
 }
-
-const UserList = ({ users }: { users: TenderWithRole[]}) => {
-  const [studylines, setStudylines] = React.useState<StudyLine[]>([]);
-
-  if (users.some(u => u.role)) {
-    users.sort((a, b) => {
-      if (a.role && b.role) {
-        return (a.role.sortingIndex ?? 0) - (b.role.sortingIndex ?? 0);
-      }
-      return 0;
-    });
-  }
-
-  useEffect(() => {
-    // If already cached, use it immediately
-    if (cachedStudylines) {
-      setStudylines(cachedStudylines);
-      return;
-    }
-
-    // If fetch is already in progress, wait for it
-    if (cachePromise) {
-      cachePromise.then((data) => {
-        setStudylines(data);
-      });
-      return;
-    }
-
-    // Otherwise, fetch and cache
-    cachePromise = getStudyLines()
-      .then((response) => {
-        const mapped: StudyLine[] = response.map((doc: unknown) => doc as StudyLine);
-        cachedStudylines = mapped;
-        setStudylines(mapped);
-        return mapped;
-      })
-      .catch((error) => {
-        console.error("Failed to fetch study lines: " + error.message);
-        cachePromise = null; // Reset on error
-        return [];
-      });
-  }, []);
-
-  return (
-    <List
-      grid={{ gutter: 16, column: 10, xs: 3, sm: 3, md: 5, lg: 8, xl: 10 }}
-      dataSource={users}
-      renderItem={(user) => (
-        <List.Item>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            {user.role && (
-              <div style={{ marginTop: 8, textAlign: 'center', fontWeight: 'bold' }}>{user.role.name}</div>
-            )}
-            <UserAvatar user={user} size={95} showHats={false} />
-            <div style={{ marginTop: 8, textAlign: 'center' }}>{getTenderDisplayName(user)}</div>
-            <div style={{ marginTop: 8, textAlign: 'center', color: 'grey' }}>{studylines.find(sl => sl.id === user.studyline)?.abbreviation?.toLocaleUpperCase()}</div>
-          </div>
-        </List.Item>
-      )}
-    />
-  );
-};

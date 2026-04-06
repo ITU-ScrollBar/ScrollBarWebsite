@@ -5,15 +5,15 @@ import { message } from 'antd';
 import { DocumentReference, getDoc } from 'firebase/firestore';
 
 type BoardRolesState = {
-    loading: boolean;
-    boardRoles: BoardRole[];
+  loading: boolean;
+  boardRoles: BoardRole[];
 }
 
 type UseBoardRolesReturn = {
-    boardRolesState: BoardRolesState;
-    updateBoardRole: (id: string, update: { name?: string; assignedUser?: Tender; sortingIndex?: number }) => void;
-    addBoardRole: (name: string) => void;
-    deleteBoardRole: (id: string) => void;
+  boardRolesState: BoardRolesState;
+  updateBoardRole: (id: string, update: { name?: string; assignedUser?: Tender; sortingIndex?: number; contactEmail?: string }) => void;
+  addBoardRole: (name: string) => void;
+  deleteBoardRole: (id: string) => void;
 }
 
 // Type used to represent a board role but with a reference to the user
@@ -23,6 +23,7 @@ interface FirebaseBoardRole {
   name: string;
   assignedUserRef?: DocumentReference;
   sortingIndex?: number;
+  contactEmail?: string;
 }
 
 export default function useBoardRoles(): UseBoardRolesReturn {
@@ -49,6 +50,7 @@ export default function useBoardRoles(): UseBoardRolesReturn {
             name: data.name,
             assignedUser,
             sortingIndex: data.sortingIndex,
+            contactEmail: data.contactEmail,
           } as BoardRole;
         }));
 
@@ -62,7 +64,7 @@ export default function useBoardRoles(): UseBoardRolesReturn {
     return unsubscribe;
   }, []);
 
-  const updateBoardRole = (id: string, update: { name?: string; assignedUser?: Tender; sortingIndex?: number }) => {
+  const updateBoardRole = (id: string, update: { name?: string; assignedUser?: Tender; sortingIndex?: number; contactEmail?: string }) => {
     updateRole(id, update);
     if (update.name) {
       message.success(`Updated role name to ${update.name} successfully`);
@@ -70,6 +72,8 @@ export default function useBoardRoles(): UseBoardRolesReturn {
       message.success(`Assigned user ${update.assignedUser.displayName} to role successfully`);
     } else if (update.sortingIndex !== undefined) {
       message.success(`Updated role sorting index to ${update.sortingIndex} successfully`);
+    } else if (update.contactEmail !== undefined) {
+      message.success("Updated role contact email successfully");
     } else {
       message.success('Updated board role successfully');
     }

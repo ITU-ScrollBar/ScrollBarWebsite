@@ -13,6 +13,7 @@ import FooterBar from "./components/HomePage/FooterBar";
 import Register from "./pages/Register";
 import Shifts from "./pages/members/Shifts";
 import Profile from "./pages/members/Profile";
+import GetHelpPage from "./pages/members/GetHelpPage";
 import { TenderMenu } from "./components/HomePage/TenderMenu";
 import { Role, ShiftFiltering } from "./types/types-file";
 import EventManagement from "./pages/admin/EventManagement/EventManagement";
@@ -60,7 +61,6 @@ function App() {
                 {/* --- Protected Routes --- */}
                 <Route element={<ProtectedRoutes />}>
                   <Route element={<TenderMenu />}>
-                    <Route path="/members/profile" element={<Profile />} />
                     <Route
                       path="/tenders/allshifts"
                       element={
@@ -79,6 +79,7 @@ function App() {
                         />
                       }
                     />
+                    <Route path="/tenders/gethelp" element={<GetHelpPage />} />
                     <Route path="/members/profile" element={<Profile />} />
                     {/* --- Admin Routes --- */}
                     <Route element={<RoleProtectedRoute />}>

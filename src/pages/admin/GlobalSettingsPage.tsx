@@ -175,6 +175,18 @@ const GlobalSettingsPage = () => {
       value: settingsState.settings.homepageDescription,
     },
     {
+      key: "getHelpTitle",
+      inputType: "text",
+      label: "Get help page title",
+      value: settingsState.settings.getHelpTitle,
+    },
+    {
+      key: "getHelpDescription",
+      inputType: "textarea",
+      label: "Get help page description",
+      value: settingsState.settings.getHelpDescription,
+    },
+    {
       key: "joinScrollBarLink",
       inputType: "text",
       label: "Join ScrollBar link",

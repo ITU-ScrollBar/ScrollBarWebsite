@@ -47,6 +47,8 @@ export interface Settings {
   hero: string;
   homepageTitle: string;
   homepageDescription: string;
+  getHelpTitle: string;
+  getHelpDescription: string;
   joinScrollBarLink: string;
   joinScrollBarText: string;
   joinScrollBarTitle: string;
@@ -184,6 +186,7 @@ export enum Role {
   ANCHOR = "anchor",
   NEWBIE = "newbie",
   BOARD = "board",
+  HR = "hr",
   TENDER_MANAGER = "tender_manager",
   SHIFT_MANAGER = "shift_manager",
   EVENT_MANAGER = "event_manager",
@@ -228,4 +231,5 @@ export interface BoardRole {
   name: string;
   assignedUser?: Tender;
   sortingIndex?: number;
+  contactEmail?: string;
 }

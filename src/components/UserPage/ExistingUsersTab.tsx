@@ -102,6 +102,7 @@ export const ExistingUsersTab = () => {
       filters: [
         { text: "Admins", value: Role.ADMIN },
         { text: "Board members", value: Role.BOARD },
+        { text: "HR", value: Role.HR },
         { text: "Newbies", value: Role.NEWBIE },
         { text: "Anchors", value: Role.ANCHOR },
       ],
