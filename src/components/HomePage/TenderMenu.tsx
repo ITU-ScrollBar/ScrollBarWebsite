@@ -79,6 +79,10 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
         label: 'Manage Internal Events',
         key: 'admin/internalEvents',
       });
+      adminItems.push({
+        label: 'Applications Review',
+        key: 'admin/applications',
+      });
     }
     if (currentUser?.isAdmin) {
       adminItems.push({

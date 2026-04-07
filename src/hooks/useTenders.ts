@@ -21,7 +21,13 @@ type TenderState = {
   studylines?: StudyLine[]; // Optional property for study lines
 };
 
+type AddInvitesResult = {
+  successful: string[];
+  failed: Array<{ id: string; email: string; error: unknown }>;
+};
+
 const useTenders = () => {
+  const appEnv = import.meta.env.VITE_APP_ENV as string;
   const [tenderState, setTenderState] = useState<TenderState>({
     loading: false,
     isLoaded: false,
@@ -109,8 +115,8 @@ const useTenders = () => {
   }, []);
 
   // Add invite
-  const addInvite = (email: string) => {
-    return inviteUser(email)
+  const addInvite = (email: string, bodyText?: string, fullName?: string) => {
+    return inviteUser(email, { bodyText, fullName })
       .then((response) => {
         message.success("Invite sent successfully!");
         return response; // Return the response from the inviteUser function
@@ -119,6 +125,47 @@ const useTenders = () => {
         message.error(`Failed to send invite: ${error.message}`);
         throw error; // Propagate error for further handling if needed
       });
+  };
+
+  const addInvites = (
+    recipients: Array<{ id: string; email: string; fullName?: string }>,
+    bodyText?: string
+  ): Promise<AddInvitesResult> => {
+    return Promise.allSettled(
+      recipients.map((recipient) =>
+        inviteUser(recipient.email, {
+          bodyText,
+          fullName: recipient.fullName,
+          applicationId: recipient.id,
+          applicationEnv: appEnv,
+        })
+      )
+    ).then((inviteResults) => {
+      const successful: string[] = [];
+      const failed: Array<{ id: string; email: string; error: unknown }> = [];
+
+      inviteResults.forEach((result, index) => {
+        const recipient = recipients[index];
+        if (result.status === "fulfilled") {
+          successful.push(recipient.id);
+        } else {
+          failed.push({ id: recipient.id, email: recipient.email, error: result.reason });
+        }
+      });
+
+      if (failed.length) {
+        failed.forEach((entry) => {
+          const reason = entry.error as { message?: string };
+          message.error(`Failed to invite ${entry.email}: ${reason?.message}`);
+        });
+      } else {
+        message.success(
+          `Invited ${successful.length} accepted applicant${successful.length === 1 ? "" : "s"}.`
+        );
+      }
+
+      return { successful, failed };
+    });
   };
 
   // Remove invite
@@ -182,6 +229,7 @@ const useTenders = () => {
     tenderState,
     invitedTenders,
     addInvite,
+    addInvites,
     removeInvite,
     updateTender,
     deleteTender,

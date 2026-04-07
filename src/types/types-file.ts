@@ -49,11 +49,13 @@ export interface Settings {
   homepageDescription: string;
   getHelpTitle: string;
   getHelpDescription: string;
-  joinScrollBarLink: string;
   joinScrollBarText: string;
   joinScrollBarTitle: string;
+  inviteEmailBodyText?: string;
+  rejectionEmailBodyText?: string;
   minutes: string;
-  openForSignups: boolean;
+  openForSignupsStart?: string;
+  openForSignupsEnd?: string;
 }
 
 export interface SettingsUpdateParams {
@@ -232,4 +234,21 @@ export interface BoardRole {
   assignedUser?: Tender;
   sortingIndex?: number;
   contactEmail?: string;
+}
+
+export type ApplicationDecision = "pending" | "maybe" | "accept" | "reject";
+
+export type EmailDeliveryStatus = "pending" | "success" | "failed";
+
+export interface IntakeApplication {
+  id: string;
+  fullName: string;
+  email: string;
+  studyline: string;
+  comment: string;
+  applicationFilePath: string;
+  photoPath: string;
+  decision: ApplicationDecision;
+  emailDeliveryStatus: EmailDeliveryStatus;
+  createdAt?: Date;
 }
