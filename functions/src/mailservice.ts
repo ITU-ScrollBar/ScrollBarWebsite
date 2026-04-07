@@ -1,5 +1,6 @@
 import FormData from 'form-data';
 import Mailgun from 'mailgun.js';
+import { marked } from 'marked';
 import * as admin from 'firebase-admin';
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { Tender } from '../src/types/types-file';
@@ -17,6 +18,14 @@ const mailgun = new Mailgun(FormData).client({
 });
 
 const mailgunDomain = process.env.MAILGUN_DOMAIN || 'dev.scrollbar.dk';
+
+const renderMarkdownToHtml = (markdown: string): string => {
+    return marked.parse(markdown, {
+        async: false,
+        gfm: true,
+        breaks: true,
+    }) as string;
+};
 
 const updateApplicationDeliveryStatus = async (
     envName: string | undefined,
@@ -39,7 +48,7 @@ export const sendEmailInvite = onDocumentCreated(
         const email = event.params?.email;
         const data = event.data?.data ? event.data.data() : {};
         const fullName = data?.fullName || 'ScrollBar Applicant';
-        const bodyText = data?.bodyText?.trim?.() || "You have been invited to ScrollBar Tender site. Please follow your invitation link to continue.";
+        const bodyText = renderMarkdownToHtml(data?.bodyText?.trim?.()) || "You have been invited to ScrollBar Tender site. Please follow your invitation link to continue.";
         const applicationId = data?.applicationId;
         const applicationEnv = data?.applicationEnv;
         if (!email) {
@@ -110,7 +119,7 @@ export const sendRejectedApplicationEmail = onDocumentCreated(
         const applicationId = data?.applicationId;
         const email = data?.email;
         const fullName = data?.fullName || 'ScrollBar Applicant';
-        const bodyText = data?.bodyText?.trim?.() || 'Thank you for your application. Unfortunately, we are not able to offer you a position at this time.';
+        const bodyText = renderMarkdownToHtml(data?.bodyText?.trim?.()) || 'Thank you for your application. Unfortunately, we are not able to offer you a position at this time.';
 
         if (!email) {
             console.warn('sendRejectedApplicationEmail: missing email');
@@ -144,7 +153,7 @@ export const sendTemplateTestEmail = onDocumentCreated(
         const templateType = data?.templateType;
         const email = data?.email;
         const fullName = data?.fullName || 'ScrollBar Applicant';
-        const bodyText = data?.bodyText?.trim?.() || '';
+        const bodyText = renderMarkdownToHtml(data?.bodyText?.trim?.()) || '';
 
         if (!email || (templateType !== 'invite' && templateType !== 'rejection')) {
             console.warn('sendTemplateTestEmail: invalid payload');
