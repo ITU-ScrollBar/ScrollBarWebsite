@@ -7,7 +7,7 @@ import heroImage from "../assets/images/hero.jpg";
 import StudyLinePicker from "./members/StudyLinePicker";
 import useSettings from "../hooks/useSettings";
 import { Loading } from "../components/Loading";
-import { formatWindowDate, getSignupWindowState } from "../utils/signupWindow";
+import { getSignupWindowState } from "../utils/signupWindow";
 
 const { Content } = Layout;
 const { Title, Paragraph } = Typography;

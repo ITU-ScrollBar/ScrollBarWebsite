@@ -206,18 +206,18 @@ export default function ApplicationsReviewPage() {
     },
     ...(applicationsState.submittedAt
       ? [
-          {
-            title: "Email status",
-            key: "emailStatus",
-            render: (_: unknown, record: IntakeApplication) => {
-              if (record.decision === "accept" || record.decision === "reject") {
-                return renderDeliveryIcon(record.emailDeliveryStatus);
-              }
-            },
+        {
+          title: "Email status",
+          key: "emailStatus",
+          render: (_: unknown, record: IntakeApplication) => {
+            if (record.decision === "accept" || record.decision === "reject") {
+              return renderDeliveryIcon(record.emailDeliveryStatus);
+            }
           },
-        ]
+        },
+      ]
       : isAdmin
-      ? [
+        ? [
           {
             title: "Actions",
             key: "actions",
@@ -298,7 +298,7 @@ export default function ApplicationsReviewPage() {
             ),
           },
         ]
-      : []),
+        : []),
   ];
 
   if (applicationsState.loading) {
@@ -472,12 +472,12 @@ export default function ApplicationsReviewPage() {
                   disabled={!canSubmit}
                   title={
                     applicationsState.submittedAt
-                    ? "This round has already been submitted"
-                    : !applicationsState.applications.length
-                    ? "No applications to submit"
-                    : canSubmit
-                    ? "Submit the round and invite accepted applicants"
-                    : "All applications must be classified as accepted or rejected to submit"
+                      ? "This round has already been submitted"
+                      : !applicationsState.applications.length
+                        ? "No applications to submit"
+                        : canSubmit
+                          ? "Submit the round and invite accepted applicants"
+                          : "All applications must be classified as accepted or rejected to submit"
                   }
                   loading={submittingRound}
                 >
