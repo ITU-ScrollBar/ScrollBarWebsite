@@ -29,6 +29,7 @@ const EditableCell = ({
   const [editing, setEditing] = useState(false);
   const inputRef = useRef<InputRef>(null);
   const [editValue, setEditValue] = useState("");
+  const [dateTimeDraft, setDateTimeDraft] = useState("");
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -40,6 +41,12 @@ const EditableCell = ({
       inputRef.current?.focus();
     }
   }, [editing]);
+
+  useEffect(() => {
+    if (inputType === "datetime") {
+      setDateTimeDraft(toDateTimeInputValue(editValue));
+    }
+  }, [editValue, inputType]);
 
   if (typeof value === "boolean") {
     return <Switch checked={value} onChange={onChange} />;
@@ -72,12 +79,17 @@ const EditableCell = ({
         <Input
           ref={inputRef}
           type="datetime-local"
-          value={toDateTimeInputValue(editValue)}
-          onBlur={(event) => {
-            onChange(fromDateTimeInputValue(event.target.value));
+          value={dateTimeDraft}
+          onBlur={() => {
+            onChange(fromDateTimeInputValue(dateTimeDraft));
             setEditing(false);
           }}
-          onChange={(event) => setEditValue(fromDateTimeInputValue(event.target.value))}
+          onChange={(event) => setDateTimeDraft(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.currentTarget.blur();
+            }
+          }}
         />
       );
     }
