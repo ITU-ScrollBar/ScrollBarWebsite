@@ -34,6 +34,7 @@ export default function ApplyPage() {
 
   const handleSubmit = async (values: any) => {
     if (!fileList.length || !photoFileList.length) {
+      message.error("Please upload both the application file and a recent photo.");
       return;
     }
 
