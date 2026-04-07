@@ -19,7 +19,7 @@ import {
   Typography,
 } from "antd";
 import { Content } from "antd/es/layout/layout";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import useApplications from "../../hooks/useApplications";
 import useTenders from "../../hooks/useTenders";
 import useSettings from "../../hooks/useSettings";
@@ -55,6 +55,7 @@ export default function ApplicationsReviewPage() {
   const [sendingRejectionTest, setSendingRejectionTest] = useState(false);
   const [studyLines, setStudyLines] = useState<StudyLine[]>([]);
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
+  const requestedPhotoIdsRef = useRef<Set<string>>(new Set());
 
   const isAdmin = !!currentUser?.isAdmin;
 
@@ -106,13 +107,14 @@ export default function ApplicationsReviewPage() {
   }, []);
 
   useEffect(() => {
-    const missing = applicationsState.applications.filter(
-      (application) => application.photoPath && !photoUrls[application.id]
-    );
+    const missing = applicationsState.applications.filter((application) => {
+      return !!application.photoPath && !requestedPhotoIdsRef.current.has(application.id);
+    });
 
     if (!missing.length) return;
 
     missing.forEach((application) => {
+      requestedPhotoIdsRef.current.add(application.id);
       getDownloadURL(ref(storage, application.photoPath))
         .then((url) => {
           setPhotoUrls((prev) => ({ ...prev, [application.id]: url }));
@@ -121,7 +123,7 @@ export default function ApplicationsReviewPage() {
           message.error(`Failed to load picture: ${error.message}`);
         });
     });
-  }, [applicationsState.applications, photoUrls]);
+  }, [applicationsState.applications]);
 
   const columns = [
     {
