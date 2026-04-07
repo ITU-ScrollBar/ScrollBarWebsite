@@ -114,7 +114,7 @@ export default function useApplications() {
   const setEmailDeliveryStatuses = async (
     updates: Array<{
       id: string;
-      emailDeliveryStatus?: "pending" | "success" | "failed";
+      emailDeliveryStatus: "pending" | "success" | "failed";
     }>
   ) => {
     await updateApplicationEmailDeliveryStatuses(updates);

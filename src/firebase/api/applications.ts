@@ -176,7 +176,7 @@ export const queueRejectedApplicationEmails = async (rejections: QueueRejectedEm
 export const updateApplicationEmailDeliveryStatuses = async (
   updates: Array<{
     id: string;
-    emailDeliveryStatus?: "pending" | "success" | "failed";
+    emailDeliveryStatus: "pending" | "success" | "failed";
   }>
 ) => {
   if (!updates.length) return;
@@ -184,8 +184,9 @@ export const updateApplicationEmailDeliveryStatuses = async (
   const batch = writeBatch(db);
   updates.forEach((update) => {
     const docRef = doc(getApplicationsCollection(), update.id);
-    const payload: Record<string, string> = {};
-    if (update.emailDeliveryStatus) payload.emailDeliveryStatus = update.emailDeliveryStatus;
+    const payload: Record<string, string> = {
+      emailDeliveryStatus: update.emailDeliveryStatus,
+    };
     batch.update(docRef, payload);
   });
 
