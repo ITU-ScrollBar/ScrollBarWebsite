@@ -4,12 +4,13 @@ import { Button, Input, InputRef, message, Switch, Table, TableProps, Upload } f
 import MDEditor from "@uiw/react-md-editor";
 import { Loading } from "../../components/Loading";
 import { useWindowSize } from "../../hooks/useWindowSize";
+import { formatWindowDate, fromDateTimeInputValue, toDateTimeInputValue } from "../../utils/signupWindow";
 
 type Setting = {
   key: string;
   label: string;
   value: string | boolean;
-  inputType?: "text" | "boolean" | "textarea" | "upload";
+  inputType?: "text" | "boolean" | "textarea" | "upload" | "datetime";
 };
 
 const EditableCell = ({
@@ -28,10 +29,11 @@ const EditableCell = ({
   const [editing, setEditing] = useState(false);
   const inputRef = useRef<InputRef>(null);
   const [editValue, setEditValue] = useState("");
+  const [dateTimeDraft, setDateTimeDraft] = useState("");
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    setEditValue(value as string);
+    setEditValue(typeof value === "string" ? value : "");
   }, [value]);
 
   useEffect(() => {
@@ -39,6 +41,12 @@ const EditableCell = ({
       inputRef.current?.focus();
     }
   }, [editing]);
+
+  useEffect(() => {
+    if (inputType === "datetime") {
+      setDateTimeDraft(toDateTimeInputValue(editValue));
+    }
+  }, [editValue, inputType]);
 
   if (typeof value === "boolean") {
     return <Switch checked={value} onChange={onChange} />;
@@ -66,6 +74,25 @@ const EditableCell = ({
         </div>
       );
     }
+    if (inputType === "datetime") {
+      return (
+        <Input
+          ref={inputRef}
+          type="datetime-local"
+          value={dateTimeDraft}
+          onBlur={() => {
+            onChange(fromDateTimeInputValue(dateTimeDraft));
+            setEditing(false);
+          }}
+          onChange={(event) => setDateTimeDraft(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.currentTarget.blur();
+            }
+          }}
+        />
+      );
+    }
     return (
       <Input
         ref={inputRef}
@@ -78,6 +105,24 @@ const EditableCell = ({
       />
     );
   } else {
+    if (inputType === "datetime") {
+      return (
+        <div
+          tabIndex={0}
+          style={{ textWrap: "wrap" }}
+          role="button"
+          onClick={() => setEditing(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              setEditing(true);
+            }
+          }}
+        >
+          {formatWindowDate(value ? new Date(value) : null)}
+        </div>
+      );
+    }
     if (inputType === "textarea") {
       return (
         <div
@@ -91,7 +136,7 @@ const EditableCell = ({
           }}
         >
           <MDEditor.Markdown
-            source={value}
+            source={value.trim().length > 0 ? value.trim() : "Click to edit"}
             style={{ background: "white", color: "black", textWrap: "wrap" }}
           />
         </div>
@@ -133,7 +178,7 @@ const EditableCell = ({
           }
         }}
       >
-        {value}
+        {value.trim().length > 0 ? value.trim() : "Click to edit"}
       </div>
     );
   }
@@ -187,12 +232,6 @@ const GlobalSettingsPage = () => {
       value: settingsState.settings.getHelpDescription,
     },
     {
-      key: "joinScrollBarLink",
-      inputType: "text",
-      label: "Join ScrollBar link",
-      value: settingsState.settings.joinScrollBarLink,
-    },
-    {
       key: "joinScrollBarTitle",
       inputType: "text",
       label: "Join ScrollBar title",
@@ -205,10 +244,34 @@ const GlobalSettingsPage = () => {
       value: settingsState.settings.joinScrollBarText,
     },
     {
-      key: "openForSignups",
-      inputType: "boolean",
-      label: "Show join ScrollBar section",
-      value: settingsState.settings.openForSignups,
+      key: "inviteEmailBodyText",
+      inputType: "textarea",
+      label: "Invite email body text",
+      value: settingsState.settings.inviteEmailBodyText || "",
+    },
+    {
+      key: "rejectionEmailBodyText",
+      inputType: "textarea",
+      label: "Rejection email body text",
+      value: settingsState.settings.rejectionEmailBodyText || "",
+    },
+    {
+      key: "applicationSubmittedEmailBodyText",
+      inputType: "textarea",
+      label: "Application submitted email body text",
+      value: settingsState.settings.applicationSubmittedEmailBodyText || "",
+    },
+    {
+      key: "openForSignupsStart",
+      inputType: "datetime",
+      label: "Signups open from",
+      value: settingsState.settings.openForSignupsStart || "",
+    },
+    {
+      key: "openForSignupsEnd",
+      inputType: "datetime",
+      label: "Signups open until",
+      value: settingsState.settings.openForSignupsEnd || "",
     },
   ];
 

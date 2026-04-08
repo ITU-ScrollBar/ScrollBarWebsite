@@ -1,6 +1,6 @@
 import FormData from 'form-data';
 import Mailgun from 'mailgun.js';
-import * as functions from 'firebase-functions/v2';
+import { marked } from 'marked';
 import * as admin from 'firebase-admin';
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { Tender } from '../src/types/types-file';
@@ -19,10 +19,43 @@ const mailgun = new Mailgun(FormData).client({
 
 const mailgunDomain = process.env.MAILGUN_DOMAIN || 'dev.scrollbar.dk';
 
+const renderMarkdownToHtml = (markdown: string): string => {
+    return marked.parse(markdown, {
+        async: false,
+        gfm: true,
+        breaks: true,
+    }) as string;
+};
+
+const getSettingsDoc = async () => {
+    const snapshot = await db.doc('settings/settings').get();
+    return snapshot.exists ? snapshot.data() : undefined;
+};
+
+const updateApplicationDeliveryStatus = async (
+    envName: string | undefined,
+    applicationId: string | undefined,
+    status: 'success' | 'failed'
+) => {
+    if (!envName || !applicationId) return;
+    try {
+        await db.doc(`env/${envName}/applications/${applicationId}`).update({
+            emailDeliveryStatus: status,
+        });
+    } catch (error) {
+        console.error('updateApplicationDeliveryStatus error', error);
+    }
+};
+
 export const sendEmailInvite = onDocumentCreated(
     { document: 'invites/{email}', region: 'europe-west1' },
     async (event: any) => {
         const email = event.params?.email;
+        const data = event.data?.data ? event.data.data() : {};
+        const fullName = data?.fullName || 'ScrollBar Applicant';
+        const bodyText = renderMarkdownToHtml(data?.bodyText?.trim?.()) || "You have been invited to ScrollBar Tender site. Please follow your invitation link to continue.";
+        const applicationId = data?.applicationId;
+        const applicationEnv = data?.applicationEnv;
         if (!email) {
             console.warn('sendEmailInvite: missing email param');
             return;
@@ -30,13 +63,20 @@ export const sendEmailInvite = onDocumentCreated(
         try {
             await mailgun.messages.create(mailgunDomain, {
                 to: email,
-                from: `ScrollBar Web <no-reply@${mailgunDomain}>`,
-                subject: 'You have been invited to ScrollBar Tender site',
+                from: `ScrollBar Web <board@${mailgunDomain}>`,
+                subject: 'Welcome to the ScrollBar family',
                 template: 'invite_template',
+                'h:Reply-To': `board@$scrollbar.dk`,
+                'h:X-Mailgun-Variables': JSON.stringify({
+                    name: fullName,
+                    bodyText,
+                }),
             });
+            await updateApplicationDeliveryStatus(applicationEnv, applicationId, 'success');
             return;
         } catch (err) {
             console.error('sendEmailInvite error', err);
+            await updateApplicationDeliveryStatus(applicationEnv, applicationId, 'failed');
         }
     }
 );
@@ -73,6 +113,115 @@ export const sendShiftGrabbedConfirmation = onDocumentUpdated(
             return;
         } catch (err) {
             console.error('sendShiftGrabbedConfirmation error', err);
+        }
+    }
+);
+
+export const sendRejectedApplicationEmail = onDocumentCreated(
+    { document: 'env/{_env}/applicationRejectionEmails/{docId}', region: 'europe-west1' },
+    async (event: any) => {
+        const envName = event.params?._env;
+        const data = event.data?.data ? event.data.data() : {};
+        const applicationId = data?.applicationId;
+        const email = data?.email;
+        const fullName = data?.fullName || 'ScrollBar Applicant';
+        const bodyText = renderMarkdownToHtml(data?.bodyText?.trim?.()) || 'Thank you for your application. Unfortunately, we are not able to offer you a position at this time.';
+
+        if (!email) {
+            console.warn('sendRejectedApplicationEmail: missing email');
+            return;
+        }
+
+        try {
+            await mailgun.messages.create(mailgunDomain, {
+                to: email,
+                from: `ScrollBar Web <board@${mailgunDomain}>`,
+                subject: 'Regarding your ScrollBar application',
+                template: 'application_rejected_template',
+                'h:Reply-To': `board@$scrollbar.dk`,
+                'h:X-Mailgun-Variables': JSON.stringify({
+                    name: fullName,
+                    bodyText,
+                }),
+            });
+            await updateApplicationDeliveryStatus(envName, applicationId, 'success');
+            return;
+        } catch (err) {
+            console.error('sendRejectedApplicationEmail error', err);
+            await updateApplicationDeliveryStatus(envName, applicationId, 'failed');
+        }
+    }
+);
+
+export const sendTemplateTestEmail = onDocumentCreated(
+    { document: 'env/{_env}/emailTemplateTests/{docId}', region: 'europe-west1' },
+    async (event: any) => {
+        const data = event.data?.data ? event.data.data() : {};
+        const templateType = data?.templateType;
+        const email = data?.email;
+        const fullName = data?.fullName || 'ScrollBar Applicant';
+        const bodyText = renderMarkdownToHtml(data?.bodyText?.trim?.()) || '';
+
+        if (!email || (templateType !== 'invite' && templateType !== 'rejection')) {
+            console.warn('sendTemplateTestEmail: invalid payload');
+            return;
+        }
+
+        try {
+            const template = templateType === 'invite' ? 'invite_template' : 'application_rejected_template';
+            const subject = templateType === 'invite'
+                ? '[TEST] You have been invited to ScrollBar Tender site'
+                : '[TEST] Regarding your ScrollBar application';
+
+            await mailgun.messages.create(mailgunDomain, {
+                to: email,
+                from: `ScrollBar Web <board@${mailgunDomain}>`,
+                subject,
+                template,
+                'h:Reply-To': `board@$scrollbar.dk`,
+                'h:X-Mailgun-Variables': JSON.stringify({
+                    name: fullName,
+                    bodyText,
+                }),
+            });
+            return;
+        } catch (err) {
+            console.error('sendTemplateTestEmail error', err);
+        }
+    }
+);
+
+export const sendApplicationSubmittedEmail = onDocumentCreated(
+    { document: 'env/{_env}/applications/{applicationId}', region: 'europe-west1' },
+    async (event: any) => {
+        const data = event.data?.data ? event.data.data() : {};
+        const email = data?.email;
+        const fullName = data?.fullName || 'ScrollBar Applicant';
+
+        if (!email) {
+            console.warn('sendApplicationSubmittedEmail: missing email');
+            return;
+        }
+
+        try {
+            const settings = await getSettingsDoc();
+            const configuredText = settings?.applicationSubmittedEmailBodyText?.trim?.();
+            const bodyText = renderMarkdownToHtml(configuredText) ?? 'Thank you for your application to ScrollBar. We have received it and will review it as soon as possible.';
+
+            await mailgun.messages.create(mailgunDomain, {
+                to: email,
+                from: `ScrollBar Web <board@${mailgunDomain}>`,
+                subject: 'We received your ScrollBar application',
+                template: 'application_submitted_template',
+                'h:Reply-To': `no-reply@$scrollbar.dk`,
+                'h:X-Mailgun-Variables': JSON.stringify({
+                    name: fullName,
+                    bodyText,
+                }),
+            });
+            return;
+        } catch (err) {
+            console.error('sendApplicationSubmittedEmail error', err);
         }
     }
 );

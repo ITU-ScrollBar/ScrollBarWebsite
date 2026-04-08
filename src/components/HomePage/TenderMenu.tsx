@@ -27,15 +27,15 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
 
   const items: MenuItem[] = [
     {
-      label: 'My shifts',
+      label: 'My Shifts',
       key: 'members/profile',    
     },
     {
-      label: 'All shifts',
+      label: 'All Shifts',
       key: 'tenders/allshifts',
     },
     {
-      label: "Up for grabs",
+      label: "Up For Grabs",
       key: 'tenders/upforgrabs',
     },
     {
@@ -78,6 +78,10 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
       adminItems.push({
         label: 'Manage Internal Events',
         key: 'admin/internalEvents',
+      });
+      adminItems.push({
+        label: 'Applications Review',
+        key: 'admin/applications',
       });
     }
     if (currentUser?.isAdmin) {
