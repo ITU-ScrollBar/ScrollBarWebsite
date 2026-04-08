@@ -53,6 +53,7 @@ export interface Settings {
   joinScrollBarTitle: string;
   inviteEmailBodyText?: string;
   rejectionEmailBodyText?: string;
+  applicationSubmittedEmailBodyText?: string;
   minutes: string;
   openForSignupsStart?: string;
   openForSignupsEnd?: string;

@@ -27,6 +27,11 @@ const renderMarkdownToHtml = (markdown: string): string => {
     }) as string;
 };
 
+const getSettingsDoc = async () => {
+    const snapshot = await db.doc('settings/settings').get();
+    return snapshot.exists ? snapshot.data() : undefined;
+};
+
 const updateApplicationDeliveryStatus = async (
     envName: string | undefined,
     applicationId: string | undefined,
@@ -182,6 +187,41 @@ export const sendTemplateTestEmail = onDocumentCreated(
             return;
         } catch (err) {
             console.error('sendTemplateTestEmail error', err);
+        }
+    }
+);
+
+export const sendApplicationSubmittedEmail = onDocumentCreated(
+    { document: 'env/{_env}/applications/{applicationId}', region: 'europe-west1' },
+    async (event: any) => {
+        const data = event.data?.data ? event.data.data() : {};
+        const email = data?.email;
+        const fullName = data?.fullName || 'ScrollBar Applicant';
+
+        if (!email) {
+            console.warn('sendApplicationSubmittedEmail: missing email');
+            return;
+        }
+
+        try {
+            const settings = await getSettingsDoc();
+            const configuredText = settings?.applicationSubmittedEmailBodyText?.trim?.();
+            const bodyText = renderMarkdownToHtml(configuredText) ?? 'Thank you for your application to ScrollBar. We have received it and will review it as soon as possible.';
+
+            await mailgun.messages.create(mailgunDomain, {
+                to: email,
+                from: `ScrollBar Web <board@${mailgunDomain}>`,
+                subject: 'We received your ScrollBar application',
+                template: 'application_submitted_template',
+                'h:Reply-To': `no-reply@$scrollbar.dk`,
+                'h:X-Mailgun-Variables': JSON.stringify({
+                    name: fullName,
+                    bodyText,
+                }),
+            });
+            return;
+        } catch (err) {
+            console.error('sendApplicationSubmittedEmail error', err);
         }
     }
 );

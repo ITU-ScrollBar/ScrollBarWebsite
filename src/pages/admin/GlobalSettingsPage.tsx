@@ -256,6 +256,12 @@ const GlobalSettingsPage = () => {
       value: settingsState.settings.rejectionEmailBodyText || "",
     },
     {
+      key: "applicationSubmittedEmailBodyText",
+      inputType: "textarea",
+      label: "Application submitted email body text",
+      value: settingsState.settings.applicationSubmittedEmailBodyText || "",
+    },
+    {
       key: "openForSignupsStart",
       inputType: "datetime",
       label: "Signups open from",
