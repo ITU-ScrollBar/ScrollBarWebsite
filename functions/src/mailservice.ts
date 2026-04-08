@@ -59,8 +59,9 @@ export const sendEmailInvite = onDocumentCreated(
             await mailgun.messages.create(mailgunDomain, {
                 to: email,
                 from: `ScrollBar Web <board@${mailgunDomain}>`,
-                subject: 'You have been invited to ScrollBar Tender site',
+                subject: 'Welcome to the ScrollBar family',
                 template: 'invite_template',
+                'h:Reply-To': `board@$scrollbar.dk`,
                 'h:X-Mailgun-Variables': JSON.stringify({
                     name: fullName,
                     bodyText,
@@ -132,6 +133,7 @@ export const sendRejectedApplicationEmail = onDocumentCreated(
                 from: `ScrollBar Web <board@${mailgunDomain}>`,
                 subject: 'Regarding your ScrollBar application',
                 template: 'application_rejected_template',
+                'h:Reply-To': `board@$scrollbar.dk`,
                 'h:X-Mailgun-Variables': JSON.stringify({
                     name: fullName,
                     bodyText,
@@ -171,6 +173,7 @@ export const sendTemplateTestEmail = onDocumentCreated(
                 from: `ScrollBar Web <board@${mailgunDomain}>`,
                 subject,
                 template,
+                'h:Reply-To': `board@$scrollbar.dk`,
                 'h:X-Mailgun-Variables': JSON.stringify({
                     name: fullName,
                     bodyText,

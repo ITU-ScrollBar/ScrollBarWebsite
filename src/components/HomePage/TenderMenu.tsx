@@ -27,15 +27,15 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
 
   const items: MenuItem[] = [
     {
-      label: 'My shifts',
+      label: 'My Shifts',
       key: 'members/profile',    
     },
     {
-      label: 'All shifts',
+      label: 'All Shifts',
       key: 'tenders/allshifts',
     },
     {
-      label: "Up for grabs",
+      label: "Up For Grabs",
       key: 'tenders/upforgrabs',
     },
     {
