@@ -72,7 +72,7 @@ const updateApplicationDeliveryStatus = async (
     }
 };
 
-export const sendManualInviteEmail = onDocumentCreated(
+export const sendEmailInvite = onDocumentCreated(
     { document: 'invites/{email}', region: 'europe-west1' },
     async (event: any) => {
         const email = event.params?.email;
@@ -91,7 +91,7 @@ export const sendManualInviteEmail = onDocumentCreated(
             });
             return;
         } catch (err) {
-            console.error('sendManualInviteEmail (create) error', err);
+            console.error('sendEmailInvite (create) error', err);
         }
     }
 );

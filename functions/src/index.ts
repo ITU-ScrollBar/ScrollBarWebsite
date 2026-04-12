@@ -7,7 +7,7 @@ import { adminChangeUserEmail } from './userManagerService';
 export const calendar = functions.https.onRequest({invoker: "public", region: "europe-west1"}, calendarApp as any);
 
 // Export mail service functions individually so the emulator can detect them.
-export const sendManualInviteEmail = mailservice.sendManualInviteEmail;
+export const sendEmailInvite = mailservice.sendEmailInvite;
 export const sendApplicationInviteEmail = mailservice.sendApplicationInviteEmail;
 export const sendRejectedApplicationEmail = mailservice.sendRejectedApplicationEmail;
 export const sendTemplateTestEmail = mailservice.sendTemplateTestEmail;
