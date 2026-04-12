@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Form, Input, message, Select, Card, Row, Col, Grid } from 'antd';
+import { Button, Form, Input, message, Card, Row, Col, Grid } from 'antd';
 import type { FormInstance } from 'antd';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,7 +9,7 @@ import {
 } from '../firebase/api/authentication';
 import Paragraph from 'antd/es/typography/Paragraph';
 import Title from 'antd/es/typography/Title';
-import  useTenders from '../hooks/useTenders';
+import StudyLinePicker from './members/StudyLinePicker';
 
 type RegisterFormValues = {
   displayName: string;
@@ -48,8 +48,6 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm<RegisterFormValues>();
   const location = useLocation();
-  const { tenderState } = useTenders();
-  const { studylines: studyLines } = tenderState;
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
   const rowGutter: [number, number] = isMobile ? [16, 8] : [16, 16];
@@ -111,10 +109,7 @@ export default function Register() {
                 rules={[{ required: true, message: 'This field is required' }]}
                 style={{ marginBottom: itemMb }}
               >
-                <Select
-                  placeholder="Please select"
-                  options={studyLines?.map((line) => ({ value: line.id, label: line.name }))}
-                />
+                <StudyLinePicker fontSize={14} />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
