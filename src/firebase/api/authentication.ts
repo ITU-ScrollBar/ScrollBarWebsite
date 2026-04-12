@@ -71,11 +71,7 @@ export interface UserProfile {
 }
 
 type InviteUserOptions = {
-  bodyText?: string;
-  fullName?: string;
-  studyline?: string;
-  applicationId?: string;
-  applicationEnv?: string;
+  manualInvite?: boolean;
 };
 
 // Create an account for a new user
@@ -148,18 +144,31 @@ export const streamInvitedUsers = (observer: Observer<QuerySnapshot>) => {
 };
 // Invite a user by email
 export const inviteUser = (email: string, options?: InviteUserOptions): Promise<void> => {
-  const bodyText = options?.bodyText?.trim();
-  const fullName = options?.fullName?.trim();
-  const studyline = options?.studyline?.trim();
-  const applicationId = options?.applicationId?.trim();
-  const applicationEnv = options?.applicationEnv?.trim();
-  return setDoc(doc(db, 'invites', email), {
+  const manualInvite = !!options?.manualInvite;
+  const manualInviteRequestId = manualInvite ? `${Date.now()}-${Math.random().toString(36).slice(2)}` : undefined;
+
+  const invitePayload = {
     registered: false,
-    ...(bodyText ? { bodyText } : {}),
-    ...(fullName ? { fullName } : {}),
-    ...(studyline ? { studyline } : {}),
-    ...(applicationId ? { applicationId } : {}),
-    ...(applicationEnv ? { applicationEnv } : {}),
+    ...(manualInviteRequestId ? { manualInviteRequestId } : {}),
+  };
+
+  return getDocument('invites', email, false).then((existing) => {
+    if (existing) {
+      if (!manualInvite) {
+        return;
+      }
+      const recreatedPayload = {
+        ...existing,
+        ...invitePayload,
+        registered: existing.registered ?? false,
+      };
+
+      return deleteDoc(doc(db, 'invites', email)).then(() =>
+        setDoc(doc(db, 'invites', email), recreatedPayload)
+      );
+    }
+
+    return setDoc(doc(db, 'invites', email), invitePayload);
   });
 };
 

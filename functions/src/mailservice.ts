@@ -19,6 +19,8 @@ const mailgun = new Mailgun(FormData).client({
 
 const mailgunDomain = process.env.MAILGUN_DOMAIN || 'dev.scrollbar.dk';
 const registerBaseUrl = 'https://scrollbar.dk/register';
+const manualInviteTemplateName = 'manual_invite_template';
+const applicationInviteTemplateName = 'application_invite_template';
 
 const buildRegisterUrl = (payload: {
     email?: string;
@@ -70,31 +72,56 @@ const updateApplicationDeliveryStatus = async (
     }
 };
 
-export const sendEmailInvite = onDocumentCreated(
+export const sendManualInviteEmail = onDocumentCreated(
     { document: 'invites/{email}', region: 'europe-west1' },
     async (event: any) => {
         const email = event.params?.email;
         const data = event.data?.data ? event.data.data() : {};
+        if (!data?.manualInviteRequestId) {
+            return;
+        }
+
+        try {
+            await mailgun.messages.create(mailgunDomain, {
+                to: email,
+                from: `ScrollBar Web <board@${mailgunDomain}>`,
+                subject: 'ScrollBar invitation',
+                template: manualInviteTemplateName,
+                'h:Reply-To': 'board@scrollbar.dk',
+            });
+            return;
+        } catch (err) {
+            console.error('sendManualInviteEmail (create) error', err);
+        }
+    }
+);
+
+export const sendApplicationInviteEmail = onDocumentCreated(
+    { document: 'env/{_env}/applicationInviteEmails/{docId}', region: 'europe-west1' },
+    async (event: any) => {
+        const envName = event.params?._env;
+        const data = event.data?.data ? event.data.data() : {};
+        const email = data?.email;
         const fullName = data?.fullName || '';
         const studyline = data?.studyline;
         const applicationId = data?.applicationId;
-        const applicationEnv = data?.applicationEnv;
         const registerUrl = buildRegisterUrl({
             email,
             fullName,
             studyline,
         });
         if (!email) {
-            console.warn('sendEmailInvite: missing email param');
+            console.warn('sendApplicationInviteEmail: missing email');
+            await updateApplicationDeliveryStatus(envName, applicationId, 'failed');
             return;
         }
         try {
-            const bodyText = toRequiredHtmlBody(data?.bodyText, 'sendEmailInvite');
+            const bodyText = toRequiredHtmlBody(data?.bodyText, 'sendApplicationInviteEmail');
             await mailgun.messages.create(mailgunDomain, {
                 to: email,
                 from: `ScrollBar Web <board@${mailgunDomain}>`,
                 subject: 'Welcome to the ScrollBar family',
-                template: 'invite_template',
+                template: applicationInviteTemplateName,
                 'h:Reply-To': 'board@scrollbar.dk',
                 'h:X-Mailgun-Variables': JSON.stringify({
                     name: fullName || 'ScrollBar Applicant',
@@ -102,11 +129,11 @@ export const sendEmailInvite = onDocumentCreated(
                     registerUrl,
                 }),
             });
-            await updateApplicationDeliveryStatus(applicationEnv, applicationId, 'success');
+            await updateApplicationDeliveryStatus(envName, applicationId, 'success');
             return;
         } catch (err) {
-            console.error('sendEmailInvite error', err);
-            await updateApplicationDeliveryStatus(applicationEnv, applicationId, 'failed');
+            console.error('sendApplicationInviteEmail error', err);
+            await updateApplicationDeliveryStatus(envName, applicationId, 'failed');
         }
     }
 );
@@ -203,7 +230,7 @@ export const sendTemplateTestEmail = onDocumentCreated(
 
         try {
             const bodyText = toRequiredHtmlBody(data?.bodyText, 'sendTemplateTestEmail');
-            const template = templateType === 'invite' ? 'invite_template' : 'application_rejected_template';
+            const template = templateType === 'invite' ? applicationInviteTemplateName : 'application_rejected_template';
             const subject = templateType === 'invite'
                 ? '[TEST] You have been invited to ScrollBar Tender site'
                 : '[TEST] Regarding your ScrollBar application';
@@ -230,6 +257,8 @@ export const sendTemplateTestEmail = onDocumentCreated(
 export const sendApplicationSubmittedEmail = onDocumentCreated(
     { document: 'env/{_env}/applications/{applicationId}', region: 'europe-west1' },
     async (event: any) => {
+        const envName = event.params?._env;
+        const applicationId = event.params?.applicationId;
         const data = event.data?.data ? event.data.data() : {};
         const email = data?.email;
         const fullName = data?.fullName || 'ScrollBar Applicant';

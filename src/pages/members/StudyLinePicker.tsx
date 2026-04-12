@@ -69,7 +69,7 @@ export default function StudyLinePicker({
     label: sl.prefix ? `${sl.prefix} in ${sl.name}` : sl.name,
   }));
 
-  const selectedStudyLine = visibleStudyLines.find(sl => sl.id === selectedValue);
+  const selectedStudyLine = studyLines.find(sl => sl.id === selectedValue);
   const displayText = (selectedStudyLine?.prefix ? `${selectedStudyLine.prefix} in ` : "") + (selectedStudyLine?.name || "Select study line");
 
   return (

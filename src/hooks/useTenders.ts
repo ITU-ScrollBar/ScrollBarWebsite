@@ -10,6 +10,7 @@ import {
   deleteUser,
   deleteFileFromStorage
 } from "../firebase/api/authentication";
+import { queueApplicationInviteEmails } from "../firebase/api/applications";
 import { Tender, Invite, StudyLine } from "../types/types-file"; // Ensure the correct import path
 import { DocumentData } from "firebase/firestore";
 import useEngagements from "./useEngagements";
@@ -27,7 +28,6 @@ type AddInvitesResult = {
 };
 
 const useTenders = () => {
-  const appEnv = import.meta.env.VITE_APP_ENV as string;
   const [tenderState, setTenderState] = useState<TenderState>({
     loading: false,
     isLoaded: false,
@@ -115,8 +115,8 @@ const useTenders = () => {
   }, []);
 
   // Add invite
-  const addInvite = (email: string, bodyText?: string, fullName?: string) => {
-    return inviteUser(email, { bodyText, fullName })
+  const addInvite = (email: string) => {
+    return inviteUser(email, { manualInvite: true })
       .then((response) => {
         message.success("Invite sent successfully!");
         return response; // Return the response from the inviteUser function
@@ -131,42 +131,45 @@ const useTenders = () => {
     recipients: Array<{ id: string; email: string; fullName?: string; studyline?: string }>,
     bodyText?: string
   ): Promise<AddInvitesResult> => {
-    return Promise.allSettled(
-      recipients.map((recipient) =>
-        inviteUser(recipient.email, {
-          bodyText,
-          fullName: recipient.fullName,
-          studyline: recipient.studyline,
-          applicationId: recipient.id,
-          applicationEnv: appEnv,
-        })
-      )
-    ).then((inviteResults) => {
-      const successful: string[] = [];
-      const failed: Array<{ id: string; email: string; error: unknown }> = [];
+    return Promise.allSettled(recipients.map((recipient) => inviteUser(recipient.email)))
+      .then(async (inviteRecordResults) => {
+        const readyForQueue: Array<{ id: string; email: string; fullName?: string; studyline?: string }> = [];
+        const failed: Array<{ id: string; email: string; error: unknown }> = [];
 
-      inviteResults.forEach((result, index) => {
-        const recipient = recipients[index];
-        if (result.status === "fulfilled") {
-          successful.push(recipient.id);
-        } else {
-          failed.push({ id: recipient.id, email: recipient.email, error: result.reason });
-        }
-      });
-
-      if (failed.length) {
-        failed.forEach((entry) => {
-          const reason = entry.error as { message?: string };
-          message.error(`Failed to invite ${entry.email}: ${reason?.message}`);
+        inviteRecordResults.forEach((result, index) => {
+          const recipient = recipients[index];
+          if (result.status === "fulfilled") {
+            readyForQueue.push(recipient);
+          } else {
+            failed.push({ id: recipient.id, email: recipient.email, error: result.reason });
+          }
         });
-      } else {
-        message.success(
-          `Invited ${successful.length} accepted applicant${successful.length === 1 ? "" : "s"}.`
-        );
-      }
 
-      return { successful, failed };
-    });
+        const queueResult = await queueApplicationInviteEmails(
+          readyForQueue.map((recipient) => ({
+            id: recipient.id,
+            email: recipient.email,
+            fullName: recipient.fullName,
+            studyline: recipient.studyline,
+            bodyText,
+          }))
+        );
+
+        const allFailed = [...failed, ...queueResult.failed];
+
+        if (allFailed.length) {
+          allFailed.forEach((entry) => {
+            const reason = entry.error as { message?: string };
+            message.error(`Failed to invite ${entry.email}: ${reason?.message}`);
+          });
+        } else {
+          message.success(
+            `Invited ${queueResult.successful.length} accepted applicant${queueResult.successful.length === 1 ? "" : "s"}.`
+          );
+        }
+
+        return { successful: queueResult.successful, failed: allFailed };
+      });
   };
 
   // Remove invite

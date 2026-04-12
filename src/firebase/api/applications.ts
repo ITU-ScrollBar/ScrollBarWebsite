@@ -46,6 +46,14 @@ type QueueRejectedEmailPayload = {
   bodyText?: string;
 };
 
+type QueueApplicationInvitePayload = {
+  id: string;
+  email: string;
+  fullName?: string;
+  studyline?: string;
+  bodyText?: string;
+};
+
 export type QueueEmailResult = {
   successful: string[];
   failed: Array<{ id: string; email: string; error: unknown }>;
@@ -172,6 +180,39 @@ export const queueRejectedApplicationEmails = async (rejections: QueueRejectedEm
       successful.push(rejection.id);
     } else {
       failed.push({ id: rejection.id, email: rejection.email, error: result.reason });
+    }
+  });
+
+  return { successful, failed };
+};
+
+export const queueApplicationInviteEmails = async (
+  invites: QueueApplicationInvitePayload[]
+): Promise<QueueEmailResult> => {
+  const collectionRef = collection(doc(collection(db, "env"), env), "applicationInviteEmails");
+
+  const results = await Promise.allSettled(
+    invites.map((invite) =>
+      addDoc(collectionRef, {
+        applicationId: invite.id,
+        email: invite.email,
+        fullName: invite.fullName ?? "",
+        studyline: invite.studyline ?? "",
+        bodyText: invite.bodyText ?? "",
+        createdAt: serverTimestamp(),
+      })
+    )
+  );
+
+  const successful: string[] = [];
+  const failed: Array<{ id: string; email: string; error: unknown }> = [];
+
+  results.forEach((result, index) => {
+    const invite = invites[index];
+    if (result.status === "fulfilled") {
+      successful.push(invite.id);
+    } else {
+      failed.push({ id: invite.id, email: invite.email, error: result.reason });
     }
   });
 
