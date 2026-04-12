@@ -375,6 +375,7 @@ export default function ApplicationsReviewPage() {
                       email: currentUser.email,
                       fullName: currentUser.displayName ?? "ScrollBar Applicant",
                       bodyText: settingsState.settings.inviteEmailBodyText,
+                      studyline: currentUser.studyline,
                     });
                   } finally {
                     setSendingInviteTest(false);
@@ -427,6 +428,7 @@ export default function ApplicationsReviewPage() {
                         id: application.id,
                         email: application.email,
                         fullName: application.fullName,
+                        studyline: application.studyline,
                       })),
                       settingsState.settings.inviteEmailBodyText
                     );
@@ -509,6 +511,7 @@ export default function ApplicationsReviewPage() {
                           id: application.id,
                           email: application.email,
                           fullName: application.fullName,
+                          studyline: application.studyline,
                         })),
                         settingsState.settings.inviteEmailBodyText
                       );

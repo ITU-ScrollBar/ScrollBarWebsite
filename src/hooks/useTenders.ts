@@ -128,7 +128,7 @@ const useTenders = () => {
   };
 
   const addInvites = (
-    recipients: Array<{ id: string; email: string; fullName?: string }>,
+    recipients: Array<{ id: string; email: string; fullName?: string; studyline?: string }>,
     bodyText?: string
   ): Promise<AddInvitesResult> => {
     return Promise.allSettled(
@@ -136,6 +136,7 @@ const useTenders = () => {
         inviteUser(recipient.email, {
           bodyText,
           fullName: recipient.fullName,
+          studyline: recipient.studyline,
           applicationId: recipient.id,
           applicationEnv: appEnv,
         })

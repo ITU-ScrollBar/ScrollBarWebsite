@@ -125,6 +125,7 @@ export default function useApplications() {
     email: string;
     fullName: string;
     bodyText?: string;
+    studyline?: string;
   }) => {
     await queueTemplateTestEmail(payload);
     message.success("Test email has been sent.");

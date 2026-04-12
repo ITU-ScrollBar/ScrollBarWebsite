@@ -34,8 +34,7 @@ import { Role } from '../../types/types-file';
 interface FormData {
   email: string;
   password: string;
-  firstname: string;
-  surname: string;
+  displayName: string;
   studyline: string;
 }
 
@@ -74,6 +73,7 @@ export interface UserProfile {
 type InviteUserOptions = {
   bodyText?: string;
   fullName?: string;
+  studyline?: string;
   applicationId?: string;
   applicationEnv?: string;
 };
@@ -82,7 +82,7 @@ type InviteUserOptions = {
 export const createAccount = async (form: FormData): Promise<User> => {
   const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, form.email, form.password);
   const userData: UserProfile = {
-    displayName: `${form.firstname} ${form.surname}`,
+    displayName: form.displayName,
     email: form.email,
     studyline: form.studyline,
     isAdmin: false,
@@ -150,12 +150,14 @@ export const streamInvitedUsers = (observer: Observer<QuerySnapshot>) => {
 export const inviteUser = (email: string, options?: InviteUserOptions): Promise<void> => {
   const bodyText = options?.bodyText?.trim();
   const fullName = options?.fullName?.trim();
+  const studyline = options?.studyline?.trim();
   const applicationId = options?.applicationId?.trim();
   const applicationEnv = options?.applicationEnv?.trim();
   return setDoc(doc(db, 'invites', email), {
     registered: false,
     ...(bodyText ? { bodyText } : {}),
     ...(fullName ? { fullName } : {}),
+    ...(studyline ? { studyline } : {}),
     ...(applicationId ? { applicationId } : {}),
     ...(applicationEnv ? { applicationEnv } : {}),
   });

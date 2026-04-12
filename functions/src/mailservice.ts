@@ -18,12 +18,35 @@ const mailgun = new Mailgun(FormData).client({
 });
 
 const mailgunDomain = process.env.MAILGUN_DOMAIN || 'dev.scrollbar.dk';
+const registerBaseUrl = 'https://scrollbar.dk/register';
 
-const renderMarkdownToHtml = (markdown: string): string => {
-    return marked.parse(markdown, {
+const buildRegisterUrl = (payload: {
+    email?: string;
+    fullName?: string;
+    studyline?: string;
+}): string => {
+    const url = new URL(registerBaseUrl);
+
+    const email = payload.email?.trim();
+    const fullName = payload.fullName?.trim();
+    const studyline = payload.studyline?.trim();
+
+    if (fullName) url.searchParams.set('displayName', fullName);
+    if (email) url.searchParams.set('email', email);
+    if (studyline) url.searchParams.set('studyline', studyline);
+
+    return url.toString();
+};
+
+const toRequiredHtmlBody = (markdown: unknown, context: string): string => {
+    const value = typeof markdown === 'string' ? markdown.trim() : '';
+    if (!value) {
+        throw new Error(`${context}: missing template body text`);
+    }
+    return marked.parse(value, {
         async: false,
         gfm: true,
-        breaks: true,
+        breaks: true,    
     }) as string;
 };
 
@@ -52,15 +75,21 @@ export const sendEmailInvite = onDocumentCreated(
     async (event: any) => {
         const email = event.params?.email;
         const data = event.data?.data ? event.data.data() : {};
-        const fullName = data?.fullName || 'ScrollBar Applicant';
-        const bodyText = renderMarkdownToHtml(data?.bodyText?.trim?.()) || "You have been invited to ScrollBar Tender site. Please follow your invitation link to continue.";
+        const fullName = data?.fullName || '';
+        const studyline = data?.studyline;
         const applicationId = data?.applicationId;
         const applicationEnv = data?.applicationEnv;
+        const registerUrl = buildRegisterUrl({
+            email,
+            fullName,
+            studyline,
+        });
         if (!email) {
             console.warn('sendEmailInvite: missing email param');
             return;
         }
         try {
+            const bodyText = toRequiredHtmlBody(data?.bodyText, 'sendEmailInvite');
             await mailgun.messages.create(mailgunDomain, {
                 to: email,
                 from: `ScrollBar Web <board@${mailgunDomain}>`,
@@ -68,8 +97,9 @@ export const sendEmailInvite = onDocumentCreated(
                 template: 'invite_template',
                 'h:Reply-To': `board@$scrollbar.dk`,
                 'h:X-Mailgun-Variables': JSON.stringify({
-                    name: fullName,
+                    name: fullName || 'ScrollBar Applicant',
                     bodyText,
+                    registerUrl,
                 }),
             });
             await updateApplicationDeliveryStatus(applicationEnv, applicationId, 'success');
@@ -125,7 +155,6 @@ export const sendRejectedApplicationEmail = onDocumentCreated(
         const applicationId = data?.applicationId;
         const email = data?.email;
         const fullName = data?.fullName || 'ScrollBar Applicant';
-        const bodyText = renderMarkdownToHtml(data?.bodyText?.trim?.()) || 'Thank you for your application. Unfortunately, we are not able to offer you a position at this time.';
 
         if (!email) {
             console.warn('sendRejectedApplicationEmail: missing email');
@@ -133,6 +162,7 @@ export const sendRejectedApplicationEmail = onDocumentCreated(
         }
 
         try {
+            const bodyText = toRequiredHtmlBody(data?.bodyText, 'sendRejectedApplicationEmail');
             await mailgun.messages.create(mailgunDomain, {
                 to: email,
                 from: `ScrollBar Web <board@${mailgunDomain}>`,
@@ -159,8 +189,12 @@ export const sendTemplateTestEmail = onDocumentCreated(
         const data = event.data?.data ? event.data.data() : {};
         const templateType = data?.templateType;
         const email = data?.email;
-        const fullName = data?.fullName || 'ScrollBar Applicant';
-        const bodyText = renderMarkdownToHtml(data?.bodyText?.trim?.()) || '';
+        const fullName = data?.fullName || '';
+        const registerUrl = buildRegisterUrl({
+            email,
+            fullName,
+            studyline: data?.studyline,
+        });
 
         if (!email || (templateType !== 'invite' && templateType !== 'rejection')) {
             console.warn('sendTemplateTestEmail: invalid payload');
@@ -168,6 +202,7 @@ export const sendTemplateTestEmail = onDocumentCreated(
         }
 
         try {
+            const bodyText = toRequiredHtmlBody(data?.bodyText, 'sendTemplateTestEmail');
             const template = templateType === 'invite' ? 'invite_template' : 'application_rejected_template';
             const subject = templateType === 'invite'
                 ? '[TEST] You have been invited to ScrollBar Tender site'
@@ -180,8 +215,9 @@ export const sendTemplateTestEmail = onDocumentCreated(
                 template,
                 'h:Reply-To': `board@$scrollbar.dk`,
                 'h:X-Mailgun-Variables': JSON.stringify({
-                    name: fullName,
+                    name: fullName || 'ScrollBar Applicant',
                     bodyText,
+                    registerUrl,
                 }),
             });
             return;
@@ -206,7 +242,7 @@ export const sendApplicationSubmittedEmail = onDocumentCreated(
         try {
             const settings = await getSettingsDoc();
             const configuredText = settings?.applicationSubmittedEmailBodyText?.trim?.();
-            const bodyText = renderMarkdownToHtml(configuredText) ?? 'Thank you for your application to ScrollBar. We have received it and will review it as soon as possible.';
+            const bodyText = toRequiredHtmlBody(configuredText ?? 'Thank you for your application to ScrollBar. We have received it and will review it as soon as possible.', 'sendApplicationSubmittedEmail');
 
             await mailgun.messages.create(mailgunDomain, {
                 to: email,

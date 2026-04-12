@@ -22,8 +22,7 @@ export interface StudyLine {
 export interface UserForm {
   email: string;
   password: string;
-  firstname: string;
-  surname: string;
+  displayName: string;
   studyline: string;
 }
 

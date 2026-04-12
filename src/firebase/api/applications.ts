@@ -56,6 +56,7 @@ type QueueTemplateTestEmailPayload = {
   email: string;
   fullName: string;
   bodyText?: string;
+  studyline?: string;
 };
 
 const uploadApplicationFile = async (file: File, applicantEmail: string, fileTag: string) => {
@@ -200,6 +201,7 @@ export const queueTemplateTestEmail = async (payload: QueueTemplateTestEmailPayl
     email: payload.email,
     fullName: payload.fullName,
     bodyText: payload.bodyText ?? "",
+    studyline: payload.studyline ?? "",
     createdAt: serverTimestamp(),
   });
 };
