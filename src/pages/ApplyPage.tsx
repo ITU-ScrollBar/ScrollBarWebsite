@@ -12,6 +12,10 @@ import { getSignupWindowState } from "../utils/signupWindow";
 const { Content } = Layout;
 const { Title, Paragraph } = Typography;
 
+const isImageFile = (file: File): boolean => {
+  return file.type.startsWith("image/");
+};
+
 export default function ApplyPage() {
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState<any[]>([]);
@@ -36,6 +40,12 @@ export default function ApplyPage() {
   const handleSubmit = async (values: any) => {
     if (!fileList.length || !photoFileList.length) {
       message.error("Please upload both the application file and a recent photo.");
+      return;
+    }
+
+    const photo = photoFileList[0]?.originFileObj as File | undefined;
+    if (!photo || !isImageFile(photo)) {
+      message.error("Please ensure your application photo is a standard image file.");
       return;
     }
 
@@ -168,13 +178,27 @@ export default function ApplyPage() {
                       label="Upload a recent picture of yourself (We want to see your face! Maybe we remember you)"
                       required
                       validateStatus={!photoFileList.length ? "error" : "success"}
-                      help={!photoFileList.length ? "Please upload one file" : undefined}
+                      help={!photoFileList.length ? "Please upload one image file" : undefined}
                     >
                       <Upload
+                        accept="image/*"
                         fileList={photoFileList}
                         maxCount={1}
-                        beforeUpload={() => false}
-                        onChange={(info) => setPhotoFileList(info.fileList)}
+                        beforeUpload={(file) => {
+                          const typedFile = file as unknown as File;
+                          if (!isImageFile(typedFile)) {
+                            message.error("Only image files are allowed for the photo upload.");
+                            return Upload.LIST_IGNORE;
+                          }
+                          return false;
+                        }}
+                        onChange={(info) => {
+                          const validFiles = info.fileList.filter((entry) => {
+                            const typedFile = entry.originFileObj as File | undefined;
+                            return !!typedFile && isImageFile(typedFile);
+                          });
+                          setPhotoFileList(validFiles);
+                        }}
                       >
                         <Button icon={<UploadOutlined />}>Select file</Button>
                       </Upload>

@@ -95,7 +95,7 @@ export const sendEmailInvite = onDocumentCreated(
                 from: `ScrollBar Web <board@${mailgunDomain}>`,
                 subject: 'Welcome to the ScrollBar family',
                 template: 'invite_template',
-                'h:Reply-To': `board@$scrollbar.dk`,
+                'h:Reply-To': 'board@scrollbar.dk',
                 'h:X-Mailgun-Variables': JSON.stringify({
                     name: fullName || 'ScrollBar Applicant',
                     bodyText,
@@ -168,7 +168,7 @@ export const sendRejectedApplicationEmail = onDocumentCreated(
                 from: `ScrollBar Web <board@${mailgunDomain}>`,
                 subject: 'Regarding your ScrollBar application',
                 template: 'application_rejected_template',
-                'h:Reply-To': `board@$scrollbar.dk`,
+                'h:Reply-To': 'board@scrollbar.dk',
                 'h:X-Mailgun-Variables': JSON.stringify({
                     name: fullName,
                     bodyText,
@@ -213,7 +213,7 @@ export const sendTemplateTestEmail = onDocumentCreated(
                 from: `ScrollBar Web <board@${mailgunDomain}>`,
                 subject,
                 template,
-                'h:Reply-To': `board@$scrollbar.dk`,
+                'h:Reply-To': 'board@scrollbar.dk',
                 'h:X-Mailgun-Variables': JSON.stringify({
                     name: fullName || 'ScrollBar Applicant',
                     bodyText,
@@ -249,7 +249,7 @@ export const sendApplicationSubmittedEmail = onDocumentCreated(
                 from: `ScrollBar Web <board@${mailgunDomain}>`,
                 subject: 'We received your ScrollBar application',
                 template: 'application_submitted_template',
-                'h:Reply-To': `no-reply@$scrollbar.dk`,
+                'h:Reply-To': 'no-reply@scrollbar.dk',
                 'h:X-Mailgun-Variables': JSON.stringify({
                     name: fullName,
                     bodyText,

@@ -174,7 +174,6 @@ export default function HomePage() {
                   type="primary"
                   size="large"
                   href={'/apply'}
-                  target="_blank"
                   className="home-apply-button"
                 >
                   Apply now!

@@ -87,6 +87,10 @@ export const submitApplication = async (payload: SubmitApplicationPayload) => {
   let uploadedPhotoPath: string | undefined;
 
   try {
+    if (!payload.photoFile.type.startsWith("image/")) {
+      throw new Error("The photo upload must be an image file.");
+    }
+
     const uploaded = await uploadApplicationFile(payload.file, payload.email, "application");
     uploadedApplicationPath = uploaded.path;
 

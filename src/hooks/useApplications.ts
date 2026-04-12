@@ -80,8 +80,12 @@ export default function useApplications() {
     file: File;
     photoFile: File;
   }) => {
-    await submitApplication(payload);
-    message.success("Application submitted successfully.");
+    try {
+      await submitApplication(payload);
+      message.success("Application submitted successfully.");
+    } catch (error: any) {
+      message.error(error?.message || "Failed to submit application.");
+    }
   };
 
   const setDecision = async (id: string, decision: "maybe" | "accept" | "reject") => {
