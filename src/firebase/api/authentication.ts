@@ -34,8 +34,7 @@ import { Role } from '../../types/types-file';
 interface FormData {
   email: string;
   password: string;
-  firstname: string;
-  surname: string;
+  displayName: string;
   studyline: string;
 }
 
@@ -71,11 +70,15 @@ export interface UserProfile {
   photoUrl: string;
 }
 
+type InviteUserOptions = {
+  manualInvite?: boolean;
+};
+
 // Create an account for a new user
 export const createAccount = async (form: FormData): Promise<User> => {
   const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, form.email, form.password);
   const userData: UserProfile = {
-    displayName: `${form.firstname} ${form.surname}`,
+    displayName: form.displayName,
     email: form.email,
     studyline: form.studyline,
     isAdmin: false,
@@ -140,8 +143,33 @@ export const streamInvitedUsers = (observer: Observer<QuerySnapshot>) => {
   });
 };
 // Invite a user by email
-export const inviteUser = (email: string): Promise<void> => {
-  return setDoc(doc(db, 'invites', email), { registered: false });
+export const inviteUser = (email: string, options?: InviteUserOptions): Promise<void> => {
+  const manualInvite = !!options?.manualInvite;
+  const manualInviteRequestId = manualInvite ? `${Date.now()}-${Math.random().toString(36).slice(2)}` : undefined;
+
+  const invitePayload = {
+    registered: false,
+    ...(manualInviteRequestId ? { manualInviteRequestId } : {}),
+  };
+
+  return getDocument('invites', email, false).then((existing) => {
+    if (existing) {
+      if (!manualInvite) {
+        return;
+      }
+      const recreatedPayload = {
+        ...existing,
+        ...invitePayload,
+        registered: existing.registered ?? false,
+      };
+
+      return deleteDoc(doc(db, 'invites', email)).then(() =>
+        setDoc(doc(db, 'invites', email), recreatedPayload)
+      );
+    }
+
+    return setDoc(doc(db, 'invites', email), invitePayload);
+  });
 };
 
 // Delete an invite by its ID

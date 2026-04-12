@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { Button, Form, Input, message, Select, Card, Row, Col, Grid } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Button, Form, Input, message, Card, Row, Col, Grid } from 'antd';
+import type { FormInstance } from 'antd';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
   checkIfEmailIsInvited,
@@ -7,26 +9,62 @@ import {
 } from '../firebase/api/authentication';
 import Paragraph from 'antd/es/typography/Paragraph';
 import Title from 'antd/es/typography/Title';
-import  useTenders from '../hooks/useTenders';
+import StudyLinePicker from './members/StudyLinePicker';
+
+type RegisterFormValues = {
+  displayName: string;
+  studyline: string;
+  email: string;
+  password: string;
+  confirm: string;
+};
+
+const getPrefillValue = (params: URLSearchParams, keys: string[]) => {
+  for (const key of keys) {
+    const value = params.get(key)?.trim();
+    if (value) return value;
+  }
+  return undefined;
+};
+
+const applyPrefilledFields = (form: FormInstance<RegisterFormValues>, search: string) => {
+  const params = new URLSearchParams(search);
+  const displayName = getPrefillValue(params, ['displayName', 'name']);
+  const email = getPrefillValue(params, ['email']);
+  const studyline = getPrefillValue(params, ['studyline']);
+
+  const patch: Partial<RegisterFormValues> = {};
+  if (displayName) patch.displayName = displayName;
+  if (email) patch.email = email;
+  if (studyline) patch.studyline = studyline;
+
+  if (Object.keys(patch).length) {
+    form.setFieldsValue(patch);
+  }
+};
 
 export default function Register() {
   const { setUser } = useAuth();
   const [loading, setLoading] = useState(false);
-  const { tenderState } = useTenders();
-  const { studylines: studyLines } = tenderState;
+  const [form] = Form.useForm<RegisterFormValues>();
+  const location = useLocation();
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
   const rowGutter: [number, number] = isMobile ? [16, 8] : [16, 16];
   const itemMb = isMobile ? 8 : 16;
 
 
-  const register = async (form: any) => {
+  useEffect(() => {
+    applyPrefilledFields(form, location.search);
+  }, [form, location.search]);
+
+  const register = async (values: RegisterFormValues) => {
     setLoading(true);
     try {
-      const isInvited = await checkIfEmailIsInvited(form.email);
+      const isInvited = await checkIfEmailIsInvited(values.email);
 
       if (isInvited && !isInvited.registered) {
-        const user = await createAccount(form);
+        const user = await createAccount(values);
         message.success('You have been signed up successfully');
         setUser(user);
       } else {
@@ -49,22 +87,12 @@ export default function Register() {
           <Paragraph style={{ margin: 0, /*textAlign: 'center' */ }}>Your e-mail must be pre-approved before you can sign up</Paragraph>
         </div>
 
-        <Form name="register" layout="vertical" onFinish={register} requiredMark={false}>
+        <Form form={form} name="register" layout="vertical" onFinish={register} requiredMark={false}>
           <Row gutter={rowGutter}>
-            <Col xs={24} md={12}>
+            <Col xs={24} md={24}>
               <Form.Item
-                name="firstname"
-                label="Firstname"
-                rules={[{ required: true, message: 'This field is required' }]}
-                style={{ marginBottom: itemMb }}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item
-                name="surname"
-                label="Surname"
+                name="displayName"
+                label="Display Name"
                 rules={[{ required: true, message: 'This field is required' }]}
                 style={{ marginBottom: itemMb }}
               >
@@ -81,10 +109,7 @@ export default function Register() {
                 rules={[{ required: true, message: 'This field is required' }]}
                 style={{ marginBottom: itemMb }}
               >
-                <Select
-                  placeholder="Please select"
-                  options={studyLines?.map((line) => ({ value: line.id, label: line.name }))}
-                />
+                <StudyLinePicker fontSize={14} />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>

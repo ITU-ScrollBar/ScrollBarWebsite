@@ -14,6 +14,7 @@ import {useNextEvent}  from '../hooks/useEvents'
 import { useLocation } from 'react-router-dom'
 import { UserList, TenderWithRole } from '../components/UserList'
 import { useWindowSize } from '../hooks/useWindowSize'
+import { getSignupWindowState } from '../utils/signupWindow'
 
 export default function HomePage() {
   const { settingsState } = useSettings();
@@ -42,6 +43,13 @@ export default function HomePage() {
       el.scrollIntoView();
     }
   }, [targetId, settingsState.loading]);
+
+  const signupsOpen = useMemo(() => {
+    return getSignupWindowState(
+      settingsState.settings.openForSignupsStart,
+      settingsState.settings.openForSignupsEnd
+    ).isOpen;
+  }, [settingsState.settings.openForSignupsEnd, settingsState.settings.openForSignupsStart]);
 
   if (settingsState.loading || boardRolesState.loading) {
     return <Loading centerOverlay={true} />;
@@ -133,7 +141,7 @@ export default function HomePage() {
           </Col>
         </Row>
 
-        {settingsState.settings.openForSignups && (
+        {signupsOpen && (
           <>
             <Divider />
 
@@ -165,8 +173,8 @@ export default function HomePage() {
                 <Button
                   type="primary"
                   size="large"
-                  href={settingsState.settings.joinScrollBarLink}
-                  target="_blank"
+                  href={'/apply'}
+                  className="home-apply-button"
                 >
                   Apply now!
                 </Button>

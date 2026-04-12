@@ -2,6 +2,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import HomePage from "./pages/HomePage";
+import ApplyPage from "./pages/ApplyPage";
 import LoginPage from "./pages/LoginPage";
 import NotFoundPage from "./pages/NotFoundPage"; // A 404 page
 import ProtectedRoutes from "./routes/ProtectedRoutes";
@@ -28,6 +29,7 @@ import { InactiveUserPage } from "./pages/InactiveUserPage";
 import dayjs from 'dayjs';
 import updateLocale from 'dayjs/plugin/updateLocale';
 import BoardManagementPage from "./pages/admin/BoardManagement/BoardManagementPage";
+import ApplicationsReviewPage from "./pages/admin/ApplicationsReviewPage";
 
 
 function App() {
@@ -55,6 +57,7 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/apply" element={<ApplyPage />} />
                 <Route path="/events" element={<EventsPage />} /> 
                 <Route path="/deletedUser" element={<InactiveUserPage />} /> 
 
@@ -122,6 +125,16 @@ function App() {
                       <Route
                         path="admin/shifts"
                         element={<ShiftManagement />}
+                      />
+                    </Route>
+                    <Route
+                      element={
+                        <RoleProtectedRoute requiredRole={Role.BOARD} />
+                      }
+                    >
+                      <Route
+                        path="admin/applications"
+                        element={<ApplicationsReviewPage />}
                       />
                     </Route>
                     <Route

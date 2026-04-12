@@ -10,6 +10,7 @@ import {
   deleteUser,
   deleteFileFromStorage
 } from "../firebase/api/authentication";
+import { queueApplicationInviteEmails } from "../firebase/api/applications";
 import { Tender, Invite, StudyLine } from "../types/types-file"; // Ensure the correct import path
 import { DocumentData } from "firebase/firestore";
 import useEngagements from "./useEngagements";
@@ -19,6 +20,11 @@ type TenderState = {
   isLoaded: boolean;
   tenders: Tender[];
   studylines?: StudyLine[]; // Optional property for study lines
+};
+
+type AddInvitesResult = {
+  successful: string[];
+  failed: Array<{ id: string; email: string; error: unknown }>;
 };
 
 const useTenders = () => {
@@ -110,7 +116,7 @@ const useTenders = () => {
 
   // Add invite
   const addInvite = (email: string) => {
-    return inviteUser(email)
+    return inviteUser(email, { manualInvite: true })
       .then((response) => {
         message.success("Invite sent successfully!");
         return response; // Return the response from the inviteUser function
@@ -118,6 +124,51 @@ const useTenders = () => {
       .catch((error) => {
         message.error(`Failed to send invite: ${error.message}`);
         throw error; // Propagate error for further handling if needed
+      });
+  };
+
+  const addInvites = (
+    recipients: Array<{ id: string; email: string; fullName?: string; studyline?: string }>,
+    bodyText?: string
+  ): Promise<AddInvitesResult> => {
+    return Promise.allSettled(recipients.map((recipient) => inviteUser(recipient.email)))
+      .then(async (inviteRecordResults) => {
+        const readyForQueue: Array<{ id: string; email: string; fullName?: string; studyline?: string }> = [];
+        const failed: Array<{ id: string; email: string; error: unknown }> = [];
+
+        inviteRecordResults.forEach((result, index) => {
+          const recipient = recipients[index];
+          if (result.status === "fulfilled") {
+            readyForQueue.push(recipient);
+          } else {
+            failed.push({ id: recipient.id, email: recipient.email, error: result.reason });
+          }
+        });
+
+        const queueResult = await queueApplicationInviteEmails(
+          readyForQueue.map((recipient) => ({
+            id: recipient.id,
+            email: recipient.email,
+            fullName: recipient.fullName,
+            studyline: recipient.studyline,
+            bodyText,
+          }))
+        );
+
+        const allFailed = [...failed, ...queueResult.failed];
+
+        if (allFailed.length) {
+          allFailed.forEach((entry) => {
+            const reason = entry.error as { message?: string };
+            message.error(`Failed to invite ${entry.email}: ${reason?.message}`);
+          });
+        } else {
+          message.success(
+            `Invited ${queueResult.successful.length} accepted applicant${queueResult.successful.length === 1 ? "" : "s"}.`
+          );
+        }
+
+        return { successful: queueResult.successful, failed: allFailed };
       });
   };
 
@@ -182,6 +233,7 @@ const useTenders = () => {
     tenderState,
     invitedTenders,
     addInvite,
+    addInvites,
     removeInvite,
     updateTender,
     deleteTender,
