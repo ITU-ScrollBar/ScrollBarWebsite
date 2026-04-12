@@ -7,6 +7,7 @@ import {
 import {
   Button,
   Divider,
+  Grid,
   Image,
   Layout,
   message,
@@ -56,6 +57,8 @@ export default function ApplicationsReviewPage() {
   const [studyLines, setStudyLines] = useState<StudyLine[]>([]);
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
   const requestedPhotoIdsRef = useRef<Set<string>>(new Set());
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
 
   const isAdmin = !!currentUser?.isAdmin;
 
@@ -308,7 +311,7 @@ export default function ApplicationsReviewPage() {
   }
 
   return (
-    <Layout style={{ padding: 24 }}>
+    <Layout style={{ padding: isMobile ? 12 : 24 }}>
       <Title level={3} style={{ margin: 0 }}>
         Application Review
       </Title>
@@ -330,27 +333,72 @@ export default function ApplicationsReviewPage() {
             {
               key: "all",
               label: `All applications (${applicationsState.applications.length})`,
-              children: <Table rowKey="id" dataSource={applicationsState.applications} columns={columns} pagination={false} />,
+              children: (
+                <Table
+                  rowKey="id"
+                  dataSource={applicationsState.applications}
+                  columns={columns}
+                  pagination={false}
+                  size={isMobile ? "small" : "middle"}
+                  scroll={{ x: true }}
+                />
+              ),
             },
             {
               key: "pending",
               label: `Pending (${grouped.pending.length})`,
-              children: <Table rowKey="id" dataSource={grouped.pending} columns={columns} pagination={false} />,
+              children: (
+                <Table
+                  rowKey="id"
+                  dataSource={grouped.pending}
+                  columns={columns}
+                  pagination={false}
+                  size={isMobile ? "small" : "middle"}
+                  scroll={{ x: true }}
+                />
+              ),
             },
             {
               key: "maybe",
               label: `Maybe (${grouped.maybe.length})`,
-              children: <Table rowKey="id" dataSource={grouped.maybe} columns={columns} pagination={false} />,
+              children: (
+                <Table
+                  rowKey="id"
+                  dataSource={grouped.maybe}
+                  columns={columns}
+                  pagination={false}
+                  size={isMobile ? "small" : "middle"}
+                  scroll={{ x: true }}
+                />
+              ),
             },
             {
               key: "accept",
               label: `Accept (${grouped.accept.length})`,
-              children: <Table rowKey="id" dataSource={grouped.accept} columns={columns} pagination={false} />,
+              children: (
+                <Table
+                  rowKey="id"
+                  dataSource={grouped.accept}
+                  columns={columns}
+                  pagination={false}
+                  size={isMobile ? "small" : "middle"}
+                  scroll={{ x: true }}
+                />
+              ),
             },
             {
               key: "reject",
               label: `Reject (${grouped.reject.length})`,
-              children: <Table rowKey="id" dataSource={grouped.reject} columns={columns} pagination={false} />,
+              children: (
+                <Table
+                  rowKey="id"
+                  dataSource={grouped.reject}
+                  columns={columns}
+                  pagination={false}
+                  size={isMobile ? "small" : "middle"}
+                  scroll={{ x: true }}
+                />
+              ),
             },
           ]}
         />
@@ -358,7 +406,7 @@ export default function ApplicationsReviewPage() {
         {isAdmin && (
           <>
             <Divider />
-            <Space>
+            <Space wrap size={[8, 8]}>
               <Popconfirm
                 title="Send invite test email"
                 description="Send the invite template to yourself?"
