@@ -271,7 +271,7 @@ export const sendApplicationSubmittedEmail = onDocumentCreated(
         try {
             const settings = await getSettingsDoc();
             const configuredText = settings?.applicationSubmittedEmailBodyText?.trim?.();
-            const bodyText = toRequiredHtmlBody(configuredText ?? 'Thank you for your application to ScrollBar. We have received it and will review it as soon as possible.', 'sendApplicationSubmittedEmail');
+            const bodyText = toRequiredHtmlBody(configuredText?.trim()?.length > 0 ? configuredText : 'Thank you for your application to ScrollBar. We have received it and will review it as soon as possible.', 'sendApplicationSubmittedEmail');
 
             await mailgun.messages.create(mailgunDomain, {
                 to: email,
