@@ -7,7 +7,6 @@ import useSettings from '../hooks/useSettings'
 import MDEditor from '@uiw/react-md-editor'
 import useTenders from '../hooks/useTenders'
 import useBoardRoles from '../hooks/useBoardRoles'
-import { Role } from '../types/types-file'
 import { Loading } from '../components/Loading'
 import CountDown from '../components/EventPage/EventCountDown'
 import {useNextEvent}  from '../hooks/useEvents'
@@ -32,7 +31,7 @@ export default function HomePage() {
       .map(role => ({ ...role.assignedUser, role } as TenderWithRole)); // Map to assigned user with role info
   }, [boardRolesState.boardRoles]);
   const activeTenders = useMemo(() => { 
-    return tenderState.tenders.filter(t => !t.roles?.includes(Role.BOARD) && t?.active && !boardMembers.includes(t))
+    return tenderState.tenders.filter(t => t?.active && !boardMembers.includes(t))
   }, [tenderState.tenders, boardMembers]);
   const { state } = useLocation();
   const { targetId } = state || {};

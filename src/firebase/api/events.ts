@@ -30,7 +30,7 @@ const getEventsCollection = () =>
  * Creates a new event.
  */
 export const createEvent = (event: EventCreateParams): Promise<DocumentData> => {
-  return addDoc(getEventsCollection(), event);
+  return addDoc(getEventsCollection(), {...event, deleted: false});
 };
 
 /**

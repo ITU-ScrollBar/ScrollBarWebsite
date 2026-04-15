@@ -1,4 +1,4 @@
-import { Layout, Space, Row, Col, Select, notification } from "antd";
+import { Alert, Button, Layout, Space, Row, Col, Select, notification } from "antd";
 import Title from "antd/es/typography/Title";
 import Text from "antd/es/typography/Text";
 import { useAuth } from "../../contexts/AuthContext";
@@ -11,18 +11,57 @@ import { CalendarSection } from "../../components/CalendarComponent";
 import { Loading } from "../../components/Loading";
 import Shifts from "./Shifts";
 import useEngagements from "../../hooks/useEngagements";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import RoleTag from "../../components/RoleTag";
 import useTeams from "../../hooks/useTeams";
+import useShiftPlanning from "../../hooks/useShiftPlanning";
+
+const resolvePeriodSurveyType = (period: {
+  surveyType?: "regularSemesterSurvey" | "excludeSemesterStatus" | "newbieShiftPlanning";
+  includeShiftStatusQuestions?: boolean;
+}): "regularSemesterSurvey" | "excludeSemesterStatus" | "newbieShiftPlanning" => {
+  if (period.surveyType) {
+    return period.surveyType;
+  }
+
+  if (period.includeShiftStatusQuestions === false) {
+    return "excludeSemesterStatus";
+  }
+
+  return "regularSemesterSurvey";
+};
 
 export default function Profile() {
   const { loading, currentUser } = useAuth();
   const { engagementState, getProfileData } = useEngagements();
+  const { periodState, loadUserResponse } = useShiftPlanning();
   const [userData, setUserData] = useState<{
     firstShift: Date | null;
     shiftCount: number | null;
   } | null>(null);
+  const [hasPendingPlanningSubmission, setHasPendingPlanningSubmission] = useState(false);
   const { teamState } = useTeams();
+
+  const isNewbie = currentUser?.roles?.includes(Role.NEWBIE) ?? false;
+  const activeOpenPeriod = useMemo(() => {
+    const now = Date.now();
+
+    return (
+      periodState.periods
+        .filter((period) => period.status === "open")
+        .filter((period) => period.submissionOpensAt?.getTime() <= now)
+        .filter((period) => period.submissionClosesAt?.getTime() >= now)
+        .filter((period) => {
+          const surveyType = resolvePeriodSurveyType(period);
+          return surveyType !== "newbieShiftPlanning" || isNewbie;
+        })
+        .sort(
+          (a, b) =>
+            (a.submissionClosesAt?.getTime() ?? Number.MAX_SAFE_INTEGER) -
+            (b.submissionClosesAt?.getTime() ?? Number.MAX_SAFE_INTEGER)
+        )[0] ?? null
+    );
+  }, [isNewbie, periodState.periods]);
 
   useEffect(() => {
     (async () => {
@@ -32,6 +71,28 @@ export default function Profile() {
       }
     })();
   }, [currentUser, getProfileData]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const checkPlanningSubmission = async () => {
+      if (!currentUser?.uid || !activeOpenPeriod?.id) {
+        setHasPendingPlanningSubmission(false);
+        return;
+      }
+
+      const response = await loadUserResponse(activeOpenPeriod.id, currentUser.uid);
+      if (!cancelled) {
+        setHasPendingPlanningSubmission(!response);
+      }
+    };
+
+    checkPlanningSubmission();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeOpenPeriod?.id, currentUser?.uid, loadUserResponse]);
 
   const setStudyLine = (studyLine: string) => {
     if (!currentUser) return;
@@ -179,6 +240,23 @@ export default function Profile() {
                 size="large"
                 style={{ width: "100%" }}
               >
+                {activeOpenPeriod && hasPendingPlanningSubmission && (
+                  <Alert
+                    type="info"
+                    showIcon
+                    message="Shift availability form is still awaiting your response"
+                    description={
+                      <Space direction="vertical" size="small">
+                        <Text>
+                          Please submit your shift planning response before {activeOpenPeriod.submissionClosesAt.toLocaleString()}.
+                        </Text>
+                        <Button type="primary" href="/members/availability" style={{ width: "fit-content" }}>
+                          Go to shift availability form
+                        </Button>
+                      </Space>
+                    }
+                  />
+                )}
                 <Shifts filter={ShiftFiltering.MY_SHIFTS} title="My Events" />
               </Space>
             </Col>

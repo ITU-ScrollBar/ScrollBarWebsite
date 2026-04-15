@@ -1,22 +1,541 @@
-import { useState } from "react";
-import { Layout, Space, Select, Empty, Button, Popconfirm, notification, Switch } from "antd";
-import Text from "antd/es/typography/Text";
-import { RocketOutlined, TeamOutlined } from "@ant-design/icons";
-import useEvents from "../../../hooks/useEvents";
+import { TeamOutlined } from "@ant-design/icons";
+import { Alert, Empty, Layout, Space, Tabs, notification } from "antd";
+import dayjs, { Dayjs } from "dayjs";
+import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "../../../contexts/AuthContext";
 import { useShiftContext } from "../../../contexts/ShiftContext";
-import ShiftInfo from "./ShiftInfo";
+import useEvents from "../../../hooks/useEvents";
+import useShiftPlanning from "../../../hooks/useShiftPlanning";
+import { ShiftPlanningSurveyType } from "../../../types/types-file";
+import ShiftPlanningResponsesPage from "../ShiftPlanningResponsesPage";
+import CustomShiftModal from "./components/CustomShiftModal";
+import ShiftPeriodModals from "./components/ShiftPeriodModals";
+import ShiftPeriodSelector from "./components/ShiftPeriodSelector";
+import ShiftPlanningTab from "./components/ShiftPlanningTab";
+
 const { Content } = Layout;
 
+type ShiftManagementTabKey = "planning" | "survey-overview" | "survey-individual";
+
 export default function ShiftManagement() {
+  const { currentUser } = useAuth();
   const { eventState, updateEvent } = useEvents();
-  const { shiftState } = useShiftContext();
+  const { shiftState, addShift, removeShift, updateShift } = useShiftContext();
+  const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<ShiftManagementTabKey>("planning");
+  const { periodState, responseState, createPeriod, updatePeriod, triggerGeneratePlan } =
+    useShiftPlanning(selectedPeriodId ?? undefined);
+
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-
-  const sortedEvents = [...eventState.events].sort(
-    (a, b) => a.start.getTime() - b.start.getTime()
+  const [creatingPeriod, setCreatingPeriod] = useState(false);
+  const [editingPeriod, setEditingPeriod] = useState(false);
+  const [isCreatePeriodModalOpen, setIsCreatePeriodModalOpen] = useState(false);
+  const [isEditPeriodModalOpen, setIsEditPeriodModalOpen] = useState(false);
+  const [generatingPlan, setGeneratingPlan] = useState(false);
+  const [newPeriodName, setNewPeriodName] = useState("");
+  const [newPeriodWindow, setNewPeriodWindow] = useState<[Dayjs, Dayjs] | null>(null);
+  const [newPeriodEventIds, setNewPeriodEventIds] = useState<string[]>([]);
+  const [newPeriodMandatoryEventIds, setNewPeriodMandatoryEventIds] = useState<string[]>([]);
+  const [newPeriodSurveyType, setNewPeriodSurveyType] =
+    useState<ShiftPlanningSurveyType>("regularSemesterSurvey");
+  const [editPeriodName, setEditPeriodName] = useState("");
+  const [editPeriodDeadline, setEditPeriodDeadline] = useState<Dayjs | null>(null);
+  const [editPeriodEventIds, setEditPeriodEventIds] = useState<string[]>([]);
+  const [editPeriodMandatoryEventIds, setEditPeriodMandatoryEventIds] = useState<string[]>([]);
+  const [editPeriodSurveyType, setEditPeriodSurveyType] =
+    useState<ShiftPlanningSurveyType>("regularSemesterSurvey");
+  const [generationSummary, setGenerationSummary] = useState<string | null>(null);
+  const [generationWarnings, setGenerationWarnings] = useState<string[]>([]);
+  const [isCustomShiftModalOpen, setIsCustomShiftModalOpen] = useState(false);
+  const [customShiftTitle, setCustomShiftTitle] = useState("");
+  const [customShiftLocation, setCustomShiftLocation] = useState("Main bar");
+  const [customShiftStart, setCustomShiftStart] = useState<Date>(new Date());
+  const [customShiftEnd, setCustomShiftEnd] = useState<Date>(
+    new Date(Date.now() + 5 * 60 * 60 * 1000)
   );
+  const [customShiftTenders, setCustomShiftTenders] = useState(4);
 
-  if (sortedEvents.length === 0) {
+  const sortedEvents = useMemo(() => {
+    return [...eventState.events].sort((a, b) => a.start.getTime() - b.start.getTime());
+  }, [eventState.events]);
+
+  const allEvents = useMemo(() => {
+    return [...eventState.events, ...eventState.previousEvents];
+  }, [eventState.events, eventState.previousEvents]);
+
+  const sortedPeriods = useMemo(() => {
+    return [...periodState.periods].sort(
+      (a, b) => b.submissionClosesAt.getTime() - a.submissionClosesAt.getTime()
+    );
+  }, [periodState.periods]);
+
+  const selectedPeriod =
+    sortedPeriods.find((period) => period.id === selectedPeriodId) ?? sortedPeriods[0] ?? null;
+
+  const selectedPeriodSurveyType = useMemo<ShiftPlanningSurveyType>(() => {
+    if (!selectedPeriod) {
+      return "regularSemesterSurvey";
+    }
+
+    if (selectedPeriod.surveyType) {
+      return selectedPeriod.surveyType;
+    }
+
+    if (selectedPeriod.includeShiftStatusQuestions === false) {
+      return "excludeSemesterStatus";
+    }
+
+    return "regularSemesterSurvey";
+  }, [selectedPeriod]);
+
+  const selectedPeriodEvents = useMemo(() => {
+    if (!selectedPeriod) {
+      return [];
+    }
+
+    const selectedEventIds = new Set(selectedPeriod.eventIds);
+    return allEvents
+      .filter((event) => selectedEventIds.has(event.id))
+      .sort((a, b) => a.start.getTime() - b.start.getTime());
+  }, [allEvents, selectedPeriod]);
+
+  const currentEvent =
+    selectedPeriodEvents.find((event) => event.id === selectedEventId) ??
+    selectedPeriodEvents[0] ??
+    null;
+
+  useEffect(() => {
+    if (!selectedPeriodId && selectedPeriod) {
+      setSelectedPeriodId(selectedPeriod.id);
+    }
+  }, [selectedPeriod, selectedPeriodId]);
+
+  useEffect(() => {
+    if (!selectedPeriodEvents.length) {
+      setSelectedEventId(null);
+      return;
+    }
+
+    if (!selectedEventId || !selectedPeriodEvents.some((event) => event.id === selectedEventId)) {
+      setSelectedEventId(selectedPeriodEvents[0].id);
+    }
+  }, [selectedEventId, selectedPeriodEvents]);
+
+  const submissionCount = responseState.responses.length;
+  const expectedSubmissions = selectedPeriod?.stats?.expectedSubmissions;
+  const missingSubmissions =
+    typeof expectedSubmissions === "number"
+      ? Math.max(0, expectedSubmissions - submissionCount)
+      : undefined;
+
+  const activeResponsesCount = responseState.responses.filter(
+    (response) => (response.participationStatus ?? "active") === "active"
+  ).length;
+
+  const totalShiftSpots = selectedPeriod
+    ? shiftState.shifts
+      .filter((shift) => selectedPeriod.eventIds.includes(shift.eventId))
+      .reduce((sum, shift) => sum + (shift.anchors ?? 0) + (shift.tenders ?? 0), 0)
+    : 0;
+
+  const shiftsPerMember =
+    activeResponsesCount > 0 ? (totalShiftSpots / activeResponsesCount).toFixed(2) : "-";
+
+  const resetPeriodForm = () => {
+    setNewPeriodName("");
+    setNewPeriodWindow(null);
+    setNewPeriodEventIds([]);
+    setNewPeriodMandatoryEventIds([]);
+    setNewPeriodSurveyType("regularSemesterSurvey");
+  };
+
+  const closeCreatePeriodModal = () => {
+    setIsCreatePeriodModalOpen(false);
+    resetPeriodForm();
+  };
+
+  const resetEditPeriodForm = () => {
+    setEditPeriodName("");
+    setEditPeriodDeadline(null);
+    setEditPeriodEventIds([]);
+    setEditPeriodMandatoryEventIds([]);
+    setEditPeriodSurveyType("regularSemesterSurvey");
+  };
+
+  const closeEditPeriodModal = () => {
+    setIsEditPeriodModalOpen(false);
+    resetEditPeriodForm();
+  };
+
+  const openEditPeriodModal = () => {
+    if (!selectedPeriod) {
+      return;
+    }
+
+    setEditPeriodName(selectedPeriod.name);
+    setEditPeriodDeadline(dayjs(selectedPeriod.submissionClosesAt));
+    setEditPeriodEventIds(selectedPeriod.eventIds);
+    setEditPeriodMandatoryEventIds(selectedPeriod.mandatoryEventIds ?? []);
+    setEditPeriodSurveyType(selectedPeriodSurveyType);
+    setIsEditPeriodModalOpen(true);
+  };
+
+  const handleCreatePeriod = async () => {
+    if (!currentUser) {
+      return;
+    }
+
+    if (!newPeriodName.trim()) {
+      notification.error({
+        message: "Missing period name",
+        description: "Please enter a name for the planning period.",
+      });
+      return;
+    }
+
+    if (!newPeriodWindow) {
+      notification.error({
+        message: "Missing submission window",
+        description: "Please pick a submission start and end time.",
+      });
+      return;
+    }
+
+    if (newPeriodEventIds.length === 0) {
+      notification.error({
+        message: "No events selected",
+        description: "Select at least one event for the planning period.",
+      });
+      return;
+    }
+
+    setCreatingPeriod(true);
+    try {
+      const createdPeriod = await createPeriod({
+        name: newPeriodName.trim(),
+        eventIds: newPeriodEventIds,
+        mandatoryEventIds: newPeriodMandatoryEventIds,
+        surveyType: newPeriodSurveyType,
+        submissionOpensAt: newPeriodWindow[0].toDate(),
+        submissionClosesAt: newPeriodWindow[1].toDate(),
+        status: "open",
+        createdBy: currentUser.uid,
+      });
+
+      if (createdPeriod && typeof (createdPeriod as { id?: string }).id === "string") {
+        setSelectedPeriodId((createdPeriod as { id: string }).id);
+      }
+
+      closeCreatePeriodModal();
+    } finally {
+      setCreatingPeriod(false);
+    }
+  };
+
+  const handleGeneratePlan = async () => {
+    if (!selectedPeriod) {
+      return;
+    }
+
+    setGeneratingPlan(true);
+    setGenerationWarnings([]);
+    try {
+      const result = await triggerGeneratePlan(selectedPeriod.id);
+      setGenerationSummary(
+        `Generated ${result.createdEngagementCount} engagements (${result.assignedAnchorCount} anchors, ${result.assignedTenderCount} tenders). Unfilled tender slots: ${result.unfilledTenderSlots}.`
+      );
+      setGenerationWarnings((result.warnings ?? []).map((warning) => warning.message));
+    } finally {
+      setGeneratingPlan(false);
+    }
+  };
+
+  const handleUpdatePeriod = async () => {
+    if (!selectedPeriod) {
+      return;
+    }
+
+    if (!editPeriodName.trim()) {
+      notification.error({
+        message: "Missing period name",
+        description: "Please enter a name for the planning period.",
+      });
+      return;
+    }
+
+    if (!editPeriodDeadline) {
+      notification.error({
+        message: "Missing submission deadline",
+        description: "Please pick a submission deadline.",
+      });
+      return;
+    }
+
+    if (submissionCount === 0 && editPeriodEventIds.length === 0) {
+      notification.error({
+        message: "No events selected",
+        description: "Select at least one event for the planning period.",
+      });
+      return;
+    }
+
+    setEditingPeriod(true);
+    try {
+      const periodEventIds = submissionCount === 0 ? editPeriodEventIds : selectedPeriod.eventIds;
+      await updatePeriod(selectedPeriod.id, {
+        name: editPeriodName.trim(),
+        submissionClosesAt: editPeriodDeadline.toDate(),
+        surveyType: editPeriodSurveyType,
+        eventIds: periodEventIds,
+        mandatoryEventIds: editPeriodMandatoryEventIds.filter((eventId) =>
+          periodEventIds.includes(eventId)
+        ),
+      });
+
+      closeEditPeriodModal();
+    } finally {
+      setEditingPeriod(false);
+    }
+  };
+
+  const handlePublishSelectedPeriodShifts = async () => {
+    if (!selectedPeriod) {
+      return;
+    }
+
+    const targetEventIds = new Set(selectedPeriod.eventIds);
+    const targetEvents = allEvents.filter((event) => targetEventIds.has(event.id));
+
+    try {
+      await Promise.all(
+        targetEvents
+          .filter((event) => !event.shiftsPublished)
+          .map((event) => updateEvent(event.id, "shiftsPublished", true))
+      );
+
+      notification.success({
+        message: "Success",
+        description: `Shifts published for ${selectedPeriod.name}.`,
+      });
+    } catch {
+      notification.error({
+        message: "Failed",
+        description: "Failed to publish one or more events in the selected period.",
+      });
+    }
+  };
+
+  const openCustomShiftModal = () => {
+    if (!currentEvent) {
+      return;
+    }
+
+    setCustomShiftTitle("");
+    setCustomShiftLocation(currentEvent.where || "Main bar");
+    setCustomShiftStart(new Date(currentEvent.start));
+    setCustomShiftEnd(new Date(currentEvent.start.getTime() + 5 * 60 * 60 * 1000));
+    setCustomShiftTenders(4);
+    setIsCustomShiftModalOpen(true);
+  };
+
+  const addDefaultShifts = async () => {
+    if (!currentEvent) {
+      return;
+    }
+
+    const eventStart = new Date(currentEvent.start);
+    const eventEnd = new Date(currentEvent.end);
+    const hours = 60 * 60 * 1000;
+
+    const openingStart = new Date(eventStart.getTime() - 1 * hours);
+    const openingEnd = new Date(eventStart.getTime() + 4 * hours);
+    const middleEnd = new Date(openingEnd.getTime() + 4 * hours);
+
+    const defaultShifts = [
+      {
+        id: "",
+        eventId: currentEvent.id,
+        title: "Opening",
+        location: currentEvent.where || "Main bar",
+        start: openingStart,
+        end: openingEnd,
+        anchors: 1,
+        tenders: 4,
+      },
+      {
+        id: "",
+        eventId: currentEvent.id,
+        title: "Middle",
+        location: currentEvent.where || "Main bar",
+        start: openingEnd,
+        end: middleEnd,
+        anchors: 1,
+        tenders: 7,
+      },
+      {
+        id: "",
+        eventId: currentEvent.id,
+        title: "Closing",
+        location: currentEvent.where || "Main bar",
+        start: middleEnd,
+        end: eventEnd,
+        anchors: 1,
+        tenders: 7,
+      },
+    ];
+
+    try {
+      await Promise.all(defaultShifts.map((shift) => addShift(shift)));
+      notification.success({
+        message: "Success",
+        description: "Default shifts added successfully.",
+      });
+    } catch {
+      notification.error({
+        message: "Failed",
+        description: "Failed to add default shifts.",
+      });
+    }
+  };
+
+  const addBigPartyShifts = async () => {
+    if (!currentEvent) {
+      return;
+    }
+
+    const eventStart = new Date(currentEvent.start);
+    const eventEnd = new Date(currentEvent.end);
+
+    const hours = 60 * 60 * 1000;
+    const openingStart = new Date(eventStart.getTime() - 1 * hours);
+    const openingEnd = new Date(eventStart.getTime() + 2 * hours);
+    const earlyMiddleEnd = new Date(openingEnd.getTime() + 2 * hours);
+    const middleEnd = new Date(earlyMiddleEnd.getTime() + 3 * hours);
+    const lateMiddleEnd = new Date(middleEnd.getTime() + 2 * hours);
+
+    const bigPartyShifts = [
+      {
+        id: "",
+        eventId: currentEvent.id,
+        title: "Opening + Setup",
+        start: openingStart,
+        end: openingEnd,
+        anchors: 1,
+        tenders: 5,
+      },
+      {
+        id: "",
+        eventId: currentEvent.id,
+        title: "Early middle + Setup",
+        start: openingEnd,
+        end: earlyMiddleEnd,
+        anchors: 1,
+        tenders: 6,
+      },
+      {
+        id: "",
+        eventId: currentEvent.id,
+        title: "Middle",
+        start: earlyMiddleEnd,
+        end: middleEnd,
+        anchors: 1,
+        tenders: 7,
+      },
+      {
+        id: "",
+        eventId: currentEvent.id,
+        title: "Late middle + Cleaning",
+        start: middleEnd,
+        end: lateMiddleEnd,
+        anchors: 1,
+        tenders: 7,
+      },
+      {
+        id: "",
+        eventId: currentEvent.id,
+        title: "Closing + Cleaning",
+        start: lateMiddleEnd,
+        end: eventEnd,
+        anchors: 1,
+        tenders: 5,
+      },
+    ];
+
+    const shiftsWithLocations = [];
+    for (const shift of bigPartyShifts) {
+      shiftsWithLocations.push({ ...shift, location: "Main bar" });
+      shiftsWithLocations.push({ ...shift, location: "Satellite" });
+    }
+
+    try {
+      await Promise.all(shiftsWithLocations.map((shift) => addShift(shift)));
+      notification.success({
+        message: "Success",
+        description: "Big party shifts added successfully.",
+      });
+    } catch {
+      notification.error({
+        message: "Failed",
+        description: "Failed to add big party shifts.",
+      });
+    }
+  };
+
+  const handleAddCustomShift = async () => {
+    if (!currentEvent) {
+      return;
+    }
+
+    if (!customShiftTitle.trim()) {
+      notification.error({
+        message: "Missing shift title",
+        description: "Please enter a title for the custom shift.",
+      });
+      return;
+    }
+
+    if (customShiftEnd.getTime() <= customShiftStart.getTime()) {
+      notification.error({
+        message: "Invalid shift window",
+        description: "Shift end must be after shift start.",
+      });
+      return;
+    }
+
+    try {
+      await addShift({
+        id: "",
+        eventId: currentEvent.id,
+        title: customShiftTitle.trim(),
+        location: customShiftLocation,
+        start: customShiftStart,
+        end: customShiftEnd,
+        anchors: 1,
+        tenders: customShiftTenders,
+      });
+
+      notification.success({
+        message: "Success",
+        description: "Custom shift added successfully.",
+      });
+      setIsCustomShiftModalOpen(false);
+    } catch {
+      notification.error({
+        message: "Failed",
+        description: "Failed to add custom shift.",
+      });
+    }
+  };
+
+  const handleToggleCurrentEventPublished = (checked: boolean) => {
+    if (!currentEvent) {
+      return;
+    }
+
+    updateEvent(currentEvent.id, "shiftsPublished", checked);
+  };
+
+  if (allEvents.length === 0) {
     return (
       <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
         <Content style={{ padding: "24px" }}>
@@ -42,12 +561,9 @@ export default function ShiftManagement() {
     );
   }
 
-  const currentEvent =
-    sortedEvents.find((e) => e.id === selectedEventId) || sortedEvents[0];
-
-  const shiftsForEvent = shiftState.shifts.filter(
-    (shift) => shift.eventId === currentEvent?.id
-  ).sort((a, b) => a.start.getTime() - b.start.getTime());
+  const shiftsForEvent = shiftState.shifts
+    .filter((shift) => shift.eventId === currentEvent?.id)
+    .sort((a, b) => a.start.getTime() - b.start.getTime());
 
   return eventState.isLoaded && shiftState.isLoaded ? (
     <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
@@ -60,11 +576,7 @@ export default function ShiftManagement() {
             boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
           }}
         >
-          <Space
-            direction="vertical"
-            style={{ width: "100%", marginBottom: "24px" }}
-            size="large"
-          >
+          <Space direction="vertical" style={{ width: "100%", marginBottom: "24px" }} size="middle">
             <div
               style={{
                 display: "flex",
@@ -76,81 +588,133 @@ export default function ShiftManagement() {
                 <TeamOutlined style={{ marginRight: "12px" }} />
                 Shift Management
               </h1>
-              <Popconfirm
-                title="Are you sure you want to publish all shifts"
-                onConfirm={() => {
-                  for (const event of sortedEvents) {
-                    if (!event.shiftsPublished) {
-                      updateEvent(event.id, "shiftsPublished", true);
-                    }
-                  }
-                  notification.success({
-                    message: "Success",
-                    description: "All shifts have been published.",
-                  });
-                }}
-              >
-                <Button
-                  type="primary"
-                  size="large"
-                  icon={<RocketOutlined />}
-                >
-                  Publish shifts for all events
-                </Button>
-              </Popconfirm>
             </div>
 
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "8px",
-                  fontWeight: 500,
-                }}
-              >
-                Select Event
-              </label>
-              <Select
-                size="large"
-                style={{ width: "100%", maxWidth: "400px" }}
-                value={currentEvent?.id}
-                onChange={(value) => setSelectedEventId(value)}
-                placeholder="Select an event"
-              >
-                {sortedEvents.map((event) => (
-                  <Select.Option key={event.id} value={event.id}>
-                    {event.displayName || event.title} -{" "}
-                    {event.start.toLocaleDateString()}
-                  </Select.Option>
-                ))}
-              </Select>
-            </div>
+            <ShiftPeriodSelector
+              sortedPeriods={sortedPeriods}
+              selectedPeriodId={selectedPeriod?.id}
+              onSelectedPeriodChange={(periodId) => setSelectedPeriodId(periodId)}
+              onCreatePeriod={() => setIsCreatePeriodModalOpen(true)}
+              onEditPeriod={openEditPeriodModal}
+              hasSelectedPeriod={Boolean(selectedPeriod)}
+            />
+
+            {selectedPeriod ? (
+              <Tabs
+                activeKey={activeTab}
+                onChange={(key) => setActiveTab(key as ShiftManagementTabKey)}
+                items={[
+                  {
+                    key: "planning",
+                    label: "Shifts",
+                    children: (
+                      <ShiftPlanningTab
+                        selectedPeriod={selectedPeriod}
+                        submissionCount={submissionCount}
+                        expectedSubmissions={expectedSubmissions}
+                        missingSubmissions={missingSubmissions}
+                        shiftsPerMember={shiftsPerMember}
+                        generatingPlan={generatingPlan}
+                        onGeneratePlan={handleGeneratePlan}
+                        onPublishSelectedPeriodShifts={handlePublishSelectedPeriodShifts}
+                        generationSummary={generationSummary}
+                        generationWarnings={generationWarnings}
+                        currentEvent={currentEvent}
+                        selectedPeriodEvents={selectedPeriodEvents}
+                        onSelectedEventChange={setSelectedEventId}
+                        onToggleShiftsPublished={handleToggleCurrentEventPublished}
+                        onAddDefaultShifts={addDefaultShifts}
+                        onOpenCustomShiftModal={openCustomShiftModal}
+                        onAddBigPartyShifts={addBigPartyShifts}
+                        shiftsForEvent={shiftsForEvent}
+                        updateShift={updateShift}
+                        removeShift={removeShift}
+                      />
+                    ),
+                  },
+                  {
+                    key: "survey-overview",
+                    label: "Survey Overview",
+                    children: (
+                      <ShiftPlanningResponsesPage
+                        embedded
+                        embeddedSection="overview"
+                        selectedPeriodId={selectedPeriod.id}
+                        onSelectedPeriodIdChange={(periodId) => setSelectedPeriodId(periodId)}
+                      />
+                    ),
+                  },
+                  {
+                    key: "survey-individual",
+                    label: "Individual Responses",
+                    children: (
+                      <ShiftPlanningResponsesPage
+                        embedded
+                        embeddedSection="individual"
+                        selectedPeriodId={selectedPeriod.id}
+                        onSelectedPeriodIdChange={(periodId) => setSelectedPeriodId(periodId)}
+                      />
+                    ),
+                  },
+                ]}
+              />
+            ) : (
+              <Alert
+                type="info"
+                showIcon
+                message="Select or create a shift planning period to continue."
+              />
+            )}
+
+            <ShiftPeriodModals
+              isCreateOpen={isCreatePeriodModalOpen}
+              isEditOpen={isEditPeriodModalOpen}
+              creatingPeriod={creatingPeriod}
+              editingPeriod={editingPeriod}
+              onCloseCreate={closeCreatePeriodModal}
+              onCloseEdit={closeEditPeriodModal}
+              onCreate={handleCreatePeriod}
+              onUpdate={handleUpdatePeriod}
+              sortedEvents={sortedEvents}
+              newPeriodName={newPeriodName}
+              onNewPeriodNameChange={setNewPeriodName}
+              newPeriodWindow={newPeriodWindow}
+              onNewPeriodWindowChange={setNewPeriodWindow}
+              newPeriodEventIds={newPeriodEventIds}
+              onNewPeriodEventIdsChange={setNewPeriodEventIds}
+              newPeriodMandatoryEventIds={newPeriodMandatoryEventIds}
+              onNewPeriodMandatoryEventIdsChange={setNewPeriodMandatoryEventIds}
+              newPeriodSurveyType={newPeriodSurveyType}
+              onNewPeriodSurveyTypeChange={setNewPeriodSurveyType}
+              editPeriodName={editPeriodName}
+              onEditPeriodNameChange={setEditPeriodName}
+              editPeriodDeadline={editPeriodDeadline}
+              onEditPeriodDeadlineChange={setEditPeriodDeadline}
+              editPeriodEventIds={editPeriodEventIds}
+              onEditPeriodEventIdsChange={setEditPeriodEventIds}
+              editPeriodMandatoryEventIds={editPeriodMandatoryEventIds}
+              onEditPeriodMandatoryEventIdsChange={setEditPeriodMandatoryEventIds}
+              editPeriodSurveyType={editPeriodSurveyType}
+              onEditPeriodSurveyTypeChange={setEditPeriodSurveyType}
+              submissionCount={submissionCount}
+            />
           </Space>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <Text>Shifts published</Text>
-            <Switch
-              checked={currentEvent?.shiftsPublished}
-              onChange={(checked) =>
-                currentEvent &&
-                updateEvent(currentEvent.id, "shiftsPublished", checked)
-              }
-            />
-          </div>
 
-          {shiftsForEvent.length > 0 ? (
-            shiftsForEvent.map((shift) => (
-              <ShiftInfo shift={shift} />
-            ))
-          ) : (
-            <Empty
-              style={{ margin: "60px 0" }}
-              description={
-                currentEvent
-                  ? `No shifts found for ${currentEvent.displayName || currentEvent.title}`
-                  : "Please select an event"
-              }
-            />
-          )}
+          <CustomShiftModal
+            open={isCustomShiftModalOpen}
+            onClose={() => setIsCustomShiftModalOpen(false)}
+            onAddShift={handleAddCustomShift}
+            customShiftTitle={customShiftTitle}
+            onCustomShiftTitleChange={setCustomShiftTitle}
+            customShiftLocation={customShiftLocation}
+            onCustomShiftLocationChange={setCustomShiftLocation}
+            customShiftStart={customShiftStart}
+            onCustomShiftStartChange={setCustomShiftStart}
+            customShiftEnd={customShiftEnd}
+            onCustomShiftEndChange={setCustomShiftEnd}
+            customShiftTenders={customShiftTenders}
+            onCustomShiftTendersChange={setCustomShiftTenders}
+          />
         </div>
       </Content>
     </Layout>

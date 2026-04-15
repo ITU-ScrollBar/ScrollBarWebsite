@@ -1,11 +1,13 @@
 import {
-  Card,
+  Alert,
+  Popconfirm,
   Select,
   Space,
+  Tag,
   Typography,
   message,
-  Divider,
 } from "antd";
+import { useMemo, useState } from "react";
 import {
   Shift,
   Engagement,
@@ -14,9 +16,9 @@ import {
 } from "../../../types/types-file";
 import { useEngagementContext } from "../../../contexts/EngagementContext";
 import useTenders from "../../../hooks/useTenders";
-import EngagementList from "./EngagementList";
+import { UserAvatar } from "../../../components/UserAvatar";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 interface ShiftInfoProps {
   shift: Shift;
@@ -26,6 +28,8 @@ export default function ShiftInfo({ shift }: ShiftInfoProps) {
   const { engagementState, addEngagement, removeEngagement } =
     useEngagementContext();
   const { tenderState } = useTenders();
+  const [anchorSelection, setAnchorSelection] = useState<string | undefined>(undefined);
+  const [tenderSelection, setTenderSelection] = useState<string | undefined>(undefined);
 
   const shiftEngagements = engagementState.engagements.filter(
     (e) => e.shiftId === shift.id
@@ -63,7 +67,10 @@ export default function ShiftInfo({ shift }: ShiftInfoProps) {
     };
 
     addEngagement(engagement)
-      .then(() => message.success("Tender added successfully"))
+      .then(() => {
+        message.success("Tender added successfully");
+        setTenderSelection(undefined);
+      })
       .catch(() => message.error("Failed to add tender"));
   };
 
@@ -81,7 +88,10 @@ export default function ShiftInfo({ shift }: ShiftInfoProps) {
     };
 
     addEngagement(engagement)
-      .then(() => message.success("Anchor added successfully"))
+      .then(() => {
+        message.success("Anchor added successfully");
+        setAnchorSelection(undefined);
+      })
       .catch(() => message.error("Failed to add anchor"));
   };
 
@@ -91,75 +101,166 @@ export default function ShiftInfo({ shift }: ShiftInfoProps) {
       .catch(() => message.error("Failed to remove"));
   };
 
+  const getTenderLabel = (userId: string | undefined): string => {
+    if (!userId) {
+      return "Unknown";
+    }
+
+    const tender = tenderState.tenders.find((candidate) => candidate.uid === userId);
+    return tender?.displayName ?? tender?.email ?? userId;
+  };
+
+  const tenderById = useMemo(() => {
+    return new Map(tenderState.tenders.map((tender) => [tender.uid, tender]));
+  }, [tenderState.tenders]);
+
+  const conflictWarnings = useMemo(() => {
+    const usersOnShift = shiftEngagements
+      .map((engagement) => engagement.userId)
+      .filter((userId): userId is string => typeof userId === "string");
+
+    const warnings: string[] = [];
+    for (let i = 0; i < usersOnShift.length; i += 1) {
+      for (let j = i + 1; j < usersOnShift.length; j += 1) {
+        const userA = tenderById.get(usersOnShift[i]);
+        const userB = tenderById.get(usersOnShift[j]);
+        if (!userA || !userB) {
+          continue;
+        }
+
+        const avoidA = new Set(userA.avoidShiftWithUserIds ?? []);
+        const avoidB = new Set(userB.avoidShiftWithUserIds ?? []);
+        if (!avoidA.has(userB.uid) && !avoidB.has(userA.uid)) {
+          continue;
+        }
+
+        warnings.push(
+          `${userA.displayName ?? userA.email} should avoid shifts with ${userB.displayName ?? userB.email}.`
+        );
+      }
+    }
+
+    return warnings;
+  }, [shiftEngagements, tenderById]);
+
   return (
-    <div>
-      <Space direction="vertical" style={{ width: "100%" }} size="large">
-        <div>
-          <Title level={3} style={{ marginBottom: "8px" }}>
-            {shift.title}
-          </Title>
-          <Text type="secondary">
-            {shift.location} • {new Date(shift.start).toLocaleString()} -{" "}
-            {new Date(shift.end).toLocaleTimeString()}
-          </Text>
+    <Space direction="vertical" style={{ width: "100%" }} size="small">
+      {conflictWarnings.length > 0 && (
+        <Alert
+          type="warning"
+          showIcon
+          message="Manual assignment conflict"
+          description={
+            <ul style={{ margin: 0, paddingLeft: 18 }}>
+              {conflictWarnings.map((warning) => (
+                <li key={warning}>{warning}</li>
+              ))}
+            </ul>
+          }
+        />
+      )}
+
+      <div>
+        <Text strong style={{ fontSize: 12 }}>Anchors</Text>
+        <div style={{ marginTop: 6 }}>
+          {anchors.length > 0 ? (
+            <Space size={[6, 6]} wrap>
+              {anchors.map((engagement) => (
+                <Popconfirm
+                  key={engagement.id}
+                  title="Remove this anchor?"
+                  onConfirm={() => handleRemove(engagement)}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <Tag color="gold" style={{ cursor: "pointer", marginRight: 0 }}>
+                    <Space size={4}>
+                      <UserAvatar
+                        user={tenderById.get(engagement.userId ?? "") ?? { uid: "", email: "", active: true, isAdmin: false }}
+                        size={32}
+                        showHats={true}
+                      />
+                      <span>{getTenderLabel(engagement.userId)}</span>
+                    </Space>
+                  </Tag>
+                </Popconfirm>
+              ))}
+            </Space>
+          ) : (
+            <Text type="secondary">None</Text>
+          )}
         </div>
+      </div>
 
-        <Divider />
+      <Select
+        size="small"
+        style={{ width: "100%" }}
+        value={anchorSelection}
+        placeholder="Add anchor"
+        onChange={(value) => {
+          setAnchorSelection(value);
+          handleAddAnchor(value);
+        }}
+        showSearch
+        optionFilterProp="children"
+      >
+        {availableAnchors.map((tender) => (
+          <Select.Option key={tender.uid} value={tender.uid}>
+            {tender.displayName} - {tender.email}
+          </Select.Option>
+        ))}
+      </Select>
 
-        <EngagementList
-          engagements={anchors}
-          title="Anchors"
-          tenders={tenderState.tenders}
-          onRemove={handleRemove}
-        />
+      <div>
+        <Text strong style={{ fontSize: 12 }}>Tenders</Text>
+        <div style={{ marginTop: 6 }}>
+          {tenders.length > 0 ? (
+            <Space size={[6, 6]} wrap>
+              {tenders.map((engagement) => (
+                <Popconfirm
+                  key={engagement.id}
+                  title="Remove this tender?"
+                  onConfirm={() => handleRemove(engagement)}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <Tag color="blue" style={{ cursor: "pointer", marginRight: 0 }}>
+                    <Space size={4}>
+                      <UserAvatar
+                        user={tenderById.get(engagement.userId ?? "") ?? { uid: "", email: "", active: true, isAdmin: false }}
+                        size={32}
+                        showHats={true}
+                      />
+                      <span>{getTenderLabel(engagement.userId)}</span>
+                    </Space>
+                  </Tag>
+                </Popconfirm>
+              ))}
+            </Space>
+          ) : (
+            <Text type="secondary">None</Text>
+          )}
+        </div>
+      </div>
 
-        <Card
-          title={<Text strong>Add Anchor</Text>}
-          bodyStyle={{ padding: "16px" }}
-        >
-          <Select
-            size="large"
-            style={{ width: "100%" }}
-            placeholder="Select an anchor to add"
-            onChange={handleAddAnchor}
-            showSearch
-            optionFilterProp="children"
-          >
-            {availableAnchors.map((tender) => (
-              <Select.Option key={tender.uid} value={tender.uid}>
-                {tender.displayName} - {tender.email}
-              </Select.Option>
-            ))}
-          </Select>
-        </Card>
-
-        <EngagementList
-          engagements={tenders}
-          title="Tenders"
-          tenders={tenderState.tenders}
-          onRemove={handleRemove}
-        />
-
-        <Card
-          title={<Text strong>Add Tender</Text>}
-          bodyStyle={{ padding: "16px" }}
-        >
-          <Select
-            size="large"
-            style={{ width: "100%" }}
-            placeholder="Select a tender to add"
-            onChange={handleAddTender}
-            showSearch
-            optionFilterProp="children"
-          >
-            {availableTenders.map((tender) => (
-              <Select.Option key={tender.uid} value={tender.uid}>
-                {tender.displayName} - {tender.email}
-              </Select.Option>
-            ))}
-          </Select>
-        </Card>
-      </Space>
-    </div>
+      <Select
+        size="small"
+        style={{ width: "100%" }}
+        value={tenderSelection}
+        placeholder="Add tender"
+        onChange={(value) => {
+          setTenderSelection(value);
+          handleAddTender(value);
+        }}
+        showSearch
+        optionFilterProp="children"
+      >
+        {availableTenders.map((tender) => (
+          <Select.Option key={tender.uid} value={tender.uid}>
+            {tender.displayName} - {tender.email}
+          </Select.Option>
+        ))}
+      </Select>
+    </Space>
   );
 }

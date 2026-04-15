@@ -15,6 +15,7 @@ import Register from "./pages/Register";
 import Shifts from "./pages/members/Shifts";
 import Profile from "./pages/members/Profile";
 import GetHelpPage from "./pages/members/GetHelpPage";
+import ShiftAvailabilityPage from "./pages/members/ShiftAvailabilityPage";
 import { TenderMenu } from "./components/HomePage/TenderMenu";
 import { Role, ShiftFiltering } from "./types/types-file";
 import EventManagement from "./pages/admin/EventManagement/EventManagement";
@@ -84,6 +85,7 @@ function App() {
                     />
                     <Route path="/tenders/gethelp" element={<GetHelpPage />} />
                     <Route path="/members/profile" element={<Profile />} />
+                    <Route path="/members/availability" element={<ShiftAvailabilityPage />} />
                     {/* --- Admin Routes --- */}
                     <Route element={<RoleProtectedRoute />}>
                       <Route

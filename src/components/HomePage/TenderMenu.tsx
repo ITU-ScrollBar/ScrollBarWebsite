@@ -10,6 +10,22 @@ import { UserAvatar } from "../UserAvatar";
 import { Loading } from "../Loading";
 import { Role } from "../../types/types-file";
 import useSettings from "../../hooks/useSettings";
+import useShiftPlanning from "../../hooks/useShiftPlanning";
+
+const resolvePeriodSurveyType = (period: {
+  surveyType?: "regularSemesterSurvey" | "excludeSemesterStatus" | "newbieShiftPlanning";
+  includeShiftStatusQuestions?: boolean;
+}): "regularSemesterSurvey" | "excludeSemesterStatus" | "newbieShiftPlanning" => {
+  if (period.surveyType) {
+    return period.surveyType;
+  }
+
+  if (period.includeShiftStatusQuestions === false) {
+    return "excludeSemesterStatus";
+  }
+
+  return "regularSemesterSurvey";
+};
 
 interface TenderMenuProps {
   children?: ReactNode;
@@ -20,10 +36,22 @@ type MenuItem = Required<MenuProps>['items'][number];
 export const TenderMenu = ({ children }: TenderMenuProps) => {
   const { currentUser, loading, logout } = useAuth();
   const { settingsState } = useSettings();
+  const { periodState } = useShiftPlanning();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { isMobile } = useWindowSize();
   const getHelpLabel = settingsState.settings.getHelpTitle || "Get help";
+  const isNewbie = currentUser?.roles?.includes(Role.NEWBIE) ?? false;
+  const now = Date.now();
+
+  const hasAccessibleOpenPeriod = periodState.periods
+    .filter((period) => period.status === "open")
+    .filter((period) => period.submissionOpensAt?.getTime() <= now)
+    .filter((period) => period.submissionClosesAt?.getTime() >= now)
+    .some((period) => {
+      const surveyType = resolvePeriodSurveyType(period);
+      return surveyType !== "newbieShiftPlanning" || isNewbie;
+    });
 
   const items: MenuItem[] = [
     {
@@ -43,6 +71,13 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
       key: 'tenders/gethelp',
     }
   ];
+
+  if (hasAccessibleOpenPeriod) {
+    items.push({
+      label: "Shift Availability",
+      key: 'members/availability',
+    });
+  }
 
   if (loading || !currentUser) {
     return <Loading />

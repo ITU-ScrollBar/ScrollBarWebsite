@@ -2,6 +2,7 @@ import React from "react";
 import { useState } from "react";
 import { Button, Tabs, Layout, Space, Segmented, Popconfirm, notification } from "antd";
 import { PlusOutlined, UploadOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
 import useEvents from "../../../hooks/useEvents";
 import EventInfo from "./EventInfo";
 import { useWindowSize } from "../../../hooks/useWindowSize";
@@ -70,11 +71,7 @@ export default function EventManagement() {
       <div style={{ textAlign: "left" }}>
         <div style={{ fontWeight: 600 }}>{e.title}</div>
         <div style={{ fontSize: "0.75em", color: "#666" }}>
-          {e.start.toDateString()}{" "}
-          {e.start.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
+          {dayjs(e.start).format("DD/MM/YYYY")}
         </div>
       </div>
     ),
@@ -102,13 +99,22 @@ export default function EventManagement() {
               style={{
                 display: "flex",
                 justifyContent: "space-between",
-                alignItems: "center",
+                alignItems: isMobile ? "stretch" : "center",
+                flexDirection: isMobile ? "column" : "row",
+                gap: isMobile ? "12px" : 0,
               }}
             >
               <h1 style={{ margin: 0, fontSize: "24px", fontWeight: 600 }}>
                 Event Management
               </h1>
-              <div style={{ display: "flex", gap: "12px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  flexDirection: isMobile ? "column" : "row",
+                  width: isMobile ? "100%" : "auto",
+                }}
+              >
                 <Popconfirm
                   title="Are you sure you want to publish all future events?"
                   onConfirm={publishFutureEvents}
@@ -119,6 +125,7 @@ export default function EventManagement() {
                     type="default"
                     size="large"
                     icon={<UploadOutlined />}
+                    style={{ width: isMobile ? "100%" : "auto" }}
                   >
                     Publish future events
                   </Button>
@@ -128,6 +135,7 @@ export default function EventManagement() {
                   size="large"
                   icon={<PlusOutlined />}
                   onClick={createEventNextAvailableFriday}
+                  style={{ width: isMobile ? "100%" : "auto" }}
                 >
                   Create Event
                 </Button>
