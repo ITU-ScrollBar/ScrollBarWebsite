@@ -134,7 +134,6 @@ export interface Shift {
   location: string;
   title: string;
   tenders: number;
-  anchors: number;
   start: Date;
   end: Date;
 }
@@ -159,7 +158,7 @@ export type Tender = {
   name?: string;
   active: boolean;
   email: string;
-  displayName?: string;
+  displayName: string;
   photoUrl?: string;
   isAdmin: boolean;
   roles?: string[];
@@ -281,8 +280,8 @@ export interface ShiftPlanningResponse {
   userId: string;
   participationStatus?: "active" | "passive" | "legacy" | "leave";
   wantsAnchor?: boolean;
-  availability: Record<string, boolean>;
-  anchorOnly: boolean;
+  availability?: Record<string, boolean>;
+  anchorOnly?: boolean;
   comments?: string;
   submittedAt?: Date;
   updatedAt?: Date;

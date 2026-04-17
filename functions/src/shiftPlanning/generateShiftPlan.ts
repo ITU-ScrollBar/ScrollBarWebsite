@@ -22,7 +22,6 @@ import {
 type GenerateShiftPlanRequest = {
   env?: string;
   periodId?: string;
-  replaceExistingEngagements?: boolean;
 };
 
 type GenerateShiftPlanWarning = {

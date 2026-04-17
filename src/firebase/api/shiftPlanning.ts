@@ -52,7 +52,6 @@ export type ShiftPlanningResponsePayload = {
 
 export type GenerateShiftPlanPayload = {
   periodId: string;
-  replaceExistingEngagements?: boolean;
 };
 
 export type GenerateShiftPlanResult = {
@@ -174,14 +173,13 @@ export const generateShiftPlan = async (
   payload: GenerateShiftPlanPayload
 ): Promise<GenerateShiftPlanResult> => {
   const callable = httpsCallable<
-    { env: string; periodId: string; replaceExistingEngagements: boolean },
+    { env: string; periodId: string },
     GenerateShiftPlanResult
   >(functions, "generateShiftPlan");
 
   const result = await callable({
     env,
     periodId: payload.periodId,
-    replaceExistingEngagements: payload.replaceExistingEngagements ?? true,
   });
 
   return result.data;

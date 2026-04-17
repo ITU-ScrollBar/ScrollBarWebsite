@@ -107,7 +107,7 @@ export default function ShiftInfo({ shift }: ShiftInfoProps) {
     }
 
     const tender = tenderState.tenders.find((candidate) => candidate.uid === userId);
-    return tender?.displayName ?? tender?.email ?? userId;
+    return tender?.displayName ?? userId;
   };
 
   const tenderById = useMemo(() => {
@@ -135,7 +135,7 @@ export default function ShiftInfo({ shift }: ShiftInfoProps) {
         }
 
         warnings.push(
-          `${userA.displayName ?? userA.email} should avoid shifts with ${userB.displayName ?? userB.email}.`
+          `${userA.displayName} should avoid shifts with ${userB.displayName}.`
         );
       }
     }

@@ -32,7 +32,7 @@ export const getTenderForEngagement = (
  * @returns The display name or "Unknown"
  */
 export const getTenderDisplayName = (tender: Tender): string => {
-  return tender.displayName || tender.name || "Unknown";
+  return tender.displayName;
 };
 
 /**

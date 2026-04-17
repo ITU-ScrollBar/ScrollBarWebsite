@@ -135,7 +135,7 @@ export default function ShiftManagement() {
   const totalShiftSpots = selectedPeriod
     ? shiftState.shifts
       .filter((shift) => selectedPeriod.eventIds.includes(shift.eventId))
-      .reduce((sum, shift) => sum + (shift.anchors ?? 0) + (shift.tenders ?? 0), 0)
+      .reduce((sum, shift) => sum + (shift.tenders ?? 0), 0)
     : 0;
 
   const shiftsPerMember =
@@ -359,7 +359,6 @@ export default function ShiftManagement() {
         location: currentEvent.where || "Main bar",
         start: openingStart,
         end: openingEnd,
-        anchors: 1,
         tenders: 4,
       },
       {
@@ -369,7 +368,6 @@ export default function ShiftManagement() {
         location: currentEvent.where || "Main bar",
         start: openingEnd,
         end: middleEnd,
-        anchors: 1,
         tenders: 7,
       },
       {
@@ -379,7 +377,6 @@ export default function ShiftManagement() {
         location: currentEvent.where || "Main bar",
         start: middleEnd,
         end: eventEnd,
-        anchors: 1,
         tenders: 7,
       },
     ];
@@ -420,7 +417,6 @@ export default function ShiftManagement() {
         title: "Opening + Setup",
         start: openingStart,
         end: openingEnd,
-        anchors: 1,
         tenders: 5,
       },
       {
@@ -429,7 +425,6 @@ export default function ShiftManagement() {
         title: "Early middle + Setup",
         start: openingEnd,
         end: earlyMiddleEnd,
-        anchors: 1,
         tenders: 6,
       },
       {
@@ -438,7 +433,6 @@ export default function ShiftManagement() {
         title: "Middle",
         start: earlyMiddleEnd,
         end: middleEnd,
-        anchors: 1,
         tenders: 7,
       },
       {
@@ -447,7 +441,6 @@ export default function ShiftManagement() {
         title: "Late middle + Cleaning",
         start: middleEnd,
         end: lateMiddleEnd,
-        anchors: 1,
         tenders: 7,
       },
       {
@@ -456,7 +449,6 @@ export default function ShiftManagement() {
         title: "Closing + Cleaning",
         start: lateMiddleEnd,
         end: eventEnd,
-        anchors: 1,
         tenders: 5,
       },
     ];
@@ -510,7 +502,6 @@ export default function ShiftManagement() {
         location: customShiftLocation,
         start: customShiftStart,
         end: customShiftEnd,
-        anchors: 1,
         tenders: customShiftTenders,
       });
 

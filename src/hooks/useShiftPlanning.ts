@@ -191,7 +191,6 @@ const useShiftPlanning = (periodId?: string) => {
   const triggerGeneratePlan = useCallback(async (targetPeriodId: string): Promise<GenerateShiftPlanResult> => {
     const result = await generateShiftPlan({
       periodId: targetPeriodId,
-      replaceExistingEngagements: true,
     });
 
     message.success("Shift plan generated as unpublished engagements.");

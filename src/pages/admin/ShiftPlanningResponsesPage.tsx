@@ -111,7 +111,7 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
   const userNameById = useMemo(() => {
     const map = new Map<string, string>();
     for (const tender of tenderState.tenders) {
-      map.set(tender.uid, tender.displayName ?? tender.email ?? tender.uid);
+      map.set(tender.uid, tender.displayName);
     }
     return map;
   }, [tenderState.tenders]);
@@ -166,17 +166,19 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
   }, [responses]);
 
   const expectedSurveyUsers = useMemo(() => {
+    const requiredRole =
+      selectedPeriodSurveyType === "newbieShiftPlanning" ? Role.NEWBIE : Role.REGULAR_ACCESS;
     return tenderState.tenders
       .filter((tender) => tender.active)
-      .filter((tender) => tender.roles?.includes(Role.REGULAR_ACCESS) === true)
+      .filter((tender) => tender.roles?.includes(requiredRole) === true)
       .map((tender) => ({
         uid: tender.uid,
-        name: tender.displayName ?? tender.email ?? tender.uid,
+        name: tender.displayName,
         email: tender.email,
         responded: responseByUserId.has(tender.uid),
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [responseByUserId, tenderState.tenders]);
+  }, [responseByUserId, selectedPeriodSurveyType, tenderState.tenders]);
 
   const filteredUsers = useMemo(() => {
     const searchTerm = userSearch.trim().toLowerCase();
@@ -253,12 +255,12 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
       .filter((tender) => tender.uid !== selectedUserId)
       .map((tender) => ({
         value: tender.uid,
-        label: tender.displayName ?? tender.email ?? tender.uid,
+        label: tender.displayName,
       }))
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [selectedUserId, tenderState.tenders]);
 
-  const regularAccessUsersCount = expectedSurveyUsers.length;
+  const expectedSurveyUsersCount = expectedSurveyUsers.length;
 
   const missingSurveyUsers = useMemo(() => {
     return expectedSurveyUsers.filter((user) => !user.responded);
@@ -727,7 +729,7 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
                   children: (
                     <ResponsesOverviewTab
                       participationSummary={participationSummary}
-                      regularAccessUsersCount={regularAccessUsersCount}
+                      expectedSurveyUsersCount={expectedSurveyUsersCount}
                       missingSurveyUsersCount={missingSurveyUsers.length}
                       anchorSummary={anchorSummary}
                       overallEventStats={overallEventStats}

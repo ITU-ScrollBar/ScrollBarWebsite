@@ -207,7 +207,6 @@ export const loadShiftsForEvents = async (
         start,
         end,
         tenders: Number.isFinite(data.tenders) ? data.tenders : 0,
-        anchors: Number.isFinite(data.anchors) ? data.anchors : 1,
       });
     }
   }

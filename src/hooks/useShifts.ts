@@ -15,7 +15,6 @@ type FirebaseShift = {
   location: string;
   title: string;
   tenders: number;
-  anchors: number;
   start: Timestamp;
   end: Timestamp;
 }

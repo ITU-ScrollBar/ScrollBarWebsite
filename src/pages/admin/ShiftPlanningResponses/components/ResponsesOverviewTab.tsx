@@ -13,7 +13,7 @@ type ResponsesOverviewTabProps = {
     legacy: number;
     leave: number;
   };
-  regularAccessUsersCount: number;
+  expectedSurveyUsersCount: number;
   missingSurveyUsersCount: number;
   anchorSummary: {
     totalAnchors: number;
@@ -26,7 +26,7 @@ type ResponsesOverviewTabProps = {
 
 export default function ResponsesOverviewTab({
   participationSummary,
-  regularAccessUsersCount,
+  expectedSurveyUsersCount,
   missingSurveyUsersCount,
   anchorSummary,
   overallEventStats,
@@ -39,7 +39,7 @@ export default function ResponsesOverviewTab({
           <Statistic
             title="Total responses"
             value={participationSummary.total}
-            suffix={"/ " + regularAccessUsersCount}
+            suffix={"/ " + expectedSurveyUsersCount}
           />
         </Col>
         <Col xs={12} md={6}>

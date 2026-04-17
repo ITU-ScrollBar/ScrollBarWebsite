@@ -31,7 +31,7 @@ export default function HomePage() {
       .map(role => ({ ...role.assignedUser, role } as TenderWithRole)); // Map to assigned user with role info
   }, [boardRolesState.boardRoles]);
   const activeTenders = useMemo(() => { 
-    return tenderState.tenders.filter(t => t?.active && !boardMembers.includes(t))
+    return tenderState.tenders.filter(t => t?.active && !boardMembers.some(b => b.uid === t.uid))
   }, [tenderState.tenders, boardMembers]);
   const { state } = useLocation();
   const { targetId } = state || {};
