@@ -84,7 +84,7 @@ const useShifts = () => {
     return unsubscribe;
   }, []);
 
-  const addShift = (shift: Shift): Promise<DocumentData> => {
+  const addShift = (shift: Shift): Promise<string> => {
     return createShift(shift);
   };
 

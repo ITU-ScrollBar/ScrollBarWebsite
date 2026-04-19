@@ -1,6 +1,7 @@
-import { DatePicker, Input, InputNumber, Modal, Space } from "antd";
+import { DatePicker, Input, InputNumber, Modal, Select, Space } from "antd";
 import Text from "antd/es/typography/Text";
 import dayjs from "dayjs";
+import { ShiftCategory } from "../../../../types/types-file";
 
 type CustomShiftModalProps = {
   open: boolean;
@@ -16,6 +17,8 @@ type CustomShiftModalProps = {
   onCustomShiftEndChange: (value: Date) => void;
   customShiftTenders: number;
   onCustomShiftTendersChange: (value: number) => void;
+  customShiftCategory: ShiftCategory | undefined;
+  onCustomShiftCategoryChange: (value: ShiftCategory) => void;
 };
 
 export default function CustomShiftModal({
@@ -32,6 +35,8 @@ export default function CustomShiftModal({
   onCustomShiftEndChange,
   customShiftTenders,
   onCustomShiftTendersChange,
+  customShiftCategory,
+  onCustomShiftCategoryChange,
 }: CustomShiftModalProps) {
   return (
     <Modal title="Add custom shift" open={open} onOk={onAddShift} onCancel={onClose} okText="Add shift">
@@ -43,6 +48,21 @@ export default function CustomShiftModal({
             value={customShiftTitle}
             onChange={(event) => onCustomShiftTitleChange(event.target.value)}
             style={{ width: "100%", marginTop: 6 }}
+          />
+        </div>
+
+        <div>
+          <Text strong>Category <span style={{ color: "#ff4d4f" }}>*</span></Text>
+          <Select
+            placeholder="Select category"
+            value={customShiftCategory}
+            onChange={onCustomShiftCategoryChange}
+            style={{ width: "100%", marginTop: 6 }}
+            options={[
+              { value: "opening", label: "Opening" },
+              { value: "middle", label: "Middle" },
+              { value: "closing", label: "Closing" },
+            ]}
           />
         </div>
 

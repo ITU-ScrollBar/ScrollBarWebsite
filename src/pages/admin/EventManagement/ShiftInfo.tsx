@@ -1,7 +1,7 @@
-import { InputNumber, Input, DatePicker, Button, Popconfirm, Space, Typography } from "antd";
-import { DeleteOutlined } from "@ant-design/icons";
+import { InputNumber, Input, DatePicker, Button, Divider, Popconfirm, Select, Space, Typography } from "antd";
+import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
-import { Shift } from "../../../types/types-file";
+import { Shift, ShiftCategory } from "../../../types/types-file";
 
 const { Text } = Typography;
 
@@ -9,8 +9,13 @@ export default function ShiftInfo(props: {
   shift: Shift;
   updateShift: (id: string, field: string, value: unknown) => void;
   removeShift: (shift: Shift) => void;
+  isMandatory?: boolean;
+  satelliteShift?: Shift;
+  onAddSatellite: () => void;
+  onRemoveSatellite: () => void;
+  onUpdateSatellite: (field: string, value: unknown) => void;
 }) {
-  const { shift, updateShift, removeShift } = props;
+  const { shift, updateShift, removeShift, isMandatory, satelliteShift, onAddSatellite, onRemoveSatellite, onUpdateSatellite } = props;
 
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="small">
@@ -46,6 +51,19 @@ export default function ShiftInfo(props: {
         </Popconfirm>
       </div>
 
+      <Select
+        size="small"
+        value={shift.category}
+        placeholder="Category"
+        onChange={(value: ShiftCategory) => updateShift(shift.id, "category", value)}
+        style={{ width: 120 }}
+        options={[
+          { value: "opening", label: "Opening" },
+          { value: "middle", label: "Middle" },
+          { value: "closing", label: "Closing" },
+        ]}
+      />
+
       <Space size="small" wrap>
         <DatePicker
           size="small"
@@ -65,16 +83,62 @@ export default function ShiftInfo(props: {
         />
       </Space>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <Text type="secondary">Total tenders including anchors</Text>
-        <InputNumber
-          size="small"
-          min={1}
-          value={shift.tenders}
-          onChange={(value) => updateShift(shift.id, "tenders", value)}
-          style={{ width: 96 }}
-        />
-      </div>
+      {isMandatory ? (
+        <Text type="secondary">Mandatory event — all available tenders are assigned</Text>
+      ) : (
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <Text type="secondary">Total tenders including anchors</Text>
+          <InputNumber
+            size="small"
+            min={1}
+            value={shift.tenders}
+            onChange={(value) => updateShift(shift.id, "tenders", value)}
+            style={{ width: 96 }}
+          />
+        </div>
+      )}
+
+      <Divider style={{ margin: "6px 0" }} />
+
+      {satelliteShift ? (
+        <Space direction="vertical" size="small" style={{ width: "100%" }}>
+          <Text type="secondary" style={{ fontSize: 11 }}>Satellite shift</Text>
+          <Space size="small" wrap>
+            <Input
+              size="small"
+              value={satelliteShift.location}
+              placeholder="Satellite location"
+              onChange={(e) => onUpdateSatellite("location", e.target.value)}
+              style={{ width: 140 }}
+            />
+            {!isMandatory && (
+              <InputNumber
+                size="small"
+                min={1}
+                value={satelliteShift.tenders}
+                onChange={(value) => onUpdateSatellite("tenders", value)}
+                style={{ width: 80 }}
+              />
+            )}
+            <Popconfirm
+              title="Remove satellite shift?"
+              description="Engagements for this satellite shift will remain."
+              onConfirm={onRemoveSatellite}
+              okText="Remove"
+              cancelText="Cancel"
+              okButtonProps={{ danger: true }}
+            >
+              <Button size="small" danger icon={<DeleteOutlined />} type="text">
+                Remove
+              </Button>
+            </Popconfirm>
+          </Space>
+        </Space>
+      ) : (
+        <Button size="small" type="dashed" icon={<PlusOutlined />} onClick={onAddSatellite}>
+          Add satellite shift
+        </Button>
+      )}
     </Space>
   );
 }

@@ -7,12 +7,14 @@ import {
   Typography,
   message,
 } from "antd";
+import dayjs from "dayjs";
 import { useMemo, useState } from "react";
 import {
   Shift,
   Engagement,
   engagementType,
   Role,
+  ShiftPlanningResponse,
 } from "../../../types/types-file";
 import { useEngagementContext } from "../../../contexts/EngagementContext";
 import useTenders from "../../../hooks/useTenders";
@@ -22,9 +24,11 @@ const { Text } = Typography;
 
 interface ShiftInfoProps {
   shift: Shift;
+  periodResponses: ShiftPlanningResponse[];
+  eventTitle: string;
 }
 
-export default function ShiftInfo({ shift }: ShiftInfoProps) {
+export default function ShiftInfo({ shift, periodResponses, eventTitle }: ShiftInfoProps) {
   const { engagementState, addEngagement, removeEngagement } =
     useEngagementContext();
   const { tenderState } = useTenders();
@@ -114,6 +118,25 @@ export default function ShiftInfo({ shift }: ShiftInfoProps) {
     return new Map(tenderState.tenders.map((tender) => [tender.uid, tender]));
   }, [tenderState.tenders]);
 
+  const responseByUserId = useMemo(() => {
+    return new Map(periodResponses.map((r) => [r.userId, r]));
+  }, [periodResponses]);
+
+  const unavailabilityWarnings = useMemo(() => {
+    const shiftPeriod = `${dayjs(shift.start).format("HH:mm")}–${dayjs(shift.end).format("HH:mm")}`;
+    const warnings: string[] = [];
+    for (const engagement of shiftEngagements) {
+      if (!engagement.userId) continue;
+      const response = responseByUserId.get(engagement.userId);
+      if (!response || response.participationStatus !== "active") continue;
+      if (response.availability?.[shift.id] === false) {
+        const name = tenderById.get(engagement.userId)?.displayName ?? engagement.userId;
+        warnings.push(`${name} has indicated they cannot work during ${shiftPeriod} at ${eventTitle}.`);
+      }
+    }
+    return warnings;
+  }, [shiftEngagements, responseByUserId, tenderById, shift, eventTitle]);
+
   const conflictWarnings = useMemo(() => {
     const usersOnShift = shiftEngagements
       .map((engagement) => engagement.userId)
@@ -145,6 +168,21 @@ export default function ShiftInfo({ shift }: ShiftInfoProps) {
 
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="small">
+      {unavailabilityWarnings.length > 0 && (
+        <Alert
+          type="warning"
+          showIcon
+          message="Availability conflict"
+          description={
+            <ul style={{ margin: 0, paddingLeft: 18 }}>
+              {unavailabilityWarnings.map((warning) => (
+                <li key={warning}>{warning}</li>
+              ))}
+            </ul>
+          }
+        />
+      )}
+
       {conflictWarnings.length > 0 && (
         <Alert
           type="warning"
@@ -176,7 +214,7 @@ export default function ShiftInfo({ shift }: ShiftInfoProps) {
                   <Tag color="gold" style={{ cursor: "pointer", marginRight: 0 }}>
                     <Space size={4}>
                       <UserAvatar
-                        user={tenderById.get(engagement.userId ?? "") ?? { uid: "", email: "", active: true, isAdmin: false }}
+                        user={tenderById.get(engagement.userId ?? "") ?? { uid: "", email: "", displayName: "", active: true, isAdmin: false }}
                         size={32}
                         showHats={true}
                       />
@@ -227,7 +265,7 @@ export default function ShiftInfo({ shift }: ShiftInfoProps) {
                   <Tag color="blue" style={{ cursor: "pointer", marginRight: 0 }}>
                     <Space size={4}>
                       <UserAvatar
-                        user={tenderById.get(engagement.userId ?? "") ?? { uid: "", email: "", active: true, isAdmin: false }}
+                        user={tenderById.get(engagement.userId ?? "") ?? { uid: "", email: "", displayName: "", active: true, isAdmin: false }}
                         size={32}
                         showHats={true}
                       />

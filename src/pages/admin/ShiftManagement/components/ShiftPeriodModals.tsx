@@ -1,4 +1,5 @@
-import { DatePicker, Input, Modal, Radio, Select, Space } from "antd";
+import { Button, DatePicker, Input, Modal, Radio, Select, Space } from "antd";
+import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import Text from "antd/es/typography/Text";
 import dayjs, { Dayjs } from "dayjs";
 import { Event, ShiftPlanningSurveyType } from "../../../../types/types-file";
@@ -25,6 +26,8 @@ type ShiftPeriodModalsProps = {
   onNewPeriodMandatoryEventIdsChange: (value: string[]) => void;
   newPeriodSurveyType: ShiftPlanningSurveyType;
   onNewPeriodSurveyTypeChange: (value: ShiftPlanningSurveyType) => void;
+  newPeriodAnchorSeminarDays: string[];
+  onNewPeriodAnchorSeminarDaysChange: (value: string[]) => void;
   editPeriodName: string;
   onEditPeriodNameChange: (value: string) => void;
   editPeriodDeadline: Dayjs | null;
@@ -35,6 +38,8 @@ type ShiftPeriodModalsProps = {
   onEditPeriodMandatoryEventIdsChange: (value: string[]) => void;
   editPeriodSurveyType: ShiftPlanningSurveyType;
   onEditPeriodSurveyTypeChange: (value: ShiftPlanningSurveyType) => void;
+  editPeriodAnchorSeminarDays: string[];
+  onEditPeriodAnchorSeminarDaysChange: (value: string[]) => void;
   submissionCount: number;
 };
 
@@ -58,6 +63,8 @@ export default function ShiftPeriodModals({
   onNewPeriodMandatoryEventIdsChange,
   newPeriodSurveyType,
   onNewPeriodSurveyTypeChange,
+  newPeriodAnchorSeminarDays,
+  onNewPeriodAnchorSeminarDaysChange,
   editPeriodName,
   onEditPeriodNameChange,
   editPeriodDeadline,
@@ -68,6 +75,8 @@ export default function ShiftPeriodModals({
   onEditPeriodMandatoryEventIdsChange,
   editPeriodSurveyType,
   onEditPeriodSurveyTypeChange,
+  editPeriodAnchorSeminarDays,
+  onEditPeriodAnchorSeminarDaysChange,
   submissionCount,
 }: ShiftPeriodModalsProps) {
   return (
@@ -167,6 +176,47 @@ export default function ShiftPeriodModals({
               Newbie shift planning is only available to users with newbie role.
             </Text>
           </div>
+
+          {newPeriodSurveyType === "regularSemesterSurvey" && (
+            <div>
+              <Text strong>Possible anchor seminar days</Text>
+              <Space direction="vertical" style={{ width: "100%", marginTop: 6 }}>
+                {newPeriodAnchorSeminarDays.map((day, index) => (
+                  <Space key={index}>
+                    <DatePicker
+                      format="DD/MM/YYYY"
+                      value={dayjs(day)}
+                      onChange={(value) => {
+                        if (!value) return;
+                        const updated = [...newPeriodAnchorSeminarDays];
+                        updated[index] = value.format("YYYY-MM-DD");
+                        onNewPeriodAnchorSeminarDaysChange(updated);
+                      }}
+                    />
+                    <Button
+                      type="text"
+                      danger
+                      icon={<DeleteOutlined />}
+                      onClick={() => onNewPeriodAnchorSeminarDaysChange(newPeriodAnchorSeminarDays.filter((_, i) => i !== index))}
+                    />
+                  </Space>
+                ))}
+                <Button
+                  type="dashed"
+                  icon={<PlusOutlined />}
+                  onClick={() => {
+                    const latest = newPeriodAnchorSeminarDays[newPeriodAnchorSeminarDays.length - 1];
+                    const next = latest
+                      ? dayjs(latest).add(1, "day").format("YYYY-MM-DD")
+                      : dayjs().format("YYYY-MM-DD");
+                    onNewPeriodAnchorSeminarDaysChange([...newPeriodAnchorSeminarDays, next]);
+                  }}
+                >
+                  Add date
+                </Button>
+              </Space>
+            </div>
+          )}
         </Space>
       </Modal>
 
@@ -268,6 +318,47 @@ export default function ShiftPeriodModals({
               Newbie shift planning is only available to users with newbie role.
             </Text>
           </div>
+
+          {editPeriodSurveyType === "regularSemesterSurvey" && (
+            <div>
+              <Text strong>Possible anchor seminar days</Text>
+              <Space direction="vertical" style={{ width: "100%", marginTop: 6 }}>
+                {editPeriodAnchorSeminarDays.map((day, index) => (
+                  <Space key={index}>
+                    <DatePicker
+                      format="DD/MM/YYYY"
+                      value={dayjs(day)}
+                      onChange={(value) => {
+                        if (!value) return;
+                        const updated = [...editPeriodAnchorSeminarDays];
+                        updated[index] = value.format("YYYY-MM-DD");
+                        onEditPeriodAnchorSeminarDaysChange(updated);
+                      }}
+                    />
+                    <Button
+                      type="text"
+                      danger
+                      icon={<DeleteOutlined />}
+                      onClick={() => onEditPeriodAnchorSeminarDaysChange(editPeriodAnchorSeminarDays.filter((_, i) => i !== index))}
+                    />
+                  </Space>
+                ))}
+                <Button
+                  type="dashed"
+                  icon={<PlusOutlined />}
+                  onClick={() => {
+                    const latest = editPeriodAnchorSeminarDays[editPeriodAnchorSeminarDays.length - 1];
+                    const next = latest
+                      ? dayjs(latest).add(1, "day").format("YYYY-MM-DD")
+                      : dayjs().format("YYYY-MM-DD");
+                    onEditPeriodAnchorSeminarDaysChange([...editPeriodAnchorSeminarDays, next]);
+                  }}
+                >
+                  Add date
+                </Button>
+              </Space>
+            </div>
+          )}
         </Space>
       </Modal>
     </>

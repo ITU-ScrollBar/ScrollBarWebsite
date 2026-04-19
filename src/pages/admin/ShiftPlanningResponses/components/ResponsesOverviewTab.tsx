@@ -1,5 +1,6 @@
 import { Card, Col, Empty, Row, Space, Statistic, Table, Tag, Typography } from "antd";
 import dayjs from "dayjs";
+import { ShiftPlanningResponse } from "../../../../types/types-file";
 import { CommentsRow, EventAggregate, ParticipationStatus } from "../types";
 import { getParticipationTagColor } from "../utils";
 
@@ -22,6 +23,8 @@ type ResponsesOverviewTabProps = {
   };
   overallEventStats: EventAggregate[];
   commentsRows: CommentsRow[];
+  periodAnchorSeminarDays: string[];
+  responses: ShiftPlanningResponse[];
 };
 
 export default function ResponsesOverviewTab({
@@ -31,7 +34,22 @@ export default function ResponsesOverviewTab({
   anchorSummary,
   overallEventStats,
   commentsRows,
+  periodAnchorSeminarDays,
+  responses,
 }: ResponsesOverviewTabProps) {
+  const wantsAnchorResponses = responses.filter(
+    (r) => r.wantsAnchor === true && r.participationStatus === "active"
+  );
+  const totalWantsAnchor = wantsAnchorResponses.length;
+
+  const seminarDayRows = periodAnchorSeminarDays.map((day) => {
+    const canCount = wantsAnchorResponses.filter((r) =>
+      Array.isArray(r.anchorSeminarDays) && r.anchorSeminarDays.includes(day)
+    ).length;
+    return { day, canCount, cannotCount: totalWantsAnchor - canCount };
+  });
+
+  const maxCanCount = seminarDayRows.reduce((max, row) => Math.max(max, row.canCount), 0);
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="large">
       <Row gutter={[12, 12]}>
@@ -104,6 +122,44 @@ export default function ResponsesOverviewTab({
             </Col>
           ))}
         </Row>
+      )}
+
+      {periodAnchorSeminarDays.length > 0 && (
+        <Card size="small" title="Anchor seminar availability">
+          <Table
+            rowKey="day"
+            pagination={false}
+            dataSource={seminarDayRows}
+            locale={{ emptyText: "No seminar days configured." }}
+            columns={[
+              {
+                title: "Date",
+                dataIndex: "day",
+                render: (_: string, row) => (
+                  <Space>
+                    <Text strong={row.canCount === maxCanCount && maxCanCount > 0}>
+                      {dayjs(row.day).format("DD/MM/YYYY")}
+                    </Text>
+                    {row.canCount === maxCanCount && maxCanCount > 0 && (
+                      <Tag color="green">Most voted</Tag>
+                    )}
+                  </Space>
+                ),
+              },
+              {
+                title: "Can attend",
+                dataIndex: "canCount",
+                render: (val: number, row) => (
+                  <Text strong={row.canCount === maxCanCount && maxCanCount > 0}>{val}</Text>
+                ),
+              },
+              {
+                title: "Cannot attend",
+                dataIndex: "cannotCount",
+              },
+            ]}
+          />
+        </Card>
       )}
 
       <Card size="small" title="Comments">

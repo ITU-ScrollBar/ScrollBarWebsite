@@ -6,16 +6,18 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { useShiftContext } from "../../../contexts/ShiftContext";
 import useEvents from "../../../hooks/useEvents";
 import useShiftPlanning from "../../../hooks/useShiftPlanning";
-import { ShiftPlanningSurveyType } from "../../../types/types-file";
+import useTenders from "../../../hooks/useTenders";
+import { ShiftCategory, ShiftPlanningSurveyType } from "../../../types/types-file";
 import ShiftPlanningResponsesPage from "../ShiftPlanningResponsesPage";
 import CustomShiftModal from "./components/CustomShiftModal";
 import ShiftPeriodModals from "./components/ShiftPeriodModals";
 import ShiftPeriodSelector from "./components/ShiftPeriodSelector";
 import ShiftPlanningTab from "./components/ShiftPlanningTab";
+import ShiftPlanOverviewTab from "./components/ShiftPlanOverviewTab";
 
 const { Content } = Layout;
 
-type ShiftManagementTabKey = "planning" | "survey-overview" | "survey-individual";
+type ShiftManagementTabKey = "planning" | "survey-overview" | "survey-individual" | "shifts-overview";
 
 export default function ShiftManagement() {
   const { currentUser } = useAuth();
@@ -25,6 +27,7 @@ export default function ShiftManagement() {
   const [activeTab, setActiveTab] = useState<ShiftManagementTabKey>("planning");
   const { periodState, responseState, createPeriod, updatePeriod, triggerGeneratePlan } =
     useShiftPlanning(selectedPeriodId ?? undefined);
+  const { tenderState, deleteTender } = useTenders();
 
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [creatingPeriod, setCreatingPeriod] = useState(false);
@@ -54,6 +57,9 @@ export default function ShiftManagement() {
     new Date(Date.now() + 5 * 60 * 60 * 1000)
   );
   const [customShiftTenders, setCustomShiftTenders] = useState(4);
+  const [customShiftCategory, setCustomShiftCategory] = useState<ShiftCategory | undefined>(undefined);
+  const [newPeriodAnchorSeminarDays, setNewPeriodAnchorSeminarDays] = useState<string[]>([]);
+  const [editPeriodAnchorSeminarDays, setEditPeriodAnchorSeminarDays] = useState<string[]>([]);
 
   const sortedEvents = useMemo(() => {
     return [...eventState.events].sort((a, b) => a.start.getTime() - b.start.getTime());
@@ -104,6 +110,12 @@ export default function ShiftManagement() {
     selectedPeriodEvents[0] ??
     null;
 
+  const periodShifts = useMemo(() => {
+    if (!selectedPeriod) return [];
+    const periodEventIds = new Set(selectedPeriod.eventIds);
+    return shiftState.shifts.filter((shift) => periodEventIds.has(shift.eventId));
+  }, [selectedPeriod, shiftState.shifts]);
+
   useEffect(() => {
     if (!selectedPeriodId && selectedPeriod) {
       setSelectedPeriodId(selectedPeriod.id);
@@ -147,6 +159,7 @@ export default function ShiftManagement() {
     setNewPeriodEventIds([]);
     setNewPeriodMandatoryEventIds([]);
     setNewPeriodSurveyType("regularSemesterSurvey");
+    setNewPeriodAnchorSeminarDays([]);
   };
 
   const closeCreatePeriodModal = () => {
@@ -160,6 +173,7 @@ export default function ShiftManagement() {
     setEditPeriodEventIds([]);
     setEditPeriodMandatoryEventIds([]);
     setEditPeriodSurveyType("regularSemesterSurvey");
+    setEditPeriodAnchorSeminarDays([]);
   };
 
   const closeEditPeriodModal = () => {
@@ -177,6 +191,7 @@ export default function ShiftManagement() {
     setEditPeriodEventIds(selectedPeriod.eventIds);
     setEditPeriodMandatoryEventIds(selectedPeriod.mandatoryEventIds ?? []);
     setEditPeriodSurveyType(selectedPeriodSurveyType);
+    setEditPeriodAnchorSeminarDays(selectedPeriod.anchorSeminarDays ?? []);
     setIsEditPeriodModalOpen(true);
   };
 
@@ -220,6 +235,7 @@ export default function ShiftManagement() {
         submissionClosesAt: newPeriodWindow[1].toDate(),
         status: "open",
         createdBy: currentUser.uid,
+        anchorSeminarDays: newPeriodAnchorSeminarDays,
       });
 
       if (createdPeriod && typeof (createdPeriod as { id?: string }).id === "string") {
@@ -290,6 +306,7 @@ export default function ShiftManagement() {
         mandatoryEventIds: editPeriodMandatoryEventIds.filter((eventId) =>
           periodEventIds.includes(eventId)
         ),
+        anchorSeminarDays: editPeriodAnchorSeminarDays,
       });
 
       closeEditPeriodModal();
@@ -335,6 +352,7 @@ export default function ShiftManagement() {
     setCustomShiftStart(new Date(currentEvent.start));
     setCustomShiftEnd(new Date(currentEvent.start.getTime() + 5 * 60 * 60 * 1000));
     setCustomShiftTenders(4);
+    setCustomShiftCategory(undefined);
     setIsCustomShiftModalOpen(true);
   };
 
@@ -360,6 +378,7 @@ export default function ShiftManagement() {
         start: openingStart,
         end: openingEnd,
         tenders: 4,
+        category: "opening" as const,
       },
       {
         id: "",
@@ -369,6 +388,7 @@ export default function ShiftManagement() {
         start: openingEnd,
         end: middleEnd,
         tenders: 7,
+        category: "middle" as const,
       },
       {
         id: "",
@@ -378,6 +398,7 @@ export default function ShiftManagement() {
         start: middleEnd,
         end: eventEnd,
         tenders: 7,
+        category: "closing" as const,
       },
     ];
 
@@ -418,6 +439,7 @@ export default function ShiftManagement() {
         start: openingStart,
         end: openingEnd,
         tenders: 5,
+        category: "opening" as const,
       },
       {
         id: "",
@@ -426,6 +448,7 @@ export default function ShiftManagement() {
         start: openingEnd,
         end: earlyMiddleEnd,
         tenders: 6,
+        category: "opening" as const,
       },
       {
         id: "",
@@ -434,6 +457,7 @@ export default function ShiftManagement() {
         start: earlyMiddleEnd,
         end: middleEnd,
         tenders: 7,
+        category: "middle" as const,
       },
       {
         id: "",
@@ -442,6 +466,7 @@ export default function ShiftManagement() {
         start: middleEnd,
         end: lateMiddleEnd,
         tenders: 7,
+        category: "closing" as const,
       },
       {
         id: "",
@@ -450,17 +475,16 @@ export default function ShiftManagement() {
         start: lateMiddleEnd,
         end: eventEnd,
         tenders: 5,
+        category: "closing" as const,
       },
     ];
 
-    const shiftsWithLocations = [];
-    for (const shift of bigPartyShifts) {
-      shiftsWithLocations.push({ ...shift, location: "Main bar" });
-      shiftsWithLocations.push({ ...shift, location: "Satellite" });
-    }
-
     try {
-      await Promise.all(shiftsWithLocations.map((shift) => addShift(shift)));
+      for (const shift of bigPartyShifts) {
+        const primary = { ...shift, location: "Main bar" };
+        const primaryId = await addShift(primary);
+        await addShift({ ...primary, id: "", location: "Satellite", linkedShiftId: primaryId });
+      }
       notification.success({
         message: "Success",
         description: "Big party shifts added successfully.",
@@ -486,6 +510,14 @@ export default function ShiftManagement() {
       return;
     }
 
+    if (!customShiftCategory) {
+      notification.error({
+        message: "Missing category",
+        description: "Please select a category for the custom shift.",
+      });
+      return;
+    }
+
     if (customShiftEnd.getTime() <= customShiftStart.getTime()) {
       notification.error({
         message: "Invalid shift window",
@@ -503,6 +535,7 @@ export default function ShiftManagement() {
         start: customShiftStart,
         end: customShiftEnd,
         tenders: customShiftTenders,
+        category: customShiftCategory,
       });
 
       notification.success({
@@ -618,8 +651,10 @@ export default function ShiftManagement() {
                         onOpenCustomShiftModal={openCustomShiftModal}
                         onAddBigPartyShifts={addBigPartyShifts}
                         shiftsForEvent={shiftsForEvent}
+                        addShift={addShift}
                         updateShift={updateShift}
                         removeShift={removeShift}
+                        periodResponses={responseState.responses}
                       />
                     ),
                   },
@@ -647,6 +682,19 @@ export default function ShiftManagement() {
                       />
                     ),
                   },
+                  ...(selectedPeriod.generatedAt ? [{
+                    key: "shifts-overview" as const,
+                    label: "Shifts Overview",
+                    children: (
+                      <ShiftPlanOverviewTab
+                        selectedPeriod={selectedPeriod}
+                        periodShifts={periodShifts}
+                        tenders={tenderState.tenders}
+                        responses={responseState.responses}
+                        deleteTender={deleteTender}
+                      />
+                    ),
+                  }] : []),
                 ]}
               />
             ) : (
@@ -687,6 +735,10 @@ export default function ShiftManagement() {
               onEditPeriodMandatoryEventIdsChange={setEditPeriodMandatoryEventIds}
               editPeriodSurveyType={editPeriodSurveyType}
               onEditPeriodSurveyTypeChange={setEditPeriodSurveyType}
+              newPeriodAnchorSeminarDays={newPeriodAnchorSeminarDays}
+              onNewPeriodAnchorSeminarDaysChange={setNewPeriodAnchorSeminarDays}
+              editPeriodAnchorSeminarDays={editPeriodAnchorSeminarDays}
+              onEditPeriodAnchorSeminarDaysChange={setEditPeriodAnchorSeminarDays}
               submissionCount={submissionCount}
             />
           </Space>
@@ -705,6 +757,8 @@ export default function ShiftManagement() {
             onCustomShiftEndChange={setCustomShiftEnd}
             customShiftTenders={customShiftTenders}
             onCustomShiftTendersChange={setCustomShiftTenders}
+            customShiftCategory={customShiftCategory}
+            onCustomShiftCategoryChange={setCustomShiftCategory}
           />
         </div>
       </Content>

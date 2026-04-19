@@ -118,26 +118,13 @@ export const chunkArray = <T>(arr: T[], size: number): T[][] => {
 };
 
 export const getShiftCategoryMap = (shifts: Shift[]): Map<string, ShiftCategory> => {
-  const byEvent = new Map<string, Shift[]>();
-  for (const shift of shifts) {
-    const existing = byEvent.get(shift.eventId) ?? [];
-    existing.push(shift);
-    byEvent.set(shift.eventId, existing);
-  }
-
   const result = new Map<string, ShiftCategory>();
-  for (const [, eventShifts] of byEvent) {
-    const sorted = [...eventShifts].sort((a, b) => a.start.getTime() - b.start.getTime());
-    for (let index = 0; index < sorted.length; index += 1) {
-      const shift = sorted[index];
-      if (index === 0) {
-        result.set(shift.id, 'opening');
-      } else if (index === sorted.length - 1) {
-        result.set(shift.id, 'closing');
-      } else {
-        result.set(shift.id, 'middle');
-      }
+  for (const shift of shifts) {
+    if (shift.category) {
+      result.set(shift.id, shift.category as ShiftCategory);
     }
+    // Shifts without an explicit category are intentionally omitted so the
+    // caller can detect and warn about missing data rather than silently masking it.
   }
   return result;
 };

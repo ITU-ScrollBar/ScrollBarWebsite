@@ -26,8 +26,10 @@ type GenerateShiftPlanRequest = {
 
 type GenerateShiftPlanWarning = {
   code:
-    | 'missing_experienced_anchors_round1'
+    | 'shift_missing_category'
+    | 'shift_missing_experienced_anchor'
     | 'new_anchor_opening_closing_not_met'
+    | 'shift_has_no_anchor'
     | 'underfilled_tender_shifts';
   message: string;
   details: Record<string, unknown>;
@@ -110,6 +112,34 @@ export const generateShiftPlan = onCall(
     // Shift categories are used to spread opening/closing/middle work fairly.
     const categoryByShiftId = getShiftCategoryMap(shifts);
 
+    // Satellite shifts (linkedShiftId set) share the primary shift's availability — users
+    // only fill out availability for the primary time slot, not the satellite separately.
+    const primaryShiftIdByLinkedId = new Map<string, string>();
+    for (const shift of shifts) {
+      if (shift.linkedShiftId) {
+        primaryShiftIdByLinkedId.set(shift.id, shift.linkedShiftId);
+      }
+    }
+    const effectiveAvailability = (userId: string, shiftId: string): boolean => {
+      const lookupId = primaryShiftIdByLinkedId.get(shiftId) ?? shiftId;
+      return getResponseAvailability(responseByUserId, userId, lookupId);
+    };
+
+    // Warn about any shifts missing an explicit category — the migration should have set these.
+    for (const shift of shifts) {
+      if (!categoryByShiftId.has(shift.id)) {
+        warnings.push({
+          code: 'shift_missing_category',
+          message: `Shift "${shift.title}" has no category set. Please set Opening, Middle, or Closing on this shift. Opening/closing caps will not be applied to it.`,
+          details: { shiftId: shift.id, eventId: shift.eventId },
+        });
+      }
+    }
+
+    // Mandatory events assign all eligible tenders regardless of capacity — exclude them from slot pools
+    // and from the opening/closing cap counts.
+    const mandatoryEventIds = new Set((period.mandatoryEventIds ?? []).filter((id) => typeof id === 'string'));
+
     // Build normalized per-semester user state by combining profile + response.
     const userList: User[] = users.map((user) => {
       const response = responseByUserId.get(user.uid);
@@ -155,7 +185,9 @@ export const generateShiftPlan = onCall(
       };
     });
 
-    // New anchors are given the Role.ANCHOR after successful plan persistence.
+    // All users who want to become an anchor are promoted to Role.ANCHOR on persistence,
+    // regardless of whether they were assigned any anchor shifts. The role represents
+    // intent and eligibility, not shift outcome — shift coverage is tracked via warnings.
     const newAnchorUserIds = userList
       .filter((user) => user.wantsAnchor && !user.experiencedAnchor)
       .map((user) => user.uid);
@@ -164,7 +196,7 @@ export const generateShiftPlan = onCall(
     const userById = new Map(userList.map((user) => [user.uid, user]));
 
     const avoidShiftWithByUserId = new Map<string, Set<string>>(
-      activeUsers.map((user) => [user.uid, new Set(user.avoidShiftWithUserIds ?? [])])
+      userList.map((user) => [user.uid, new Set(user.avoidShiftWithUserIds ?? [])])
     );
     const assignedUserIdsByShiftId = new Map<string, Set<string>>();
     const markAssignedToShift = (userId: string, shiftId: string): void => {
@@ -202,17 +234,32 @@ export const generateShiftPlan = onCall(
       markAssignedToShift(user.uid, slot.shiftId);
     };
 
+    const onTenderSlotAssigned = (user: User, slot: Slot): void => {
+      markAssignedToShift(user.uid, slot.shiftId);
+      totalAssignedCountByUser.set(user.uid, (totalAssignedCountByUser.get(user.uid) ?? 0) + 1);
+      if (slot.category === 'opening') {
+        assignedOpeningCountByUser.set(user.uid, (assignedOpeningCountByUser.get(user.uid) ?? 0) + 1);
+      } else if (slot.category === 'closing') {
+        assignedClosingCountByUser.set(user.uid, (assignedClosingCountByUser.get(user.uid) ?? 0) + 1);
+      }
+    };
+
     // Tracks enforce fairness and one-event-per-user constraints during assignment.
     const assignedEventsByUser = new Map<string, Set<string>>();
     const assignedAnchorCountByUser = new Map<string, number>();
     const assignedTenderCountByUser = new Map<string, number>();
     const totalAssignedCountByUser = new Map<string, number>();
+    // Per-category caps (max 2 opening, 2 closing per user per period; mandatory events excluded).
+    const assignedOpeningCountByUser = new Map<string, number>();
+    const assignedClosingCountByUser = new Map<string, number>();
 
     for (const user of userList) {
       assignedEventsByUser.set(user.uid, new Set<string>());
       assignedAnchorCountByUser.set(user.uid, 0);
       assignedTenderCountByUser.set(user.uid, 0);
       totalAssignedCountByUser.set(user.uid, 0);
+      assignedOpeningCountByUser.set(user.uid, 0);
+      assignedClosingCountByUser.set(user.uid, 0);
     }
 
     for (const assignment of existingAssignments) {
@@ -237,6 +284,16 @@ export const generateShiftPlan = onCall(
           assignment.userId,
           (assignedTenderCountByUser.get(assignment.userId) ?? 0) + 1
         );
+      }
+
+      // Seed opening/closing caps from pre-existing assignments; mandatory events are excluded.
+      if (!mandatoryEventIds.has(assignment.eventId)) {
+        const cat = categoryByShiftId.get(assignment.shiftId);
+        if (cat === 'opening') {
+          assignedOpeningCountByUser.set(assignment.userId, (assignedOpeningCountByUser.get(assignment.userId) ?? 0) + 1);
+        } else if (cat === 'closing') {
+          assignedClosingCountByUser.set(assignment.userId, (assignedClosingCountByUser.get(assignment.userId) ?? 0) + 1);
+        }
       }
     }
 
@@ -290,7 +347,7 @@ export const generateShiftPlan = onCall(
       if (hasAvoidConflictOnShift(user.uid, slot.shiftId)) {
         return false;
       }
-      return getResponseAvailability(responseByUserId, user.uid, slot.shiftId);
+      return effectiveAvailability(user.uid, slot.shiftId);
     };
 
     const anchorPhase1 = assignSlotsRoundRobin({
@@ -302,8 +359,6 @@ export const generateShiftPlan = onCall(
       hasConflict: hasAvoidConflict,
       onAssigned: onSlotAssigned,
     });
-
-    const assignedAnchorSlotIds = new Set(anchorPhase1.assignments.map((entry) => entry.slotId));
 
     // Persist anchor assignments
     for (const assignment of anchorPhase1.assignments) {
@@ -329,17 +384,13 @@ export const generateShiftPlan = onCall(
         assignment.userId,
         (totalAssignedCountByUser.get(assignment.userId) ?? 0) + 1
       );
-    }
-
-    const unresolvedAnchorSlots = anchorSlots.filter((slot) => !assignedAnchorSlotIds.has(slot.id));
-    if (unresolvedAnchorSlots.length > 0) {
-      warnings.push({
-        code: 'missing_experienced_anchors_round1',
-        message: `${unresolvedAnchorSlots.length} shifts had no experienced anchor assigned in round 1.`,
-        details: {
-          shiftIds: unresolvedAnchorSlots.map((slot) => slot.shiftId),
-        },
-      });
+      if (!mandatoryEventIds.has(slot.eventId)) {
+        if (slot.category === 'opening') {
+          assignedOpeningCountByUser.set(assignment.userId, (assignedOpeningCountByUser.get(assignment.userId) ?? 0) + 1);
+        } else if (slot.category === 'closing') {
+          assignedClosingCountByUser.set(assignment.userId, (assignedClosingCountByUser.get(assignment.userId) ?? 0) + 1);
+        }
+      }
     }
 
     // Phase 2: assign new anchors one opening and one closing shift each.
@@ -354,7 +405,42 @@ export const generateShiftPlan = onCall(
       }
     }
 
+    for (const shift of shifts) {
+      const hasAnyAnchor = (assignedAnchorsByShiftId.get(shift.id) ?? 0) > 0;
+      if (hasAnyAnchor && !experiencedAnchorShiftIds.has(shift.id)) {
+        warnings.push({
+          code: 'shift_missing_experienced_anchor',
+          message: `Shift "${shift.title}" has no experienced anchor assigned`,
+          details: { shiftId: shift.id, eventId: shift.eventId },
+        });
+      }
+    }
+
     const newAnchorUsers = anchorUsers.filter((user) => !user.experiencedAnchor);
+
+    // Determine anchor seminar cutoff: the most-voted day across new anchor responses.
+    // New anchor shifts (Phase 2) must start on or after this date.
+    let anchorSeminarCutoff: Date | null = null;
+    const periodAnchorSeminarDays = (period.anchorSeminarDays ?? []) as string[];
+    if (periodAnchorSeminarDays.length > 0) {
+      const dayVotes = new Map<string, number>();
+      for (const user of newAnchorUsers) {
+        for (const day of ((responseByUserId.get(user.uid)?.anchorSeminarDays ?? []) as string[])) {
+          dayVotes.set(day, (dayVotes.get(day) ?? 0) + 1);
+        }
+      }
+      let topDay: string | null = null;
+      let topVotes = 0;
+      for (const [day, votes] of dayVotes) {
+        if (votes > topVotes) {
+          topDay = day;
+          topVotes = votes;
+        }
+      }
+      if (topDay) {
+        anchorSeminarCutoff = new Date(topDay);
+      }
+    }
 
     const canTakeNewAnchorSlot = (user: User, slot: Slot): boolean => {
       if (!user.wantsAnchor || user.experiencedAnchor) {
@@ -370,18 +456,30 @@ export const generateShiftPlan = onCall(
         return false;
       }
 
-      return getResponseAvailability(responseByUserId, user.uid, slot.shiftId);
+      return effectiveAvailability(user.uid, slot.shiftId);
     };
 
-    const openingAnchorSlots = anchorSlots.filter(
-      (slot) =>
-        slot.category === 'opening' &&
-        experiencedAnchorShiftIds.has(slot.shiftId) &&
-        (assignedAnchorsByShiftId.get(slot.shiftId) ?? 0) < 2
-    );
+    const openingAnchorSlots = shifts
+      .filter(
+        (shift) =>
+          categoryByShiftId.get(shift.id) === 'opening' &&
+          !mandatoryEventIds.has(shift.eventId) &&
+          experiencedAnchorShiftIds.has(shift.id) &&
+          (assignedAnchorsByShiftId.get(shift.id) ?? 0) < 2 &&
+          (anchorSeminarCutoff === null || shift.start >= anchorSeminarCutoff)
+      )
+      .map((shift) => ({
+        id: `${shift.id}::new-anchor`,
+        shiftId: shift.id,
+        eventId: shift.eventId,
+        category: 'opening' as ShiftCategory,
+      }));
     const openingAnchorCountByUser = new Map<string, number>();
     for (const user of newAnchorUsers) {
-      openingAnchorCountByUser.set(user.uid, 0);
+      const existingCount = allAssignments.filter(
+        (a) => a.userId === user.uid && a.type === engagementType.ANCHOR && categoryByShiftId.get(a.shiftId) === 'opening'
+      ).length;
+      openingAnchorCountByUser.set(user.uid, existingCount);
     }
 
     const newAnchorOpeningPhase = assignSlotsRoundRobin({
@@ -416,17 +514,32 @@ export const generateShiftPlan = onCall(
         assignment.userId,
         (totalAssignedCountByUser.get(assignment.userId) ?? 0) + 1
       );
+      if (!mandatoryEventIds.has(assignment.eventId)) {
+        assignedOpeningCountByUser.set(assignment.userId, (assignedOpeningCountByUser.get(assignment.userId) ?? 0) + 1);
+      }
     }
 
-    const closingAnchorSlots = anchorSlots.filter(
-      (slot) =>
-        slot.category === 'closing' &&
-        experiencedAnchorShiftIds.has(slot.shiftId) &&
-        (assignedAnchorsByShiftId.get(slot.shiftId) ?? 0) < 2
-    );
+    const closingAnchorSlots = shifts
+      .filter(
+        (shift) =>
+          categoryByShiftId.get(shift.id) === 'closing' &&
+          !mandatoryEventIds.has(shift.eventId) &&
+          experiencedAnchorShiftIds.has(shift.id) &&
+          (assignedAnchorsByShiftId.get(shift.id) ?? 0) < 2 &&
+          (anchorSeminarCutoff === null || shift.start >= anchorSeminarCutoff)
+      )
+      .map((shift) => ({
+        id: `${shift.id}::new-anchor`,
+        shiftId: shift.id,
+        eventId: shift.eventId,
+        category: 'closing' as ShiftCategory,
+      }));
     const closingAnchorCountByUser = new Map<string, number>();
     for (const user of newAnchorUsers) {
-      closingAnchorCountByUser.set(user.uid, 0);
+      const existingCount = allAssignments.filter(
+        (a) => a.userId === user.uid && a.type === engagementType.ANCHOR && categoryByShiftId.get(a.shiftId) === 'closing'
+      ).length;
+      closingAnchorCountByUser.set(user.uid, existingCount);
     }
 
     const newAnchorClosingPhase = assignSlotsRoundRobin({
@@ -461,6 +574,9 @@ export const generateShiftPlan = onCall(
         assignment.userId,
         (totalAssignedCountByUser.get(assignment.userId) ?? 0) + 1
       );
+      if (!mandatoryEventIds.has(assignment.eventId)) {
+        assignedClosingCountByUser.set(assignment.userId, (assignedClosingCountByUser.get(assignment.userId) ?? 0) + 1);
+      }
     }
 
     // Build tender capacity as configured tenders minus anchors already assigned.
@@ -478,6 +594,11 @@ export const generateShiftPlan = onCall(
 
     const tenderSlots: Slot[] = [];
     for (const shift of shifts) {
+      // Mandatory event shifts have no capacity cap; the mandatory loop handles all their assignments.
+      if (mandatoryEventIds.has(shift.eventId)) {
+        continue;
+      }
+
       const configuredTenders = Math.max(0, Number.isFinite(shift.tenders) ? shift.tenders : 0);
       const assignedAnchorsOnShift = assignedAnchorsByShiftId.get(shift.id) ?? 0;
       const assignedTendersOnShift = assignedTendersByShiftId.get(shift.id) ?? 0;
@@ -508,8 +629,6 @@ export const generateShiftPlan = onCall(
     }
 
     const regularUsers = activeUsers.filter((user) => !user.anchorOnly);
-
-    const mandatoryEventIds = new Set((period.mandatoryEventIds ?? []).filter((id) => typeof id === 'string'));
     const unmetMandatory: Array<{ eventId: string; userId: string }> = [];
 
     const canTakeTenderSlot = (user: User, slot: Slot): boolean => {
@@ -519,6 +638,14 @@ export const generateShiftPlan = onCall(
 
       // Users should not be assigned to more than 5 shifts
       if ((totalAssignedCountByUser.get(user.uid) ?? 0) >= 5) {
+        return false;
+      }
+
+      // Per-period cap: at most 2 opening and 2 closing shifts (mandatory events excluded).
+      if (slot.category === 'opening' && (assignedOpeningCountByUser.get(user.uid) ?? 0) >= 2) {
+        return false;
+      }
+      if (slot.category === 'closing' && (assignedClosingCountByUser.get(user.uid) ?? 0) >= 2) {
         return false;
       }
 
@@ -540,69 +667,51 @@ export const generateShiftPlan = onCall(
         return false;
       }
 
-      return getResponseAvailability(responseByUserId, user.uid, slot.shiftId);
+      return effectiveAvailability(user.uid, slot.shiftId);
     };
 
     for (const mandatoryEventId of mandatoryEventIds) {
-      const eventSlots = Array.from(remainingTenderSlots.values()).filter(
-        (slot) => slot.eventId === mandatoryEventId
-      );
-
-      if (eventSlots.length === 0) {
+      const eventShifts = shifts.filter((shift) => shift.eventId === mandatoryEventId);
+      if (eventShifts.length === 0) {
         continue;
       }
 
-      const eventAssignments = assignSlotsRoundRobin({
-        slots: eventSlots,
-        users: regularUsers,
-        assignedEventsByUser,
-        assignedCountByUser: assignedTenderCountByUser,
-        canTake: canTakeTenderSlot,
-        hasConflict: hasAvoidConflict,
-        onAssigned: onSlotAssigned,
-      });
-
-      const assignedSlotIds = new Set(eventAssignments.assignments.map((entry) => entry.slotId));
-      for (const assignment of eventAssignments.assignments) {
-        const slot = eventSlots.find((candidate) => candidate.id === assignment.slotId);
-        if (!slot) {
-          continue;
-        }
-
-        remainingTenderSlots.delete(slot.id);
-        allAssignments.push({
-          userId: assignment.userId,
-          shiftId: slot.shiftId,
-          eventId: slot.eventId,
-          type: engagementType.TENDER,
-        });
-        plannedAssignments.push({
-          userId: assignment.userId,
-          shiftId: slot.shiftId,
-          eventId: slot.eventId,
-          type: engagementType.TENDER,
-        });
-        totalAssignedCountByUser.set(
-          assignment.userId,
-          (totalAssignedCountByUser.get(assignment.userId) ?? 0) + 1
-        );
-      }
-
       for (const user of regularUsers) {
-        const canWorkMandatoryEvent = eventSlots.some((slot) => canTakeTenderSlot(user, slot));
-        if (!canWorkMandatoryEvent) {
+        // Skip if already assigned to this event
+        if (assignedEventsByUser.get(user.uid)?.has(mandatoryEventId) === true) {
           continue;
         }
 
-        const isAssignedOnMandatoryEvent = assignedEventsByUser.get(user.uid)?.has(mandatoryEventId) === true;
-        if (!isAssignedOnMandatoryEvent) {
-          unmetMandatory.push({ eventId: mandatoryEventId, userId: user.uid });
+        // Respect the 5-shift cap
+        if ((totalAssignedCountByUser.get(user.uid) ?? 0) >= 5) {
+          continue;
         }
-      }
 
-      for (const slot of eventSlots) {
-        if (!assignedSlotIds.has(slot.id)) {
-          remainingTenderSlots.set(slot.id, slot);
+        // Find any shift in this event the user can take (ignoring slot capacity)
+        const availableShift = eventShifts.find((shift) =>
+          anchorShiftIdsByUser.get(user.uid)?.has(shift.id) !== true &&
+          assignedUserIdsByShiftId.get(shift.id)?.has(user.uid) !== true &&
+          !hasAvoidConflictOnShift(user.uid, shift.id) &&
+          effectiveAvailability(user.uid, shift.id)
+        );
+
+        if (availableShift) {
+          markAssignedToShift(user.uid, availableShift.id);
+          totalAssignedCountByUser.set(user.uid, (totalAssignedCountByUser.get(user.uid) ?? 0) + 1);
+          assignedTenderCountByUser.set(user.uid, (assignedTenderCountByUser.get(user.uid) ?? 0) + 1);
+          const userEvents = assignedEventsByUser.get(user.uid) ?? new Set<string>();
+          userEvents.add(mandatoryEventId);
+          assignedEventsByUser.set(user.uid, userEvents);
+          allAssignments.push({ userId: user.uid, shiftId: availableShift.id, eventId: mandatoryEventId, type: engagementType.TENDER });
+          plannedAssignments.push({ userId: user.uid, shiftId: availableShift.id, eventId: mandatoryEventId, type: engagementType.TENDER });
+        } else {
+          // Only flag as unmet if the user had availability for at least one shift in this event
+          const couldWork = eventShifts.some((shift) =>
+            effectiveAvailability(user.uid, shift.id)
+          );
+          if (couldWork) {
+            unmetMandatory.push({ eventId: mandatoryEventId, userId: user.uid });
+          }
         }
       }
     }
@@ -631,7 +740,7 @@ export const generateShiftPlan = onCall(
         canTake: canTakeTenderSlot,
         maxPerUser: baseMaxPerUser,
         hasConflict: hasAvoidConflict,
-        onAssigned: onSlotAssigned,
+        onAssigned: onTenderSlotAssigned,
       });
 
       for (const assignment of categoryAssignments.assignments) {
@@ -653,10 +762,6 @@ export const generateShiftPlan = onCall(
           eventId: slot.eventId,
           type: engagementType.TENDER,
         });
-        totalAssignedCountByUser.set(
-          assignment.userId,
-          (totalAssignedCountByUser.get(assignment.userId) ?? 0) + 1
-        );
       }
     }
 
@@ -668,7 +773,7 @@ export const generateShiftPlan = onCall(
       assignedCountByUser: assignedTenderCountByUser,
       canTake: canTakeTenderSlot,
       hasConflict: hasAvoidConflict,
-      onAssigned: onSlotAssigned,
+      onAssigned: onTenderSlotAssigned,
     });
 
     for (const assignment of relaxedFillAssignments.assignments) {
@@ -689,54 +794,54 @@ export const generateShiftPlan = onCall(
         eventId: slot.eventId,
         type: engagementType.TENDER,
       });
-      totalAssignedCountByUser.set(
-        assignment.userId,
-        (totalAssignedCountByUser.get(assignment.userId) ?? 0) + 1
-      );
     }
 
-    const assignedAnchorCount = allAssignments.filter((a) => a.type === engagementType.ANCHOR).length;
-    const assignedTenderCount = allAssignments.filter((a) => a.type === engagementType.TENDER).length;
+    const assignedAnchorCount = plannedAssignments.filter((a) => a.type === engagementType.ANCHOR).length;
+    const assignedTenderCount = plannedAssignments.filter((a) => a.type === engagementType.TENDER).length;
 
-    const newAnchorCoverageGaps = newAnchorUserIds
-      .map((userId) => {
-        const assignedAnchorShiftIds = allAssignments
-          .filter((assignment) => assignment.type === engagementType.ANCHOR && assignment.userId === userId)
-          .map((assignment) => assignment.shiftId);
+    for (const userId of newAnchorUserIds) {
+      const assignedAnchorShiftIds = allAssignments
+        .filter((assignment) => assignment.type === engagementType.ANCHOR && assignment.userId === userId)
+        .map((assignment) => assignment.shiftId);
 
-        const categoriesForUser = new Set(
-          assignedAnchorShiftIds
-            .map((shiftId) => categoryByShiftId.get(shiftId))
-            .filter((category): category is ShiftCategory => category !== undefined)
-        );
+      const categoriesForUser = new Set(
+        assignedAnchorShiftIds
+          .map((shiftId) => categoryByShiftId.get(shiftId))
+          .filter((category): category is ShiftCategory => category !== undefined)
+      );
 
-        const missingCategories: Array<'opening' | 'closing'> = [];
-        if (!categoriesForUser.has('opening')) {
-          missingCategories.push('opening');
-        }
-        if (!categoriesForUser.has('closing')) {
-          missingCategories.push('closing');
-        }
+      const missingOpening = !categoriesForUser.has('opening');
+      const missingClosing = !categoriesForUser.has('closing');
 
-        if (missingCategories.length === 0) {
-          return null;
-        }
+      if (!missingOpening && !missingClosing) {
+        continue;
+      }
 
-        return {
-          userId,
-          missingCategories,
-        };
-      })
-      .filter((gap): gap is { userId: string; missingCategories: Array<'opening' | 'closing'> } => gap !== null);
+      const displayName = userById.get(userId)?.displayName ?? userId;
+      let missingLabel: string;
+      if (missingOpening && missingClosing) {
+        missingLabel = 'any';
+      } else if (missingOpening) {
+        missingLabel = 'an opening';
+      } else {
+        missingLabel = 'a closing';
+      }
 
-    if (newAnchorCoverageGaps.length > 0) {
       warnings.push({
         code: 'new_anchor_opening_closing_not_met',
-        message: `${newAnchorCoverageGaps.length} new anchors did not receive both an opening and a closing anchor shift.`,
-        details: {
-          gaps: newAnchorCoverageGaps,
-        },
+        message: `${displayName} did not receive ${missingLabel} anchor shift`,
+        details: { userId, missingOpening, missingClosing },
       });
+    }
+
+    for (const shift of shifts) {
+      if ((assignedAnchorsByShiftId.get(shift.id) ?? 0) === 0) {
+        warnings.push({
+          code: 'shift_has_no_anchor',
+          message: `Shift "${shift.title}" has no anchor assigned`,
+          details: { shiftId: shift.id, eventId: shift.eventId },
+        });
+      }
     }
 
     const tenderAssignedByShiftId = new Map<string, number>();
@@ -752,6 +857,11 @@ export const generateShiftPlan = onCall(
 
     const underfilledTenderShifts = shifts
       .map((shift) => {
+        // Mandatory event shifts have no capacity cap, so underfill doesn't apply.
+        if (mandatoryEventIds.has(shift.eventId)) {
+          return null;
+        }
+
         const configuredTenders = Math.max(0, Number.isFinite(shift.tenders) ? shift.tenders : 0);
         const assignedAnchors = assignedAnchorsByShiftId.get(shift.id) ?? 0;
         const expectedTenders = Math.max(0, configuredTenders - assignedAnchors);
@@ -810,7 +920,7 @@ export const generateShiftPlan = onCall(
       submittedCount: requiredSurveyUsers.length - missingSubmissionUserIds.length,
       assignedAnchorCount,
       assignedTenderCount,
-      unfilledAnchorSlots: unresolvedAnchorSlots.length,
+      unfilledAnchorSlots: shifts.filter((s) => (assignedAnchorsByShiftId.get(s.id) ?? 0) === 0).length,
       unfilledTenderSlots: remainingTenderSlots.size,
     });
 

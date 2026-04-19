@@ -49,6 +49,8 @@ type ResponsesIndividualTabProps = {
   onEditorWantsAnchorChange: (value: boolean) => void;
   editorAnchorOnly: boolean;
   onEditorAnchorOnlyChange: (value: boolean) => void;
+  editorAnchorSeminarDays: string[];
+  periodAnchorSeminarDays: string[];
   periodEventGroups: PeriodEventGroup[];
   editorEventChoices: Partial<Record<string, EventChoice>>;
   editorEventCanShiftIds: Record<string, string[]>;
@@ -56,6 +58,10 @@ type ResponsesIndividualTabProps = {
   onEditorCanShiftIds: (eventId: string, shiftIds: string[]) => void;
   editorComments: string;
   onEditorCommentsChange: (value: string) => void;
+  editorPassiveReason: string;
+  onEditorPassiveReasonChange: (value: string) => void;
+  editorPrivateEmail: string;
+  onEditorPrivateEmailChange: (value: string) => void;
   editorSaving: boolean;
   onSubmitOrEditResponse: () => void;
 };
@@ -83,6 +89,8 @@ export default function ResponsesIndividualTab({
   onEditorWantsAnchorChange,
   editorAnchorOnly,
   onEditorAnchorOnlyChange,
+  editorAnchorSeminarDays,
+  periodAnchorSeminarDays,
   periodEventGroups,
   editorEventChoices,
   editorEventCanShiftIds,
@@ -90,6 +98,10 @@ export default function ResponsesIndividualTab({
   onEditorCanShiftIds,
   editorComments,
   onEditorCommentsChange,
+  editorPassiveReason,
+  onEditorPassiveReasonChange,
+  editorPrivateEmail,
+  onEditorPrivateEmailChange,
   editorSaving,
   onSubmitOrEditResponse,
 }: ResponsesIndividualTabProps) {
@@ -283,6 +295,23 @@ export default function ResponsesIndividualTab({
                           <Radio value="anchor-only">Only anchor shifts</Radio>
                         </Radio.Group>
                       )}
+
+                      {editorWantsAnchor === true && periodAnchorSeminarDays.length > 0 && (
+                        <div>
+                          <Typography.Text type="secondary" style={{ display: "block", marginBottom: 6 }}>
+                            Anchor seminar days they can attend
+                          </Typography.Text>
+                          <Checkbox.Group value={editorAnchorSeminarDays} disabled>
+                            <Space direction="vertical">
+                              {periodAnchorSeminarDays.map((day) => (
+                                <Checkbox key={day} value={day}>
+                                  {dayjs(day).format("DD/MM/YYYY")}
+                                </Checkbox>
+                              ))}
+                            </Space>
+                          </Checkbox.Group>
+                        </div>
+                      )}
                     </Space>
                   </Card>
                 )}
@@ -341,6 +370,27 @@ export default function ResponsesIndividualTab({
                         );
                       })}
                     </Space>
+                  </Card>
+                )}
+
+                {editorParticipationStatus === "passive" && (
+                  <Card size="small" title="Reason for being passive">
+                    <TextArea
+                      rows={3}
+                      value={editorPassiveReason}
+                      onChange={(event) => onEditorPassiveReasonChange(event.target.value)}
+                    />
+                  </Card>
+                )}
+
+                {editorParticipationStatus === "legacy" && (
+                  <Card size="small" title="Private email for Teams">
+                    <TextArea
+                      rows={1}
+                      value={editorPrivateEmail}
+                      onChange={(event) => onEditorPrivateEmailChange(event.target.value)}
+                      placeholder="your@email.com"
+                    />
                   </Card>
                 )}
 

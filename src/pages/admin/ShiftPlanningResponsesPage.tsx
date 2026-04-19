@@ -44,7 +44,10 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
   >(undefined);
   const [editorWantsAnchor, setEditorWantsAnchor] = useState<boolean | undefined>(undefined);
   const [editorAnchorOnly, setEditorAnchorOnly] = useState(false);
+  const [editorAnchorSeminarDays, setEditorAnchorSeminarDays] = useState<string[]>([]);
   const [editorComments, setEditorComments] = useState("");
+  const [editorPassiveReason, setEditorPassiveReason] = useState("");
+  const [editorPrivateEmail, setEditorPrivateEmail] = useState("");
   const [editorEventChoices, setEditorEventChoices] = useState<
     Partial<Record<string, EventChoice>>
   >({});
@@ -140,7 +143,7 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
 
     const eventIds = new Set(selectedPeriod.eventIds);
     for (const shift of shiftState.shifts) {
-      if (!eventIds.has(shift.eventId)) {
+      if (!eventIds.has(shift.eventId) || shift.linkedShiftId) {
         continue;
       }
 
@@ -441,6 +444,8 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
           setEditorWantsAnchor(false);
           setEditorAnchorOnly(false);
           setEditorComments("");
+          setEditorPassiveReason("");
+          setEditorPrivateEmail("");
           setEditorEventChoices({});
           setEditorEventCanShiftIds({});
           setEditorSubmittedAt(null);
@@ -486,7 +491,10 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
         setEditorParticipationStatus(loadedParticipation);
         setEditorWantsAnchor(loadedWantsAnchor);
         setEditorAnchorOnly(Boolean(response.anchorOnly));
+        setEditorAnchorSeminarDays(Array.isArray(response.anchorSeminarDays) ? response.anchorSeminarDays : []);
         setEditorComments(response.comments ?? "");
+        setEditorPassiveReason(response.passiveReason ?? "");
+        setEditorPrivateEmail(response.privateEmail ?? "");
         setEditorEventChoices(loadedChoices);
         setEditorEventCanShiftIds(loadedCanShiftIds);
         setEditorSubmittedAt(response.submittedAt ?? response.updatedAt ?? null);
@@ -630,6 +638,8 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
         availability: normalizedAvailability,
         anchorOnly: wantsAnchor ? editorAnchorOnly : false,
         comments: editorComments,
+        passiveReason: editorPassiveReason,
+        privateEmail: editorPrivateEmail,
       });
 
       setEditorHasExistingResponse(true);
@@ -734,6 +744,8 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
                       anchorSummary={anchorSummary}
                       overallEventStats={overallEventStats}
                       commentsRows={commentsRows}
+                      periodAnchorSeminarDays={selectedPeriod?.anchorSeminarDays ?? []}
+                      responses={responses}
                     />
                   ),
                 },
@@ -770,6 +782,8 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
                       onEditorWantsAnchorChange={handleEditorWantsAnchorChange}
                       editorAnchorOnly={editorAnchorOnly}
                       onEditorAnchorOnlyChange={setEditorAnchorOnly}
+                      editorAnchorSeminarDays={editorAnchorSeminarDays}
+                      periodAnchorSeminarDays={selectedPeriod?.anchorSeminarDays ?? []}
                       periodEventGroups={periodEventGroups}
                       editorEventChoices={editorEventChoices}
                       editorEventCanShiftIds={editorEventCanShiftIds}
@@ -777,6 +791,10 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
                       onEditorCanShiftIds={handleEditorCanShiftIds}
                       editorComments={editorComments}
                       onEditorCommentsChange={setEditorComments}
+                      editorPassiveReason={editorPassiveReason}
+                      onEditorPassiveReasonChange={setEditorPassiveReason}
+                      editorPrivateEmail={editorPrivateEmail}
+                      onEditorPrivateEmailChange={setEditorPrivateEmail}
                       editorSaving={editorSaving}
                       onSubmitOrEditResponse={handleSubmitOrEditResponse}
                     />

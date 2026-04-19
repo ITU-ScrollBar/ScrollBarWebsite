@@ -61,7 +61,10 @@ export default function ShiftAvailabilityPage() {
   const [participationStatus, setParticipationStatus] = useState<ParticipationStatus | undefined>(undefined);
   const [wantsAnchor, setWantsAnchor] = useState<boolean | undefined>(undefined);
   const [anchorOnly, setAnchorOnly] = useState(false);
+  const [anchorSeminarDays, setAnchorSeminarDays] = useState<string[]>([]);
   const [comments, setComments] = useState("");
+  const [passiveReason, setPassiveReason] = useState("");
+  const [privateEmail, setPrivateEmail] = useState("");
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [submittedAt, setSubmittedAt] = useState<Date | null>(null);
   const [loadingResponse, setLoadingResponse] = useState(false);
@@ -170,7 +173,7 @@ export default function ShiftAvailabilityPage() {
 
     const eventIdSet = new Set(selectedPeriod.eventIds);
     return shiftState.shifts
-      .filter((shift) => eventIdSet.has(shift.eventId))
+      .filter((shift) => eventIdSet.has(shift.eventId) && !shift.linkedShiftId)
       .sort((a, b) => a.start.getTime() - b.start.getTime());
   }, [selectedPeriod, shiftState.shifts]);
 
@@ -216,6 +219,8 @@ export default function ShiftAvailabilityPage() {
     : "regularSemesterSurvey";
   const includesShiftStatusQuestions = selectedPeriodSurveyType === "regularSemesterSurvey";
   const isAnchor = currentUser?.roles?.includes(Role.ANCHOR) ?? false;
+  const isCurrentlyPassive = currentUser?.roles?.includes(Role.PASSIVE) ?? false;
+  const isCurrentlyLegacy = currentUser?.roles?.includes(Role.LEGACY) ?? false;
   const isClosed =
     selectedPeriod?.submissionClosesAt !== undefined &&
     selectedPeriod.submissionClosesAt.getTime() < Date.now();
@@ -253,7 +258,10 @@ export default function ShiftAvailabilityPage() {
     setParticipationStatus(undefined);
     setWantsAnchor(undefined);
     setAnchorOnly(false);
+    setAnchorSeminarDays([]);
     setComments("");
+    setPassiveReason("");
+    setPrivateEmail("");
     setHasSubmitted(false);
     setSubmittedAt(null);
 
@@ -305,7 +313,10 @@ export default function ShiftAvailabilityPage() {
         setParticipationStatus(includesShiftStatusQuestions ? loadedParticipationStatus : undefined);
         setWantsAnchor(includesShiftStatusQuestions ? loadedWantsAnchor : undefined);
         setAnchorOnly(includesShiftStatusQuestions ? Boolean(response.anchorOnly) : false);
+        setAnchorSeminarDays(Array.isArray(response.anchorSeminarDays) ? response.anchorSeminarDays : []);
         setComments(response.comments ?? "");
+        setPassiveReason(response.passiveReason ?? "");
+        setPrivateEmail(response.privateEmail ?? "");
         setHasSubmitted(true);
         setSubmittedAt(response.submittedAt ?? response.updatedAt ?? new Date());
       })
@@ -354,6 +365,7 @@ export default function ShiftAvailabilityPage() {
     if (value !== "active") {
       setWantsAnchor(false);
       setAnchorOnly(false);
+      setAnchorSeminarDays([]);
       setEventChoices({});
       setEventCanShiftIds({});
       return;
@@ -408,14 +420,18 @@ export default function ShiftAvailabilityPage() {
 
     setSaving(true);
     try {
+      const isNewAnchor = anchorEnabled && !isAnchor;
       await submitResponse({
         periodId: selectedPeriod.id,
         userId: currentUser.uid,
         participationStatus: includesShiftStatusQuestions ? (participationStatus as ParticipationStatus) : "active",
         wantsAnchor: anchorEnabled,
         availability: normalizedAvailability,
-        anchorOnly: anchorEnabled ? anchorOnly : false,
+        anchorOnly: anchorEnabled && !isNewAnchor ? anchorOnly : false,
+        anchorSeminarDays: isNewAnchor ? anchorSeminarDays : [],
         comments,
+        passiveReason,
+        privateEmail,
       });
       setHasSubmitted(true);
       setSubmittedAt(new Date());
@@ -515,16 +531,48 @@ export default function ShiftAvailabilityPage() {
               <Card size="small" title="Semester participation">
                 <Space direction="vertical" style={{ width: "100%" }}>
                   <Text>How do you want to participate this semester?</Text>
-                  <Radio.Group
-                    value={participationStatus}
-                    onChange={(event) => handleSetParticipationStatus(event.target.value as ParticipationStatus)}
-                    disabled={isClosed}
-                  >
-                    <Radio value="active">Active</Radio>
-                    <Radio value="passive">Passive</Radio>
-                    <Radio value="legacy">Legacy</Radio>
-                    <Radio value="leave">Leave</Radio>
-                  </Radio.Group>
+                  {isCurrentlyLegacy ? (
+                    <Radio.Group
+                      value={participationStatus}
+                      onChange={(event) => handleSetParticipationStatus(event.target.value as ParticipationStatus)}
+                      disabled={isClosed}
+                    >
+                      <Radio value="legacy">Stay legacy</Radio>
+                      <Radio value="leave">Become implicit member (Leave the bar)</Radio>
+                    </Radio.Group>
+                  ) : isCurrentlyPassive ? (
+                    <>
+                      <Radio.Group
+                        value={participationStatus}
+                        onChange={(event) => handleSetParticipationStatus(event.target.value as ParticipationStatus)}
+                        disabled={isClosed}
+                      >
+                        <Radio value="active">Become active member again</Radio>
+                        <Radio value="passive">Apply to stay passive</Radio>
+                        <Radio value="legacy">Become legacy member</Radio>
+                        <Radio value="leave">Become implicit member (Leave the bar)</Radio>
+                      </Radio.Group>
+                      {participationStatus === "passive" && (
+                        <Alert
+                          type="warning"
+                          showIcon
+                          message="Passive exemption required"
+                          description="According to § 29.1 of our constitution, you must apply for an exemption to stay passive for more than one semester and be approved by at least half of the board. Reasons for exemption can be, but is not limited to Ex. Studying abroad, illness, pregnancy etc."
+                        />
+                      )}
+                    </>
+                  ) : (
+                    <Radio.Group
+                      value={participationStatus}
+                      onChange={(event) => handleSetParticipationStatus(event.target.value as ParticipationStatus)}
+                      disabled={isClosed}
+                    >
+                      <Radio value="active">Active member</Radio>
+                      <Radio value="passive">Passive member</Radio>
+                      <Radio value="legacy">Legacy member</Radio>
+                      <Radio value="leave">Implicit member (Leaving the bar)</Radio>
+                    </Radio.Group>
+                  )}
                 </Space>
               </Card>
             )}
@@ -540,6 +588,7 @@ export default function ShiftAvailabilityPage() {
                       setWantsAnchor(value);
                       if (!value) {
                         setAnchorOnly(false);
+                        setAnchorSeminarDays([]);
                       }
                     }}
                     disabled={isClosed}
@@ -548,7 +597,7 @@ export default function ShiftAvailabilityPage() {
                     <Radio value="no">No</Radio>
                   </Radio.Group>
 
-                  {wantsAnchor === true && (
+                  {wantsAnchor === true && isAnchor && (
                     <Radio.Group
                       value={anchorOnly ? "anchor-only" : "mixed"}
                       onChange={(event) => setAnchorOnly(event.target.value === "anchor-only")}
@@ -559,14 +608,57 @@ export default function ShiftAvailabilityPage() {
                     </Radio.Group>
                   )}
 
-                  {!isAnchor && wantsAnchor === true && (
-                    <Alert
-                      type="info"
-                      showIcon
-                      message="Your current role is not anchor"
-                      description="You can still submit this preference. A shift manager must grant anchor role before anchor assignments can be generated."
-                    />
+                  {wantsAnchor === true && !isAnchor && (selectedPeriod.anchorSeminarDays?.length ?? 0) > 0 && (
+                    <div>
+                      <Text type="secondary" style={{ display: "block", marginBottom: 8 }}>
+                        Which anchor seminar dates can you attend? (select all that apply)
+                      </Text>
+                      <Checkbox.Group
+                        value={anchorSeminarDays}
+                        onChange={(values) => setAnchorSeminarDays(values.map(String))}
+                        disabled={isClosed}
+                      >
+                        <Space direction="vertical">
+                          {(selectedPeriod.anchorSeminarDays ?? []).map((day) => (
+                            <Checkbox key={day} value={day}>
+                              {dayjs(day).format("DD/MM/YYYY")}
+                            </Checkbox>
+                          ))}
+                        </Space>
+                      </Checkbox.Group>
+                    </div>
                   )}
+
+
+                </Space>
+              </Card>
+            )}
+
+            {participationStatus === "passive" && (
+              <Card size="small" title="Reason for being passive">
+                <TextArea
+                  rows={3}
+                  value={passiveReason}
+                  onChange={(e) => setPassiveReason(e.target.value)}
+                  disabled={isClosed}
+                  placeholder="Please provide a reason for being passive this semester."
+                />
+              </Card>
+            )}
+
+            {participationStatus === "legacy" && (
+              <Card size="small" title="Contact for Teams">
+                <Space direction="vertical" style={{ width: "100%" }}>
+                  <Text type="secondary">
+                    Private email that we can invite to Teams (leave blank to use your ITU email).
+                  </Text>
+                  <Input
+                    value={privateEmail}
+                    onChange={(e) => setPrivateEmail(e.target.value)}
+                    disabled={isClosed}
+                    placeholder="your@email.com"
+                    type="email"
+                  />
                 </Space>
               </Card>
             )}

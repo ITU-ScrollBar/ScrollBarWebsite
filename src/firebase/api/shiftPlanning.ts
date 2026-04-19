@@ -38,6 +38,7 @@ export type CreateShiftPlanningPeriodPayload = {
   submissionClosesAt: Date;
   status?: ShiftPlanningPeriodStatus;
   createdBy: string;
+  anchorSeminarDays?: string[];
 };
 
 export type ShiftPlanningResponsePayload = {
@@ -47,7 +48,10 @@ export type ShiftPlanningResponsePayload = {
   wantsAnchor: boolean;
   availability: Record<string, boolean>;
   anchorOnly: boolean;
+  anchorSeminarDays?: string[];
   comments?: string;
+  passiveReason?: string;
+  privateEmail?: string;
 };
 
 export type GenerateShiftPlanPayload = {
@@ -130,6 +134,7 @@ export const updateShiftPlanningPeriod = async (
     submissionOpensAt: Date;
     submissionClosesAt: Date;
     status: ShiftPlanningPeriodStatus;
+    anchorSeminarDays: string[];
   }>
 ): Promise<void> => {
   const ref = doc(getPeriodsCollection(), periodId);
@@ -151,7 +156,10 @@ export const submitShiftPlanningResponse = async (
       wantsAnchor: payload.wantsAnchor,
       availability: payload.availability,
       anchorOnly: payload.anchorOnly,
+      anchorSeminarDays: payload.anchorSeminarDays ?? [],
       comments: payload.comments?.trim() ?? "",
+      passiveReason: payload.passiveReason?.trim() ?? "",
+      privateEmail: payload.privateEmail?.trim() ?? "",
       submittedAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     },

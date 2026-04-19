@@ -127,6 +127,8 @@ export enum ShiftFiltering {
   ALL_SHIFTS = "ALL_SHIFTS",
 }
 
+export type ShiftCategory = "opening" | "middle" | "closing";
+
 // Shift-related types
 export interface Shift {
   id: string;
@@ -136,6 +138,8 @@ export interface Shift {
   tenders: number;
   start: Date;
   end: Date;
+  category?: ShiftCategory;
+  linkedShiftId?: string; // Set on satellite shifts; points to the primary shift's ID
 }
 
 export interface ShiftUpdateParams {
@@ -263,6 +267,7 @@ export interface ShiftPlanningPeriod {
   createdAt?: Date;
   generatedAt?: Date;
   generatedBy?: string;
+  anchorSeminarDays?: string[];
   stats?: {
     expectedSubmissions?: number;
     submittedCount?: number;
@@ -282,7 +287,10 @@ export interface ShiftPlanningResponse {
   wantsAnchor?: boolean;
   availability?: Record<string, boolean>;
   anchorOnly?: boolean;
+  anchorSeminarDays?: string[];
   comments?: string;
+  passiveReason?: string;
+  privateEmail?: string;
   submittedAt?: Date;
   updatedAt?: Date;
 }

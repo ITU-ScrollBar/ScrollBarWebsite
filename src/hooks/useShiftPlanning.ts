@@ -156,6 +156,7 @@ const useShiftPlanning = (periodId?: string) => {
       submissionOpensAt: Date;
       submissionClosesAt: Date;
       status: "draft" | "open" | "closed" | "generated";
+      anchorSeminarDays: string[];
     }>
   ) => {
     await updateShiftPlanningPeriod(id, updates);
@@ -169,7 +170,10 @@ const useShiftPlanning = (periodId?: string) => {
     wantsAnchor: boolean;
     availability: Record<string, boolean>;
     anchorOnly: boolean;
+    anchorSeminarDays?: string[];
     comments?: string;
+    passiveReason?: string;
+    privateEmail?: string;
   }) => {
     await submitShiftPlanningResponse(payload);
     message.success("Availability submitted.");

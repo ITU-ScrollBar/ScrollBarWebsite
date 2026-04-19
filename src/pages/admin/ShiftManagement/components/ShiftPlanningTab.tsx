@@ -1,10 +1,11 @@
 import { PlusOutlined, RocketOutlined } from "@ant-design/icons";
-import { Alert, Button, Card, Col, Empty, Popconfirm, Row, Select, Space, Switch } from "antd";
+import { Alert, Button, Card, Col, Divider, Empty, Popconfirm, Row, Select, Space, Switch } from "antd";
 import Text from "antd/es/typography/Text";
 import dayjs from "dayjs";
+import { useMemo } from "react";
 import ShiftConfigInfo from "../../EventManagement/ShiftInfo";
 import ShiftAssignmentInfo from "../ShiftInfo";
-import { Event, Shift, ShiftPlanningPeriod } from "../../../../types/types-file";
+import { Event, Shift, ShiftPlanningPeriod, ShiftPlanningResponse } from "../../../../types/types-file";
 
 type ShiftPlanningTabProps = {
   selectedPeriod: ShiftPlanningPeriod;
@@ -25,8 +26,10 @@ type ShiftPlanningTabProps = {
   onOpenCustomShiftModal: () => void;
   onAddBigPartyShifts: () => void;
   shiftsForEvent: Shift[];
+  addShift: (shift: Shift) => Promise<string>;
   updateShift: (id: string, field: string, value: unknown) => void;
   removeShift: (shift: Shift) => void;
+  periodResponses: ShiftPlanningResponse[];
 };
 
 export default function ShiftPlanningTab({
@@ -48,9 +51,46 @@ export default function ShiftPlanningTab({
   onOpenCustomShiftModal,
   onAddBigPartyShifts,
   shiftsForEvent,
+  addShift,
   updateShift,
   removeShift,
+  periodResponses,
 }: ShiftPlanningTabProps) {
+  // Satellite shifts link back to their primary via linkedShiftId; keep them out of the card list.
+  const satelliteByPrimaryId = useMemo(() => {
+    const map = new Map<string, Shift>();
+    for (const shift of shiftsForEvent) {
+      if (shift.linkedShiftId) {
+        map.set(shift.linkedShiftId, shift);
+      }
+    }
+    return map;
+  }, [shiftsForEvent]);
+
+  const primaryShifts = useMemo(
+    () => shiftsForEvent.filter((s) => !s.linkedShiftId),
+    [shiftsForEvent]
+  );
+
+  const handleRemoveShift = (shift: Shift) => {
+    const satellite = satelliteByPrimaryId.get(shift.id);
+    if (satellite) removeShift(satellite);
+    removeShift(shift);
+  };
+
+  const handleAddSatellite = (primary: Shift) => {
+    addShift({
+      id: "",
+      eventId: primary.eventId,
+      title: primary.title,
+      location: "Satellite",
+      start: primary.start,
+      end: primary.end,
+      tenders: primary.tenders,
+      category: primary.category,
+      linkedShiftId: primary.id,
+    });
+  };
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
       <div
@@ -165,30 +205,52 @@ export default function ShiftPlanningTab({
             </Button>
           </Space>
 
-          {shiftsForEvent.length > 0 ? (
+          {primaryShifts.length > 0 ? (
             <Row gutter={[12, 12]}>
-              {shiftsForEvent.map((shift) => (
-                <Col key={shift.id} xs={24} sm={24} md={12} xl={8}>
-                  <Card
-                    size="small"
-                    title={`${shift.title} (${dayjs(shift.start).format("DD/MM HH:mm")}-${dayjs(shift.end).format("HH:mm")})`}
-                    style={{
-                      border: "1px solid #d9d9d9",
-                      borderRadius: 8,
-                      boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
-                    }}
-                  >
-                    <Space direction="vertical" style={{ width: "100%" }} size="middle">
-                      <ShiftConfigInfo
-                        shift={shift}
-                        updateShift={updateShift}
-                        removeShift={removeShift}
-                      />
-                      <ShiftAssignmentInfo shift={shift} />
-                    </Space>
-                  </Card>
-                </Col>
-              ))}
+              {primaryShifts.map((shift) => {
+                const satellite = satelliteByPrimaryId.get(shift.id);
+                return (
+                  <Col key={shift.id} xs={24} sm={24} md={12} xl={8}>
+                    <Card
+                      size="small"
+                      title={`${shift.title} (${dayjs(shift.start).format("DD/MM HH:mm")}-${dayjs(shift.end).format("HH:mm")})`}
+                      style={{
+                        border: "1px solid #d9d9d9",
+                        borderRadius: 8,
+                        boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
+                      }}
+                    >
+                      <Space direction="vertical" style={{ width: "100%" }} size="middle">
+                        <ShiftConfigInfo
+                          shift={shift}
+                          updateShift={updateShift}
+                          removeShift={handleRemoveShift}
+                          isMandatory={selectedPeriod.mandatoryEventIds?.includes(shift.eventId)}
+                          satelliteShift={satellite}
+                          onAddSatellite={() => handleAddSatellite(shift)}
+                          onRemoveSatellite={() => { if (satellite) removeShift(satellite); }}
+                          onUpdateSatellite={(field, value) => { if (satellite) updateShift(satellite.id, field, value); }}
+                        />
+                        <ShiftAssignmentInfo
+                          shift={shift}
+                          periodResponses={periodResponses}
+                          eventTitle={currentEvent?.title ?? ""}
+                        />
+                        {satellite && (
+                          <>
+                            <Divider style={{ margin: "4px 0" }} />
+                            <ShiftAssignmentInfo
+                              shift={satellite}
+                              periodResponses={periodResponses}
+                              eventTitle={currentEvent?.title ?? ""}
+                            />
+                          </>
+                        )}
+                      </Space>
+                    </Card>
+                  </Col>
+                );
+              })}
             </Row>
           ) : (
             <Empty
