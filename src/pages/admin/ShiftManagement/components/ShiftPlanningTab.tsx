@@ -56,7 +56,6 @@ export default function ShiftPlanningTab({
   removeShift,
   periodResponses,
 }: ShiftPlanningTabProps) {
-  // Satellite shifts link back to their primary via linkedShiftId; keep them out of the card list.
   const satelliteByPrimaryId = useMemo(() => {
     const map = new Map<string, Shift>();
     for (const shift of shiftsForEvent) {

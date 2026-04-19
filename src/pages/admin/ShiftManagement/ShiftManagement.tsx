@@ -1,6 +1,5 @@
 import { TeamOutlined } from "@ant-design/icons";
 import { Alert, Empty, Layout, Space, Tabs, notification } from "antd";
-import dayjs, { Dayjs } from "dayjs";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useShiftContext } from "../../../contexts/ShiftContext";
@@ -14,6 +13,7 @@ import ShiftPeriodModals from "./components/ShiftPeriodModals";
 import ShiftPeriodSelector from "./components/ShiftPeriodSelector";
 import ShiftPlanningTab from "./components/ShiftPlanningTab";
 import ShiftPlanOverviewTab from "./components/ShiftPlanOverviewTab";
+import { usePeriodForm } from "./hooks/usePeriodForm";
 
 const { Content } = Layout;
 
@@ -30,23 +30,7 @@ export default function ShiftManagement() {
   const { tenderState, deleteTender } = useTenders();
 
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [creatingPeriod, setCreatingPeriod] = useState(false);
-  const [editingPeriod, setEditingPeriod] = useState(false);
-  const [isCreatePeriodModalOpen, setIsCreatePeriodModalOpen] = useState(false);
-  const [isEditPeriodModalOpen, setIsEditPeriodModalOpen] = useState(false);
   const [generatingPlan, setGeneratingPlan] = useState(false);
-  const [newPeriodName, setNewPeriodName] = useState("");
-  const [newPeriodWindow, setNewPeriodWindow] = useState<[Dayjs, Dayjs] | null>(null);
-  const [newPeriodEventIds, setNewPeriodEventIds] = useState<string[]>([]);
-  const [newPeriodMandatoryEventIds, setNewPeriodMandatoryEventIds] = useState<string[]>([]);
-  const [newPeriodSurveyType, setNewPeriodSurveyType] =
-    useState<ShiftPlanningSurveyType>("regularSemesterSurvey");
-  const [editPeriodName, setEditPeriodName] = useState("");
-  const [editPeriodDeadline, setEditPeriodDeadline] = useState<Dayjs | null>(null);
-  const [editPeriodEventIds, setEditPeriodEventIds] = useState<string[]>([]);
-  const [editPeriodMandatoryEventIds, setEditPeriodMandatoryEventIds] = useState<string[]>([]);
-  const [editPeriodSurveyType, setEditPeriodSurveyType] =
-    useState<ShiftPlanningSurveyType>("regularSemesterSurvey");
   const [generationSummary, setGenerationSummary] = useState<string | null>(null);
   const [generationWarnings, setGenerationWarnings] = useState<string[]>([]);
   const [isCustomShiftModalOpen, setIsCustomShiftModalOpen] = useState(false);
@@ -58,8 +42,6 @@ export default function ShiftManagement() {
   );
   const [customShiftTenders, setCustomShiftTenders] = useState(4);
   const [customShiftCategory, setCustomShiftCategory] = useState<ShiftCategory | undefined>(undefined);
-  const [newPeriodAnchorSeminarDays, setNewPeriodAnchorSeminarDays] = useState<string[]>([]);
-  const [editPeriodAnchorSeminarDays, setEditPeriodAnchorSeminarDays] = useState<string[]>([]);
 
   const sortedEvents = useMemo(() => {
     return [...eventState.events].sort((a, b) => a.start.getTime() - b.start.getTime());
@@ -82,15 +64,12 @@ export default function ShiftManagement() {
     if (!selectedPeriod) {
       return "regularSemesterSurvey";
     }
-
     if (selectedPeriod.surveyType) {
       return selectedPeriod.surveyType;
     }
-
     if (selectedPeriod.includeShiftStatusQuestions === false) {
       return "excludeSemesterStatus";
     }
-
     return "regularSemesterSurvey";
   }, [selectedPeriod]);
 
@@ -98,7 +77,6 @@ export default function ShiftManagement() {
     if (!selectedPeriod) {
       return [];
     }
-
     const selectedEventIds = new Set(selectedPeriod.eventIds);
     return allEvents
       .filter((event) => selectedEventIds.has(event.id))
@@ -153,100 +131,15 @@ export default function ShiftManagement() {
   const shiftsPerMember =
     activeResponsesCount > 0 ? (totalShiftSpots / activeResponsesCount).toFixed(2) : "-";
 
-  const resetPeriodForm = () => {
-    setNewPeriodName("");
-    setNewPeriodWindow(null);
-    setNewPeriodEventIds([]);
-    setNewPeriodMandatoryEventIds([]);
-    setNewPeriodSurveyType("regularSemesterSurvey");
-    setNewPeriodAnchorSeminarDays([]);
-  };
-
-  const closeCreatePeriodModal = () => {
-    setIsCreatePeriodModalOpen(false);
-    resetPeriodForm();
-  };
-
-  const resetEditPeriodForm = () => {
-    setEditPeriodName("");
-    setEditPeriodDeadline(null);
-    setEditPeriodEventIds([]);
-    setEditPeriodMandatoryEventIds([]);
-    setEditPeriodSurveyType("regularSemesterSurvey");
-    setEditPeriodAnchorSeminarDays([]);
-  };
-
-  const closeEditPeriodModal = () => {
-    setIsEditPeriodModalOpen(false);
-    resetEditPeriodForm();
-  };
-
-  const openEditPeriodModal = () => {
-    if (!selectedPeriod) {
-      return;
-    }
-
-    setEditPeriodName(selectedPeriod.name);
-    setEditPeriodDeadline(dayjs(selectedPeriod.submissionClosesAt));
-    setEditPeriodEventIds(selectedPeriod.eventIds);
-    setEditPeriodMandatoryEventIds(selectedPeriod.mandatoryEventIds ?? []);
-    setEditPeriodSurveyType(selectedPeriodSurveyType);
-    setEditPeriodAnchorSeminarDays(selectedPeriod.anchorSeminarDays ?? []);
-    setIsEditPeriodModalOpen(true);
-  };
-
-  const handleCreatePeriod = async () => {
-    if (!currentUser) {
-      return;
-    }
-
-    if (!newPeriodName.trim()) {
-      notification.error({
-        message: "Missing period name",
-        description: "Please enter a name for the planning period.",
-      });
-      return;
-    }
-
-    if (!newPeriodWindow) {
-      notification.error({
-        message: "Missing submission window",
-        description: "Please pick a submission start and end time.",
-      });
-      return;
-    }
-
-    if (newPeriodEventIds.length === 0) {
-      notification.error({
-        message: "No events selected",
-        description: "Select at least one event for the planning period.",
-      });
-      return;
-    }
-
-    setCreatingPeriod(true);
-    try {
-      const createdPeriod = await createPeriod({
-        name: newPeriodName.trim(),
-        eventIds: newPeriodEventIds,
-        mandatoryEventIds: newPeriodMandatoryEventIds,
-        surveyType: newPeriodSurveyType,
-        submissionOpensAt: newPeriodWindow[0].toDate(),
-        submissionClosesAt: newPeriodWindow[1].toDate(),
-        status: "open",
-        createdBy: currentUser.uid,
-        anchorSeminarDays: newPeriodAnchorSeminarDays,
-      });
-
-      if (createdPeriod && typeof (createdPeriod as { id?: string }).id === "string") {
-        setSelectedPeriodId((createdPeriod as { id: string }).id);
-      }
-
-      closeCreatePeriodModal();
-    } finally {
-      setCreatingPeriod(false);
-    }
-  };
+  const periodForm = usePeriodForm({
+    currentUserId: currentUser?.uid,
+    selectedPeriod,
+    selectedPeriodSurveyType,
+    submissionCount,
+    createPeriod,
+    updatePeriod,
+    onPeriodCreated: setSelectedPeriodId,
+  });
 
   const handleGeneratePlan = async () => {
     if (!selectedPeriod) {
@@ -263,55 +156,6 @@ export default function ShiftManagement() {
       setGenerationWarnings((result.warnings ?? []).map((warning) => warning.message));
     } finally {
       setGeneratingPlan(false);
-    }
-  };
-
-  const handleUpdatePeriod = async () => {
-    if (!selectedPeriod) {
-      return;
-    }
-
-    if (!editPeriodName.trim()) {
-      notification.error({
-        message: "Missing period name",
-        description: "Please enter a name for the planning period.",
-      });
-      return;
-    }
-
-    if (!editPeriodDeadline) {
-      notification.error({
-        message: "Missing submission deadline",
-        description: "Please pick a submission deadline.",
-      });
-      return;
-    }
-
-    if (submissionCount === 0 && editPeriodEventIds.length === 0) {
-      notification.error({
-        message: "No events selected",
-        description: "Select at least one event for the planning period.",
-      });
-      return;
-    }
-
-    setEditingPeriod(true);
-    try {
-      const periodEventIds = submissionCount === 0 ? editPeriodEventIds : selectedPeriod.eventIds;
-      await updatePeriod(selectedPeriod.id, {
-        name: editPeriodName.trim(),
-        submissionClosesAt: editPeriodDeadline.toDate(),
-        surveyType: editPeriodSurveyType,
-        eventIds: periodEventIds,
-        mandatoryEventIds: editPeriodMandatoryEventIds.filter((eventId) =>
-          periodEventIds.includes(eventId)
-        ),
-        anchorSeminarDays: editPeriodAnchorSeminarDays,
-      });
-
-      closeEditPeriodModal();
-    } finally {
-      setEditingPeriod(false);
     }
   };
 
@@ -423,8 +267,8 @@ export default function ShiftManagement() {
 
     const eventStart = new Date(currentEvent.start);
     const eventEnd = new Date(currentEvent.end);
-
     const hours = 60 * 60 * 1000;
+
     const openingStart = new Date(eventStart.getTime() - 1 * hours);
     const openingEnd = new Date(eventStart.getTime() + 2 * hours);
     const earlyMiddleEnd = new Date(openingEnd.getTime() + 2 * hours);
@@ -432,51 +276,11 @@ export default function ShiftManagement() {
     const lateMiddleEnd = new Date(middleEnd.getTime() + 2 * hours);
 
     const bigPartyShifts = [
-      {
-        id: "",
-        eventId: currentEvent.id,
-        title: "Opening + Setup",
-        start: openingStart,
-        end: openingEnd,
-        tenders: 5,
-        category: "opening" as const,
-      },
-      {
-        id: "",
-        eventId: currentEvent.id,
-        title: "Early middle + Setup",
-        start: openingEnd,
-        end: earlyMiddleEnd,
-        tenders: 6,
-        category: "opening" as const,
-      },
-      {
-        id: "",
-        eventId: currentEvent.id,
-        title: "Middle",
-        start: earlyMiddleEnd,
-        end: middleEnd,
-        tenders: 7,
-        category: "middle" as const,
-      },
-      {
-        id: "",
-        eventId: currentEvent.id,
-        title: "Late middle + Cleaning",
-        start: middleEnd,
-        end: lateMiddleEnd,
-        tenders: 7,
-        category: "closing" as const,
-      },
-      {
-        id: "",
-        eventId: currentEvent.id,
-        title: "Closing + Cleaning",
-        start: lateMiddleEnd,
-        end: eventEnd,
-        tenders: 5,
-        category: "closing" as const,
-      },
+      { id: "", eventId: currentEvent.id, title: "Opening + Setup", start: openingStart, end: openingEnd, tenders: 5, category: "opening" as const },
+      { id: "", eventId: currentEvent.id, title: "Early middle + Setup", start: openingEnd, end: earlyMiddleEnd, tenders: 6, category: "opening" as const },
+      { id: "", eventId: currentEvent.id, title: "Middle", start: earlyMiddleEnd, end: middleEnd, tenders: 7, category: "middle" as const },
+      { id: "", eventId: currentEvent.id, title: "Late middle + Cleaning", start: middleEnd, end: lateMiddleEnd, tenders: 7, category: "closing" as const },
+      { id: "", eventId: currentEvent.id, title: "Closing + Cleaning", start: lateMiddleEnd, end: eventEnd, tenders: 5, category: "closing" as const },
     ];
 
     try {
@@ -555,7 +359,6 @@ export default function ShiftManagement() {
     if (!currentEvent) {
       return;
     }
-
     updateEvent(currentEvent.id, "shiftsPublished", checked);
   };
 
@@ -618,8 +421,8 @@ export default function ShiftManagement() {
               sortedPeriods={sortedPeriods}
               selectedPeriodId={selectedPeriod?.id}
               onSelectedPeriodChange={(periodId) => setSelectedPeriodId(periodId)}
-              onCreatePeriod={() => setIsCreatePeriodModalOpen(true)}
-              onEditPeriod={openEditPeriodModal}
+              onCreatePeriod={periodForm.openCreate}
+              onEditPeriod={periodForm.openEdit}
               hasSelectedPeriod={Boolean(selectedPeriod)}
             />
 
@@ -706,39 +509,39 @@ export default function ShiftManagement() {
             )}
 
             <ShiftPeriodModals
-              isCreateOpen={isCreatePeriodModalOpen}
-              isEditOpen={isEditPeriodModalOpen}
-              creatingPeriod={creatingPeriod}
-              editingPeriod={editingPeriod}
-              onCloseCreate={closeCreatePeriodModal}
-              onCloseEdit={closeEditPeriodModal}
-              onCreate={handleCreatePeriod}
-              onUpdate={handleUpdatePeriod}
+              isCreateOpen={periodForm.isCreateOpen}
+              isEditOpen={periodForm.isEditOpen}
+              creatingPeriod={periodForm.creating}
+              editingPeriod={periodForm.editing}
+              onCloseCreate={periodForm.closeCreate}
+              onCloseEdit={periodForm.closeEdit}
+              onCreate={periodForm.handleCreate}
+              onUpdate={periodForm.handleUpdate}
               sortedEvents={sortedEvents}
-              newPeriodName={newPeriodName}
-              onNewPeriodNameChange={setNewPeriodName}
-              newPeriodWindow={newPeriodWindow}
-              onNewPeriodWindowChange={setNewPeriodWindow}
-              newPeriodEventIds={newPeriodEventIds}
-              onNewPeriodEventIdsChange={setNewPeriodEventIds}
-              newPeriodMandatoryEventIds={newPeriodMandatoryEventIds}
-              onNewPeriodMandatoryEventIdsChange={setNewPeriodMandatoryEventIds}
-              newPeriodSurveyType={newPeriodSurveyType}
-              onNewPeriodSurveyTypeChange={setNewPeriodSurveyType}
-              editPeriodName={editPeriodName}
-              onEditPeriodNameChange={setEditPeriodName}
-              editPeriodDeadline={editPeriodDeadline}
-              onEditPeriodDeadlineChange={setEditPeriodDeadline}
-              editPeriodEventIds={editPeriodEventIds}
-              onEditPeriodEventIdsChange={setEditPeriodEventIds}
-              editPeriodMandatoryEventIds={editPeriodMandatoryEventIds}
-              onEditPeriodMandatoryEventIdsChange={setEditPeriodMandatoryEventIds}
-              editPeriodSurveyType={editPeriodSurveyType}
-              onEditPeriodSurveyTypeChange={setEditPeriodSurveyType}
-              newPeriodAnchorSeminarDays={newPeriodAnchorSeminarDays}
-              onNewPeriodAnchorSeminarDaysChange={setNewPeriodAnchorSeminarDays}
-              editPeriodAnchorSeminarDays={editPeriodAnchorSeminarDays}
-              onEditPeriodAnchorSeminarDaysChange={setEditPeriodAnchorSeminarDays}
+              newPeriodName={periodForm.newPeriodName}
+              onNewPeriodNameChange={periodForm.setNewPeriodName}
+              newPeriodWindow={periodForm.newPeriodWindow}
+              onNewPeriodWindowChange={periodForm.setNewPeriodWindow}
+              newPeriodEventIds={periodForm.newPeriodEventIds}
+              onNewPeriodEventIdsChange={periodForm.setNewPeriodEventIds}
+              newPeriodMandatoryEventIds={periodForm.newPeriodMandatoryEventIds}
+              onNewPeriodMandatoryEventIdsChange={periodForm.setNewPeriodMandatoryEventIds}
+              newPeriodSurveyType={periodForm.newPeriodSurveyType}
+              onNewPeriodSurveyTypeChange={periodForm.setNewPeriodSurveyType}
+              editPeriodName={periodForm.editPeriodName}
+              onEditPeriodNameChange={periodForm.setEditPeriodName}
+              editPeriodDeadline={periodForm.editPeriodDeadline}
+              onEditPeriodDeadlineChange={periodForm.setEditPeriodDeadline}
+              editPeriodEventIds={periodForm.editPeriodEventIds}
+              onEditPeriodEventIdsChange={periodForm.setEditPeriodEventIds}
+              editPeriodMandatoryEventIds={periodForm.editPeriodMandatoryEventIds}
+              onEditPeriodMandatoryEventIdsChange={periodForm.setEditPeriodMandatoryEventIds}
+              editPeriodSurveyType={periodForm.editPeriodSurveyType}
+              onEditPeriodSurveyTypeChange={periodForm.setEditPeriodSurveyType}
+              newPeriodAnchorSeminarDays={periodForm.newPeriodAnchorSeminarDays}
+              onNewPeriodAnchorSeminarDaysChange={periodForm.setNewPeriodAnchorSeminarDays}
+              editPeriodAnchorSeminarDays={periodForm.editPeriodAnchorSeminarDays}
+              onEditPeriodAnchorSeminarDaysChange={periodForm.setEditPeriodAnchorSeminarDays}
               submissionCount={submissionCount}
             />
           </Space>

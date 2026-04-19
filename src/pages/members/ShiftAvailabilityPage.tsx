@@ -3,18 +3,13 @@ import {
   Alert,
   Button,
   Card,
-  Checkbox,
-  Col,
   Empty,
   Input,
   Layout,
   message,
   Popconfirm,
-  Radio,
-  Row,
   Select,
   Space,
-  Tag,
   Typography,
 } from "antd";
 import dayjs from "dayjs";
@@ -23,6 +18,9 @@ import { useShiftContext } from "../../contexts/ShiftContext";
 import useEvents from "../../hooks/useEvents";
 import useShiftPlanning from "../../hooks/useShiftPlanning";
 import { Role, Shift, ShiftPlanningSurveyType } from "../../types/types-file";
+import AnchorPreferenceCard from "./ShiftAvailability/components/AnchorPreferenceCard";
+import EventAvailabilityGrid from "./ShiftAvailability/components/EventAvailabilityGrid";
+import SemesterParticipationCard from "./ShiftAvailability/components/SemesterParticipationCard";
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
@@ -99,7 +97,6 @@ export default function ShiftAvailabilityPage() {
     if (!selectedPeriodId) {
       return null;
     }
-
     return availablePeriods.find((period) => period.id === selectedPeriodId) ?? null;
   }, [availablePeriods, selectedPeriodId]);
 
@@ -126,10 +123,7 @@ export default function ShiftAvailabilityPage() {
     Promise.all(
       availablePeriods.map(async (period) => {
         const response = await loadUserResponse(period.id, currentUser.uid);
-        return {
-          periodId: period.id,
-          answered: Boolean(response),
-        };
+        return { periodId: period.id, answered: Boolean(response) };
       })
     )
       .then((statuses) => {
@@ -180,11 +174,7 @@ export default function ShiftAvailabilityPage() {
   const eventsById = useMemo(() => {
     const map = new Map<string, { id: string; title: string; start: Date }>();
     for (const event of eventState.events) {
-      map.set(event.id, {
-        id: event.id,
-        title: event.title,
-        start: event.start,
-      });
+      map.set(event.id, { id: event.id, title: event.title, start: event.start });
     }
     return map;
   }, [eventState.events]);
@@ -203,11 +193,7 @@ export default function ShiftAvailabilityPage() {
         event: eventsById.get(eventId),
         shifts: shifts.sort((a, b) => a.start.getTime() - b.start.getTime()),
       }))
-      .sort((a, b) => {
-        const aDate = a.event?.start?.getTime() ?? 0;
-        const bDate = b.event?.start?.getTime() ?? 0;
-        return aDate - bDate;
-      });
+      .sort((a, b) => (a.event?.start?.getTime() ?? 0) - (b.event?.start?.getTime() ?? 0));
   }, [eventsById, periodShifts]);
 
   const mandatoryEventIds = useMemo(() => {
@@ -231,20 +217,13 @@ export default function ShiftAvailabilityPage() {
   }, [periodShifts]);
 
   const allEventsAnswered = useMemo(() => {
-    if (!includesShiftStatusQuestions) {
-      return groupedShifts.every((group) => {
-        return eventChoices[group.eventId] === "can" || eventChoices[group.eventId] === "cannot";
-      });
-    }
-
     if (!isActiveParticipant) {
       return true;
     }
-
     return groupedShifts.every((group) => {
       return eventChoices[group.eventId] === "can" || eventChoices[group.eventId] === "cannot";
     });
-  }, [eventChoices, groupedShifts, includesShiftStatusQuestions, isActiveParticipant]);
+  }, [eventChoices, groupedShifts, isActiveParticipant]);
 
   useEffect(() => {
     if (!selectedPeriod?.id || !currentUser?.uid) {
@@ -339,24 +318,14 @@ export default function ShiftAvailabilityPage() {
   ]);
 
   const handleSetEventChoice = (eventId: string, value: EventChoice) => {
-    setEventChoices((prev) => ({
-      ...prev,
-      [eventId]: value,
-    }));
-
+    setEventChoices((prev) => ({ ...prev, [eventId]: value }));
     if (value === "can") {
-      setEventCanShiftIds((prev) => ({
-        ...prev,
-        [eventId]: [],
-      }));
+      setEventCanShiftIds((prev) => ({ ...prev, [eventId]: [] }));
     }
   };
 
   const handleSetCanShiftIdsForEvent = (eventId: string, shiftIds: string[]) => {
-    setEventCanShiftIds((prev) => ({
-      ...prev,
-      [eventId]: shiftIds,
-    }));
+    setEventCanShiftIds((prev) => ({ ...prev, [eventId]: shiftIds }));
   };
 
   const handleSetParticipationStatus = (value: ParticipationStatus) => {
@@ -368,7 +337,6 @@ export default function ShiftAvailabilityPage() {
       setAnchorSeminarDays([]);
       setEventChoices({});
       setEventCanShiftIds({});
-      return;
     }
   };
 
@@ -473,6 +441,14 @@ export default function ShiftAvailabilityPage() {
     );
   }
 
+  const isSubmitDisabled =
+    isClosed ||
+    !currentUser ||
+    (includesShiftStatusQuestions
+      ? !participationStatus ||
+        (participationStatus === "active" && (!allEventsAnswered || wantsAnchor === undefined))
+      : !allEventsAnswered);
+
   return (
     <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
       <Content style={{ padding: 24 }}>
@@ -528,110 +504,27 @@ export default function ShiftAvailabilityPage() {
             />
 
             {includesShiftStatusQuestions && (
-              <Card size="small" title="Semester participation">
-                <Space direction="vertical" style={{ width: "100%" }}>
-                  <Text>How do you want to participate this semester?</Text>
-                  {isCurrentlyLegacy ? (
-                    <Radio.Group
-                      value={participationStatus}
-                      onChange={(event) => handleSetParticipationStatus(event.target.value as ParticipationStatus)}
-                      disabled={isClosed}
-                    >
-                      <Radio value="legacy">Stay legacy</Radio>
-                      <Radio value="leave">Become implicit member (Leave the bar)</Radio>
-                    </Radio.Group>
-                  ) : isCurrentlyPassive ? (
-                    <>
-                      <Radio.Group
-                        value={participationStatus}
-                        onChange={(event) => handleSetParticipationStatus(event.target.value as ParticipationStatus)}
-                        disabled={isClosed}
-                      >
-                        <Radio value="active">Become active member again</Radio>
-                        <Radio value="passive">Apply to stay passive</Radio>
-                        <Radio value="legacy">Become legacy member</Radio>
-                        <Radio value="leave">Become implicit member (Leave the bar)</Radio>
-                      </Radio.Group>
-                      {participationStatus === "passive" && (
-                        <Alert
-                          type="warning"
-                          showIcon
-                          message="Passive exemption required"
-                          description="According to § 29.1 of our constitution, you must apply for an exemption to stay passive for more than one semester and be approved by at least half of the board. Reasons for exemption can be, but is not limited to Ex. Studying abroad, illness, pregnancy etc."
-                        />
-                      )}
-                    </>
-                  ) : (
-                    <Radio.Group
-                      value={participationStatus}
-                      onChange={(event) => handleSetParticipationStatus(event.target.value as ParticipationStatus)}
-                      disabled={isClosed}
-                    >
-                      <Radio value="active">Active member</Radio>
-                      <Radio value="passive">Passive member</Radio>
-                      <Radio value="legacy">Legacy member</Radio>
-                      <Radio value="leave">Implicit member (Leaving the bar)</Radio>
-                    </Radio.Group>
-                  )}
-                </Space>
-              </Card>
+              <SemesterParticipationCard
+                isCurrentlyLegacy={isCurrentlyLegacy}
+                isCurrentlyPassive={isCurrentlyPassive}
+                participationStatus={participationStatus}
+                isClosed={isClosed}
+                onChange={handleSetParticipationStatus}
+              />
             )}
 
             {includesShiftStatusQuestions && isActiveParticipant && (
-              <Card size="small" title="Anchor preference">
-                <Space direction="vertical" style={{ width: "100%" }}>
-                  <Text>Do you want to be an anchor for the coming semester?</Text>
-                  <Radio.Group
-                    value={wantsAnchor === undefined ? undefined : wantsAnchor ? "yes" : "no"}
-                    onChange={(event) => {
-                      const value = event.target.value === "yes";
-                      setWantsAnchor(value);
-                      if (!value) {
-                        setAnchorOnly(false);
-                        setAnchorSeminarDays([]);
-                      }
-                    }}
-                    disabled={isClosed}
-                  >
-                    <Radio value="yes">Yes</Radio>
-                    <Radio value="no">No</Radio>
-                  </Radio.Group>
-
-                  {wantsAnchor === true && isAnchor && (
-                    <Radio.Group
-                      value={anchorOnly ? "anchor-only" : "mixed"}
-                      onChange={(event) => setAnchorOnly(event.target.value === "anchor-only")}
-                      disabled={isClosed}
-                    >
-                      <Radio value="mixed">Mix of anchor and tender shifts</Radio>
-                      <Radio value="anchor-only">Only anchor shifts</Radio>
-                    </Radio.Group>
-                  )}
-
-                  {wantsAnchor === true && !isAnchor && (selectedPeriod.anchorSeminarDays?.length ?? 0) > 0 && (
-                    <div>
-                      <Text type="secondary" style={{ display: "block", marginBottom: 8 }}>
-                        Which anchor seminar dates can you attend? (select all that apply)
-                      </Text>
-                      <Checkbox.Group
-                        value={anchorSeminarDays}
-                        onChange={(values) => setAnchorSeminarDays(values.map(String))}
-                        disabled={isClosed}
-                      >
-                        <Space direction="vertical">
-                          {(selectedPeriod.anchorSeminarDays ?? []).map((day) => (
-                            <Checkbox key={day} value={day}>
-                              {dayjs(day).format("DD/MM/YYYY")}
-                            </Checkbox>
-                          ))}
-                        </Space>
-                      </Checkbox.Group>
-                    </div>
-                  )}
-
-
-                </Space>
-              </Card>
+              <AnchorPreferenceCard
+                wantsAnchor={wantsAnchor}
+                isAnchor={isAnchor}
+                anchorOnly={anchorOnly}
+                isClosed={isClosed}
+                anchorSeminarDays={anchorSeminarDays}
+                periodAnchorSeminarDays={selectedPeriod.anchorSeminarDays ?? []}
+                onWantsAnchorChange={setWantsAnchor}
+                onAnchorOnlyChange={setAnchorOnly}
+                onAnchorSeminarDaysChange={setAnchorSeminarDays}
+              />
             )}
 
             {participationStatus === "passive" && (
@@ -663,73 +556,17 @@ export default function ShiftAvailabilityPage() {
               </Card>
             )}
 
-            {isActiveParticipant && (groupedShifts.length === 0 ? (
-              <Empty description="No shifts are connected to this planning period." />
-            ) : (
-              <Row gutter={[16, 16]}>
-                {groupedShifts.map((group) => {
-                  const choice = eventChoices[group.eventId];
-                  const canShiftIds = eventCanShiftIds[group.eventId] ?? [];
-
-                  return (
-                    <Col key={group.eventId} xs={24} md={12} xl={8}>
-                      <Card
-                        size="small"
-                        style={{ height: "100%" }}
-                        title={
-                          <Space>
-                            <span>{group.event?.title ?? "Event"}</span>
-                            {mandatoryEventIds.has(group.eventId) && <Tag color="gold">Big party</Tag>}
-                          </Space>
-                        }
-                      >
-                        <Space direction="vertical" style={{ width: "100%" }}>
-                          <Text type="secondary">
-                            {group.event?.start ? dayjs(group.event.start).format("DD/MM/YYYY") : "-"} · {group.shifts.length} shift{group.shifts.length === 1 ? "" : "s"}
-                          </Text>
-
-                          <Radio.Group
-                            value={choice}
-                            onChange={(event) => handleSetEventChoice(group.eventId, event.target.value as EventChoice)}
-                            disabled={isClosed}
-                          >
-                            <Radio.Button value="can">Can work</Radio.Button>
-                            <Radio.Button value="cannot">Cannot work</Radio.Button>
-                          </Radio.Group>
-
-                          {choice === "cannot" && (
-                            <div>
-                              <Text>
-                                Select shifts you can still attend for this event:
-                              </Text>
-                              <Checkbox.Group
-                                style={{ width: "100%", marginTop: 8 }}
-                                value={canShiftIds}
-                                onChange={(values) =>
-                                  handleSetCanShiftIdsForEvent(
-                                    group.eventId,
-                                    values.map((value) => String(value))
-                                  )
-                                }
-                                disabled={isClosed}
-                              >
-                                <Space direction="vertical">
-                                  {group.shifts.map((shift) => (
-                                    <Checkbox key={shift.id} value={shift.id}>
-                                      {shift.title} ({shift.location}) · {dayjs(shift.start).format("HH:mm")} - {dayjs(shift.end).format("HH:mm")}
-                                    </Checkbox>
-                                  ))}
-                                </Space>
-                              </Checkbox.Group>
-                            </div>
-                          )}
-                        </Space>
-                      </Card>
-                    </Col>
-                  );
-                })}
-              </Row>
-            ))}
+            {isActiveParticipant && (
+              <EventAvailabilityGrid
+                groupedShifts={groupedShifts}
+                mandatoryEventIds={mandatoryEventIds}
+                eventChoices={eventChoices}
+                eventCanShiftIds={eventCanShiftIds}
+                isClosed={isClosed}
+                onEventChoiceChange={handleSetEventChoice}
+                onCanShiftIdsChange={handleSetCanShiftIdsForEvent}
+              />
+            )}
 
             <Card size="small" title="Any other comments?">
               <TextArea
@@ -746,27 +583,13 @@ export default function ShiftAvailabilityPage() {
               description="You can keep editing your answers until the submission deadline."
               onConfirm={handleSubmit}
               okText="Submit"
-              disabled={
-                isClosed ||
-                !currentUser ||
-                (includesShiftStatusQuestions
-                  ? !participationStatus ||
-                    (participationStatus === "active" && (!allEventsAnswered || wantsAnchor === undefined))
-                  : !allEventsAnswered)
-              }
+              disabled={isSubmitDisabled}
             >
               <Button
                 type="primary"
                 size="large"
                 loading={saving}
-                disabled={
-                  isClosed ||
-                  !currentUser ||
-                  (includesShiftStatusQuestions
-                    ? !participationStatus ||
-                      (participationStatus === "active" && (!allEventsAnswered || wantsAnchor === undefined))
-                    : !allEventsAnswered)
-                }
+                disabled={isSubmitDisabled}
               >
                 Submit availability
               </Button>

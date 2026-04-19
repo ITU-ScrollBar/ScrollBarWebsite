@@ -11,8 +11,8 @@ import useTenders from "../../hooks/useTenders";
 import { Role, Shift, ShiftPlanningSurveyType } from "../../types/types-file";
 import ResponsesIndividualTab from "./ShiftPlanningResponses/components/ResponsesIndividualTab";
 import ResponsesOverviewTab from "./ShiftPlanningResponses/components/ResponsesOverviewTab";
+import { useResponseEditor } from "./ShiftPlanningResponses/hooks/useResponseEditor";
 import {
-  EventChoice,
   EventAggregate,
   ParticipationStatus,
   ResponseFilter,
@@ -38,26 +38,6 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
   const [userSearch, setUserSearch] = useState("");
   const [responseFilter, setResponseFilter] = useState<ResponseFilter>("all");
   const [avoidSaving, setAvoidSaving] = useState(false);
-
-  const [editorParticipationStatus, setEditorParticipationStatus] = useState<
-    ParticipationStatus | undefined
-  >(undefined);
-  const [editorWantsAnchor, setEditorWantsAnchor] = useState<boolean | undefined>(undefined);
-  const [editorAnchorOnly, setEditorAnchorOnly] = useState(false);
-  const [editorAnchorSeminarDays, setEditorAnchorSeminarDays] = useState<string[]>([]);
-  const [editorComments, setEditorComments] = useState("");
-  const [editorPassiveReason, setEditorPassiveReason] = useState("");
-  const [editorPrivateEmail, setEditorPrivateEmail] = useState("");
-  const [editorEventChoices, setEditorEventChoices] = useState<
-    Partial<Record<string, EventChoice>>
-  >({});
-  const [editorEventCanShiftIds, setEditorEventCanShiftIds] = useState<
-    Record<string, string[]>
-  >({});
-  const [editorLoading, setEditorLoading] = useState(false);
-  const [editorSaving, setEditorSaving] = useState(false);
-  const [editorHasExistingResponse, setEditorHasExistingResponse] = useState(false);
-  const [editorSubmittedAt, setEditorSubmittedAt] = useState<Date | null>(null);
 
   const isExternallyControlled = typeof onSelectedPeriodIdChange === "function";
   const effectiveSelectedPeriodId = isExternallyControlled
@@ -96,7 +76,6 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
     if (!selectedPeriod) {
       return null;
     }
-
     return resolveSurveyType(selectedPeriod);
   }, [selectedPeriod]);
 
@@ -107,7 +86,6 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
       onSelectedPeriodIdChange?.(value);
       return;
     }
-
     setInternalSelectedPeriodId(value);
   };
 
@@ -190,50 +168,19 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
       const response = responseByUserId.get(user.uid);
       const userIsAnchor = tenderById.get(user.uid)?.roles?.includes(Role.ANCHOR) === true;
 
-      if (responseFilter === "responded" && !user.responded) {
-        return false;
-      }
+      if (responseFilter === "responded" && !user.responded) return false;
+      if (responseFilter === "missing" && user.responded) return false;
+      if (responseFilter === "allAnchors" && !response?.wantsAnchor) return false;
+      if (responseFilter === "newAnchors" && (!response?.wantsAnchor || userIsAnchor)) return false;
+      if (responseFilter === "passiveMembers" && (response?.participationStatus ?? "active") !== "passive") return false;
+      if (responseFilter === "legacyMembers" && (response?.participationStatus ?? "active") !== "legacy") return false;
+      if (responseFilter === "leavingBar" && (response?.participationStatus ?? "active") !== "leave") return false;
 
-      if (responseFilter === "missing" && user.responded) {
-        return false;
-      }
-
-      if (responseFilter === "allAnchors" && !response?.wantsAnchor) {
-        return false;
-      }
-
-      if (responseFilter === "newAnchors" && (!response?.wantsAnchor || userIsAnchor)) {
-        return false;
-      }
-
-      if (
-        responseFilter === "passiveMembers" &&
-        (response?.participationStatus ?? "active") !== "passive"
-      ) {
-        return false;
-      }
-
-      if (
-        responseFilter === "legacyMembers" &&
-        (response?.participationStatus ?? "active") !== "legacy"
-      ) {
-        return false;
-      }
-
-      if (
-        responseFilter === "leavingBar" &&
-        (response?.participationStatus ?? "active") !== "leave"
-      ) {
-        return false;
-      }
-
-      if (!searchTerm) {
-        return true;
-      }
-
-      const inName = user.name.toLowerCase().includes(searchTerm);
-      const inEmail = (user.email ?? "").toLowerCase().includes(searchTerm);
-      return inName || inEmail;
+      if (!searchTerm) return true;
+      return (
+        user.name.toLowerCase().includes(searchTerm) ||
+        (user.email ?? "").toLowerCase().includes(searchTerm)
+      );
     });
   }, [expectedSurveyUsers, responseByUserId, responseFilter, tenderById, userSearch]);
 
@@ -270,19 +217,11 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
   }, [expectedSurveyUsers]);
 
   const participationSummary = useMemo(() => {
-    const summary = {
-      total: responses.length,
-      active: 0,
-      passive: 0,
-      legacy: 0,
-      leave: 0,
-    };
-
+    const summary = { total: responses.length, active: 0, passive: 0, legacy: 0, leave: 0 };
     for (const response of responses) {
       const status = (response.participationStatus ?? "active") as ParticipationStatus;
       summary[status] += 1;
     }
-
     return summary;
   }, [responses]);
 
@@ -293,39 +232,14 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
 
     for (const response of responses) {
       const status = (response.participationStatus ?? "active") as ParticipationStatus;
-
-      if (status === "leave") {
-        leavingBar += 1;
-      }
-
-      if (status !== "active" || response.wantsAnchor !== true) {
-        continue;
-      }
-
+      if (status === "leave") leavingBar += 1;
+      if (status !== "active" || response.wantsAnchor !== true) continue;
       totalAnchors += 1;
-      if (tenderById.get(response.userId)?.roles?.includes(Role.ANCHOR) !== true) {
-        newAnchors += 1;
-      }
+      if (tenderById.get(response.userId)?.roles?.includes(Role.ANCHOR) !== true) newAnchors += 1;
     }
 
-    return {
-      totalAnchors,
-      newAnchors,
-      leavingBar,
-    };
+    return { totalAnchors, newAnchors, leavingBar };
   }, [responses, tenderById]);
-
-  const selectedUserPassiveConsecutiveWarning = useMemo(() => {
-    if (!selectedUserId || editorParticipationStatus !== "passive") {
-      return false;
-    }
-
-    if (!isRegularSemesterSurvey) {
-      return false;
-    }
-
-    return tenderById.get(selectedUserId)?.roles?.includes(Role.PASSIVE) === true;
-  }, [editorParticipationStatus, isRegularSemesterSurvey, selectedUserId, tenderById]);
 
   const overallEventStats = useMemo((): EventAggregate[] => {
     if (!selectedPeriod) {
@@ -351,20 +265,14 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
         if (decision === "unanswered") unansweredCount += 1;
       }
 
-      const shiftCounts = shifts.map((shift) => {
-        const canShiftCount = responses.filter((response) => {
-          if ((response.participationStatus ?? "active") !== "active") {
-            return false;
-          }
+      const shiftCounts = shifts.map((shift) => ({
+        shiftId: shift.id,
+        shiftTitle: shift.title,
+        canCount: responses.filter((response) => {
+          if ((response.participationStatus ?? "active") !== "active") return false;
           return response.availability?.[shift.id] === true;
-        }).length;
-
-        return {
-          shiftId: shift.id,
-          shiftTitle: shift.title,
-          canCount: canShiftCount,
-        };
-      });
+        }).length,
+      }));
 
       rows.push({
         eventId,
@@ -378,11 +286,7 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
       });
     }
 
-    return rows.sort((a, b) => {
-      const aTime = a.start?.getTime() ?? 0;
-      const bTime = b.start?.getTime() ?? 0;
-      return aTime - bTime;
-    });
+    return rows.sort((a, b) => (a.start?.getTime() ?? 0) - (b.start?.getTime() ?? 0));
   }, [eventsById, periodShiftsByEvent, responses, selectedPeriod]);
 
   const commentsRows = useMemo(() => {
@@ -410,105 +314,26 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
         const shifts = (periodShiftsByEvent.get(eventId) ?? []).slice().sort(
           (a, b) => a.start.getTime() - b.start.getTime()
         );
-
-        return {
-          eventId,
-          event,
-          shifts,
-        };
+        return { eventId, event, shifts };
       })
-      .sort((a, b) => {
-        const aTime = a.event?.start?.getTime() ?? 0;
-        const bTime = b.event?.start?.getTime() ?? 0;
-        return aTime - bTime;
-      });
+      .sort((a, b) => (a.event?.start?.getTime() ?? 0) - (b.event?.start?.getTime() ?? 0));
   }, [eventsById, periodShiftsByEvent, selectedPeriod]);
 
-  useEffect(() => {
-    if (!selectedPeriod?.id || !selectedUserId) {
-      return;
+  const editor = useResponseEditor({
+    selectedPeriod,
+    selectedUserId,
+    periodEventGroups,
+    loadUserResponse,
+    submitResponse,
+    userNameById,
+  });
+
+  const selectedUserPassiveConsecutiveWarning = useMemo(() => {
+    if (!selectedUserId || editor.participationStatus !== "passive" || !isRegularSemesterSurvey) {
+      return false;
     }
-
-    let cancelled = false;
-    setEditorLoading(true);
-
-    loadUserResponse(selectedPeriod.id, selectedUserId)
-      .then((response) => {
-        if (cancelled) {
-          return;
-        }
-
-        if (!response) {
-          setEditorHasExistingResponse(false);
-          setEditorParticipationStatus("active");
-          setEditorWantsAnchor(false);
-          setEditorAnchorOnly(false);
-          setEditorComments("");
-          setEditorPassiveReason("");
-          setEditorPrivateEmail("");
-          setEditorEventChoices({});
-          setEditorEventCanShiftIds({});
-          setEditorSubmittedAt(null);
-          return;
-        }
-
-        const loadedParticipation =
-          (response.participationStatus as ParticipationStatus | undefined) ?? "active";
-        const loadedWantsAnchor =
-          typeof response.wantsAnchor === "boolean"
-            ? response.wantsAnchor
-            : Boolean(response.anchorOnly);
-
-        const loadedChoices: Partial<Record<string, EventChoice>> = {};
-        const loadedCanShiftIds: Record<string, string[]> = {};
-
-        if (loadedParticipation === "active") {
-          for (const group of periodEventGroups) {
-            const hasAnyAnswer = group.shifts.some(
-              (shift) => typeof response.availability?.[shift.id] === "boolean"
-            );
-
-            if (!hasAnyAnswer) {
-              continue;
-            }
-
-            const allCanWork = group.shifts.every(
-              (shift) => response.availability?.[shift.id] === true
-            );
-
-            if (allCanWork) {
-              loadedChoices[group.eventId] = "can";
-            } else {
-              loadedChoices[group.eventId] = "cannot";
-              loadedCanShiftIds[group.eventId] = group.shifts
-                .filter((shift) => response.availability?.[shift.id] === true)
-                .map((shift) => shift.id);
-            }
-          }
-        }
-
-        setEditorHasExistingResponse(true);
-        setEditorParticipationStatus(loadedParticipation);
-        setEditorWantsAnchor(loadedWantsAnchor);
-        setEditorAnchorOnly(Boolean(response.anchorOnly));
-        setEditorAnchorSeminarDays(Array.isArray(response.anchorSeminarDays) ? response.anchorSeminarDays : []);
-        setEditorComments(response.comments ?? "");
-        setEditorPassiveReason(response.passiveReason ?? "");
-        setEditorPrivateEmail(response.privateEmail ?? "");
-        setEditorEventChoices(loadedChoices);
-        setEditorEventCanShiftIds(loadedCanShiftIds);
-        setEditorSubmittedAt(response.submittedAt ?? response.updatedAt ?? null);
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setEditorLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [loadUserResponse, periodEventGroups, selectedPeriod?.id, selectedUserId]);
+    return tenderById.get(selectedUserId)?.roles?.includes(Role.PASSIVE) === true;
+  }, [editor.participationStatus, isRegularSemesterSurvey, selectedUserId, tenderById]);
 
   const handleAvoidListChange = async (nextUserIds: string[]) => {
     if (!selectedUserId) {
@@ -541,115 +366,6 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
       message.error(casted.message ?? "Failed to update avoid list.");
     } finally {
       setAvoidSaving(false);
-    }
-  };
-
-  const handleEditorEventChoice = (eventId: string, value: EventChoice) => {
-    setEditorEventChoices((prev) => ({ ...prev, [eventId]: value }));
-
-    if (value === "can") {
-      setEditorEventCanShiftIds((prev) => ({ ...prev, [eventId]: [] }));
-    }
-  };
-
-  const handleEditorCanShiftIds = (eventId: string, shiftIds: string[]) => {
-    setEditorEventCanShiftIds((prev) => ({ ...prev, [eventId]: shiftIds }));
-  };
-
-  const handleEditorParticipationStatusChange = (value: ParticipationStatus) => {
-    setEditorParticipationStatus(value);
-    if (value !== "active") {
-      setEditorWantsAnchor(false);
-      setEditorAnchorOnly(false);
-      setEditorEventChoices({});
-      setEditorEventCanShiftIds({});
-    }
-  };
-
-  const handleEditorWantsAnchorChange = (value: boolean) => {
-    setEditorWantsAnchor(value);
-    if (!value) {
-      setEditorAnchorOnly(false);
-    }
-  };
-
-  const editorAllEventsAnswered = useMemo(() => {
-    if (editorParticipationStatus !== "active") {
-      return true;
-    }
-
-    return periodEventGroups.every((group) => {
-      const choice = editorEventChoices[group.eventId];
-      return choice === "can" || choice === "cannot";
-    });
-  }, [editorEventChoices, editorParticipationStatus, periodEventGroups]);
-
-  const handleSubmitOrEditResponse = async () => {
-    if (!selectedPeriod || !selectedUserId) {
-      return;
-    }
-
-    if (!editorParticipationStatus) {
-      message.error("Choose participation status before saving.");
-      return;
-    }
-
-    if (editorParticipationStatus === "active" && editorWantsAnchor === undefined) {
-      message.error("Choose anchor preference before saving.");
-      return;
-    }
-
-    if (!editorAllEventsAnswered) {
-      message.error("Please choose can/cannot for every event before saving.");
-      return;
-    }
-
-    const normalizedAvailability: Record<string, boolean> = {};
-    if (editorParticipationStatus === "active") {
-      for (const group of periodEventGroups) {
-        const choice = editorEventChoices[group.eventId];
-        if (!choice) {
-          continue;
-        }
-
-        if (choice === "can") {
-          for (const shift of group.shifts) {
-            normalizedAvailability[shift.id] = true;
-          }
-          continue;
-        }
-
-        const selectedShiftIds = new Set(editorEventCanShiftIds[group.eventId] ?? []);
-        for (const shift of group.shifts) {
-          normalizedAvailability[shift.id] = selectedShiftIds.has(shift.id);
-        }
-      }
-    }
-
-    const wantsAnchor = editorParticipationStatus === "active" && editorWantsAnchor === true;
-
-    setEditorSaving(true);
-    try {
-      await submitResponse({
-        periodId: selectedPeriod.id,
-        userId: selectedUserId,
-        participationStatus: editorParticipationStatus,
-        wantsAnchor,
-        availability: normalizedAvailability,
-        anchorOnly: wantsAnchor ? editorAnchorOnly : false,
-        comments: editorComments,
-        passiveReason: editorPassiveReason,
-        privateEmail: editorPrivateEmail,
-      });
-
-      setEditorHasExistingResponse(true);
-      setEditorSubmittedAt(new Date());
-      message.success(`Saved shift availability for ${userNameById.get(selectedUserId) ?? selectedUserId}.`);
-    } catch (error) {
-      const casted = error as { message?: string };
-      message.error(casted.message ?? "Failed to save response.");
-    } finally {
-      setEditorSaving(false);
     }
   };
 
@@ -764,39 +480,35 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
                       selectedUserDisplayName={
                         userNameById.get(selectedUserId ?? "") ?? selectedUserId ?? ""
                       }
-                      selectedUserPassiveConsecutiveWarning={
-                        selectedUserPassiveConsecutiveWarning
-                      }
+                      selectedUserPassiveConsecutiveWarning={selectedUserPassiveConsecutiveWarning}
                       selectedUserAvoidIds={selectedUserTender?.avoidShiftWithUserIds ?? []}
                       onAvoidListChange={handleAvoidListChange}
                       avoidListOptions={avoidListOptions}
                       avoidSaving={avoidSaving}
-                      editorLoading={editorLoading}
-                      editorHasExistingResponse={editorHasExistingResponse}
-                      editorSubmittedAt={editorSubmittedAt}
-                      editorParticipationStatus={editorParticipationStatus}
-                      onEditorParticipationStatusChange={
-                        handleEditorParticipationStatusChange
-                      }
-                      editorWantsAnchor={editorWantsAnchor}
-                      onEditorWantsAnchorChange={handleEditorWantsAnchorChange}
-                      editorAnchorOnly={editorAnchorOnly}
-                      onEditorAnchorOnlyChange={setEditorAnchorOnly}
-                      editorAnchorSeminarDays={editorAnchorSeminarDays}
+                      editorLoading={editor.loading}
+                      editorHasExistingResponse={editor.hasExistingResponse}
+                      editorSubmittedAt={editor.submittedAt}
+                      editorParticipationStatus={editor.participationStatus}
+                      onEditorParticipationStatusChange={editor.handleParticipationStatusChange}
+                      editorWantsAnchor={editor.wantsAnchor}
+                      onEditorWantsAnchorChange={editor.handleWantsAnchorChange}
+                      editorAnchorOnly={editor.anchorOnly}
+                      onEditorAnchorOnlyChange={editor.setAnchorOnly}
+                      editorAnchorSeminarDays={editor.anchorSeminarDays}
                       periodAnchorSeminarDays={selectedPeriod?.anchorSeminarDays ?? []}
                       periodEventGroups={periodEventGroups}
-                      editorEventChoices={editorEventChoices}
-                      editorEventCanShiftIds={editorEventCanShiftIds}
-                      onEditorEventChoice={handleEditorEventChoice}
-                      onEditorCanShiftIds={handleEditorCanShiftIds}
-                      editorComments={editorComments}
-                      onEditorCommentsChange={setEditorComments}
-                      editorPassiveReason={editorPassiveReason}
-                      onEditorPassiveReasonChange={setEditorPassiveReason}
-                      editorPrivateEmail={editorPrivateEmail}
-                      onEditorPrivateEmailChange={setEditorPrivateEmail}
-                      editorSaving={editorSaving}
-                      onSubmitOrEditResponse={handleSubmitOrEditResponse}
+                      editorEventChoices={editor.eventChoices}
+                      editorEventCanShiftIds={editor.eventCanShiftIds}
+                      onEditorEventChoice={editor.handleEventChoice}
+                      onEditorCanShiftIds={editor.handleCanShiftIds}
+                      editorComments={editor.comments}
+                      onEditorCommentsChange={editor.setComments}
+                      editorPassiveReason={editor.passiveReason}
+                      onEditorPassiveReasonChange={editor.setPassiveReason}
+                      editorPrivateEmail={editor.privateEmail}
+                      onEditorPrivateEmailChange={editor.setPrivateEmail}
+                      editorSaving={editor.saving}
+                      onSubmitOrEditResponse={editor.handleSubmitOrEdit}
                     />
                   ),
                 },
