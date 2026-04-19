@@ -286,6 +286,17 @@ export const persistPlannerResult = async (
     existingEngagementDocs.push(...existingSnapshot.docs);
   }
 
+  if (newAnchorUserIds.length > 0) {
+    await Promise.all(
+      newAnchorUserIds.map((userId) =>
+        db.collection('users').doc(userId).set(
+          { roles: admin.firestore.FieldValue.arrayUnion(Role.ANCHOR) },
+          { merge: true }
+        )
+      )
+    );
+  }
+
   const writer = db.bulkWriter();
 
   const existingAssignmentKeys = new Set(
@@ -320,17 +331,6 @@ export const persistPlannerResult = async (
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
     createdEngagementCount += 1;
-  }
-
-  for (const userId of newAnchorUserIds) {
-    const userRef = db.collection('users').doc(userId);
-    writer.set(
-      userRef,
-      {
-        roles: admin.firestore.FieldValue.arrayUnion(Role.ANCHOR),
-      },
-      { merge: true }
-    );
   }
 
   const eventDocs = await getDocumentsByIds<Record<string, unknown>>(envRef.collection('events'), eventIds);
