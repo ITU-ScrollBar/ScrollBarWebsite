@@ -907,7 +907,7 @@ export const generateShiftPlan = onCall(
     }
 
     // Persist generated engagements, period stats, and anchor role promotions.
-    const { replacedEngagementCount, createdEngagementCount } = await persistPlannerResult({
+    const { createdEngagementCount } = await persistPlannerResult({
       envRef,
       periodRef,
       periodId,
@@ -928,7 +928,6 @@ export const generateShiftPlan = onCall(
       success: true,
       periodId,
       env,
-      replacedEngagementCount,
       createdEngagementCount,
       assignedAnchorCount,
       assignedTenderCount,

@@ -62,7 +62,6 @@ export type GenerateShiftPlanResult = {
   success: boolean;
   periodId: string;
   env: string;
-  replacedEngagementCount: number;
   createdEngagementCount: number;
   assignedAnchorCount: number;
   assignedTenderCount: number;

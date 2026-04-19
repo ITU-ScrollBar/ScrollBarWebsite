@@ -259,7 +259,7 @@ export const loadExistingAssignmentsForShifts = async (
 
 export const persistPlannerResult = async (
   params: PersistPlannerResultParams
-): Promise<{ replacedEngagementCount: number; createdEngagementCount: number }> => {
+): Promise<{ createdEngagementCount: number }> => {
   const {
     envRef,
     periodRef,
@@ -365,8 +365,5 @@ export const persistPlannerResult = async (
 
   await writer.close();
 
-  return {
-    replacedEngagementCount: 0,
-    createdEngagementCount,
-  };
+  return { createdEngagementCount };
 };
