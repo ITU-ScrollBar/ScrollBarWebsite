@@ -121,6 +121,7 @@ export const createShiftPlanningPeriod = async (
     status: payload.status ?? "open",
     createdBy: payload.createdBy,
     createdAt: serverTimestamp(),
+    anchorSeminarDays: payload.anchorSeminarDays ?? [],
   });
 };
 

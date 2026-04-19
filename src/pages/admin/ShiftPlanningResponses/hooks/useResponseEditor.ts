@@ -10,6 +10,7 @@ type SubmitPayload = {
   wantsAnchor: boolean;
   availability: Record<string, boolean>;
   anchorOnly: boolean;
+  anchorSeminarDays?: string[];
   comments?: string;
   passiveReason?: string;
   privateEmail?: string;
@@ -212,6 +213,7 @@ export const useResponseEditor = ({
         wantsAnchor: resolvedWantsAnchor,
         availability: normalizedAvailability,
         anchorOnly: resolvedWantsAnchor ? anchorOnly : false,
+        anchorSeminarDays: resolvedWantsAnchor ? anchorSeminarDays : [],
         comments,
         passiveReason,
         privateEmail,
@@ -228,6 +230,7 @@ export const useResponseEditor = ({
   }, [
     allEventsAnswered,
     anchorOnly,
+    anchorSeminarDays,
     comments,
     eventCanShiftIds,
     eventChoices,
