@@ -30,7 +30,8 @@ type GenerateShiftPlanWarning = {
     | 'shift_missing_experienced_anchor'
     | 'new_anchor_opening_closing_not_met'
     | 'shift_has_no_anchor'
-    | 'underfilled_tender_shifts';
+    | 'underfilled_tender_shifts'
+    | 'mandatory_assignment_not_met';
   message: string;
   details: Record<string, unknown>;
 };
@@ -71,39 +72,23 @@ export const generateShiftPlan = onCall(
     await assertCallerCanGenerate(uid);
 
     // Load immutable planning context (period, event scope, submission window).
-    const { envRef, periodRef, period, eventIds, submissionClosesAt } = await loadPlanningPeriodContext(
+    const { envRef, periodRef, period, eventIds } = await loadPlanningPeriodContext(
       env,
       periodId
     );
     const surveyType = resolveSurveyType(period);
     const includeShiftStatusQuestions = surveyType === 'regularSemesterSurvey';
 
-    const now = new Date();
-
     const { users, requiredSurveyUsers } = await loadEligibleUsers({
       surveyType,
     });
     const responseByUserId = await loadResponsesByUserId(envRef, periodId);
 
-    const missingSubmissionUserIds = requiredSurveyUsers
-      .filter((user) => !responseByUserId.has(user.uid))
-      .map((user) => user.uid);
-
-    const allSubmitted = missingSubmissionUserIds.length === 0;
-    const afterDeadline = now.getTime() >= submissionClosesAt.getTime();
-
-    // Hard rule: either everyone submitted, or submission deadline has passed.
-    if (!allSubmitted && !afterDeadline) {
-      throw new HttpsError(
-        'failed-precondition',
-        'Not all users have submitted availability and the deadline has not passed yet.',
-        {
-          expectedSubmissions: requiredSurveyUsers.length,
-          submittedCount: requiredSurveyUsers.length - missingSubmissionUserIds.length,
-          missingSubmissionUserIds,
-        }
-      );
-    }
+    const missingSubmissionUserIdSet = new Set(
+      requiredSurveyUsers
+        .filter((user) => !responseByUserId.has(user.uid))
+        .map((user) => user.uid)
+    );
 
     // Materialize shifts participating in this planning period.
     const shifts = await loadShiftsForEvents(envRef, eventIds);
@@ -169,7 +154,9 @@ export const generateShiftPlan = onCall(
         };
       }
 
-      const participationStatus = response?.participationStatus ?? 'active';
+      const participationStatus = missingSubmissionUserIdSet.has(user.uid)
+        ? 'leave'
+        : (response?.participationStatus ?? 'active');
       const isActive = participationStatus === 'active';
       const wantsAnchor = isActive && response?.wantsAnchor === true;
       const isNewAnchor = wantsAnchor && !hasAnchorRole;
@@ -191,6 +178,36 @@ export const generateShiftPlan = onCall(
     const newAnchorUserIds = userList
       .filter((user) => user.wantsAnchor && !user.experiencedAnchor)
       .map((user) => user.uid);
+    const newAnchorUserIdSet = new Set(newAnchorUserIds);
+
+    // Compute unified role updates: passive/legacy corrections + new anchor promotions.
+    // Applied in one write per user so there are no races between concurrent transforms.
+    const roleUpdates: Array<{ userId: string; roles: string[] }> = [];
+    for (const user of userList) {
+      if (user.participationStatus === 'leave') continue;
+
+      const current = user.roles;
+      let base = current.filter((r) => r !== Role.PASSIVE && r !== Role.LEGACY);
+
+      if (newAnchorUserIdSet.has(user.uid) && !base.includes(Role.ANCHOR)) {
+        base = [...base, Role.ANCHOR];
+      }
+
+      const newRoles =
+        user.participationStatus === 'passive'
+          ? [...base, Role.PASSIVE]
+          : user.participationStatus === 'legacy'
+          ? [...base, Role.LEGACY]
+          : base;
+
+      const changed =
+        newRoles.length !== current.length ||
+        newRoles.some((r) => !current.includes(r));
+
+      if (changed) {
+        roleUpdates.push({ userId: user.uid, roles: newRoles });
+      }
+    }
 
     const activeUsers = userList.filter((user) => user.participationStatus === 'active');
     const userById = new Map(userList.map((user) => [user.uid, user]));
@@ -629,7 +646,7 @@ export const generateShiftPlan = onCall(
     }
 
     const regularUsers = activeUsers.filter((user) => !user.anchorOnly);
-    const unmetMandatory: Array<{ eventId: string; userId: string }> = [];
+    const unmetMandatoryWarnings: Array<{ eventId: string; userId: string }> = [];
 
     const canTakeTenderSlot = (user: User, slot: Slot): boolean => {
       if (user.anchorOnly) {
@@ -710,10 +727,18 @@ export const generateShiftPlan = onCall(
             effectiveAvailability(user.uid, shift.id)
           );
           if (couldWork) {
-            unmetMandatory.push({ eventId: mandatoryEventId, userId: user.uid });
+            unmetMandatoryWarnings.push({ eventId: mandatoryEventId, userId: user.uid });
           }
         }
       }
+    }
+
+    for (const { eventId, userId } of unmetMandatoryWarnings) {
+      warnings.push({
+        code: 'mandatory_assignment_not_met',
+        message: `${userById.get(userId)?.displayName ?? userId} indicated availability for a mandatory event but could not be assigned`,
+        details: { userId, eventId },
+      });
     }
 
     const remainingTenderSlotList = () => Array.from(remainingTenderSlots.values());
@@ -906,7 +931,7 @@ export const generateShiftPlan = onCall(
       });
     }
 
-    // Persist generated engagements, period stats, and anchor role promotions.
+    // Persist generated engagements, period stats, and role corrections.
     const { createdEngagementCount } = await persistPlannerResult({
       envRef,
       periodRef,
@@ -915,9 +940,9 @@ export const generateShiftPlan = onCall(
       eventIds,
       shifts,
       assignments: plannedAssignments,
-      newAnchorUserIds,
+      roleUpdates,
       expectedSubmissions: requiredSurveyUsers.length,
-      submittedCount: requiredSurveyUsers.length - missingSubmissionUserIds.length,
+      submittedCount: requiredSurveyUsers.length - missingSubmissionUserIdSet.size,
       assignedAnchorCount,
       assignedTenderCount,
       unfilledAnchorSlots: shifts.filter((s) => (assignedAnchorsByShiftId.get(s.id) ?? 0) === 0).length,
@@ -932,11 +957,6 @@ export const generateShiftPlan = onCall(
       assignedAnchorCount,
       assignedTenderCount,
       unfilledTenderSlots: remainingTenderSlots.size,
-      unmetMandatoryCount: unmetMandatory.length,
-      unmetMandatory,
-      missingSubmissionUserIds,
-      afterDeadline,
-      allSubmitted,
       warnings,
     };
   }

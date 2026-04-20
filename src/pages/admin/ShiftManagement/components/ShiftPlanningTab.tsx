@@ -110,7 +110,11 @@ export default function ShiftPlanningTab({
 
           <Popconfirm
             title="Generate shift plan"
-            description="This generates new engagements for unassigned slots in the selected period's shifts and creates a new unpublished plan. Existing engagements are kept. Continue?"
+            description={
+              (missingSubmissions ?? 0) > 0
+                ? `${missingSubmissions} member(s) have not submitted availability and will be treated as leaving the bar. Generate new engagements for unassigned slots and create a new unpublished plan? Existing engagements are kept.`
+                : "Generate new engagements for unassigned slots in the selected period's shifts and create a new unpublished plan? Existing engagements are kept."
+            }
             onConfirm={onGeneratePlan}
           >
             <Button type="primary" icon={<RocketOutlined />} loading={generatingPlan}>

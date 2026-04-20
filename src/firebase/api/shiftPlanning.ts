@@ -66,16 +66,14 @@ export type GenerateShiftPlanResult = {
   assignedAnchorCount: number;
   assignedTenderCount: number;
   unfilledTenderSlots: number;
-  unmetMandatoryCount: number;
-  unmetMandatory: Array<{ eventId: string; userId: string }>;
-  missingSubmissionUserIds: string[];
-  afterDeadline: boolean;
-  allSubmitted: boolean;
   warnings: Array<{
     code:
-      | "missing_experienced_anchors_round1"
+      | "shift_missing_category"
+      | "shift_missing_experienced_anchor"
       | "new_anchor_opening_closing_not_met"
-      | "underfilled_tender_shifts";
+      | "shift_has_no_anchor"
+      | "underfilled_tender_shifts"
+      | "mandatory_assignment_not_met";
     message: string;
     details: Record<string, unknown>;
   }>;
