@@ -1,4 +1,4 @@
-import { ShiftPlanningResponse, ShiftPlanningSurveyType } from "../../../types/types-file";
+import { ShiftPlanningResponse } from "../../../types/types-file";
 import { EventDecision, ParticipationStatus } from "./types";
 
 export const getParticipationTagColor = (status: ParticipationStatus) => {
@@ -6,21 +6,6 @@ export const getParticipationTagColor = (status: ParticipationStatus) => {
   if (status === "passive") return "gold";
   if (status === "legacy") return "blue";
   return "red";
-};
-
-export const resolveSurveyType = (period: {
-  surveyType?: ShiftPlanningSurveyType;
-  includeShiftStatusQuestions?: boolean;
-}): ShiftPlanningSurveyType => {
-  if (period.surveyType) {
-    return period.surveyType;
-  }
-
-  if (period.includeShiftStatusQuestions === false) {
-    return "excludeSemesterStatus";
-  }
-
-  return "regularSemesterSurvey";
 };
 
 export const getEventDecision = (

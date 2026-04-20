@@ -1,5 +1,5 @@
 import { PlusOutlined, RocketOutlined } from "@ant-design/icons";
-import { Alert, Button, Card, Col, Divider, Empty, Popconfirm, Row, Select, Space, Switch } from "antd";
+import { Alert, Button, Card, Col, Divider, Empty, message, Popconfirm, Row, Select, Space, Switch } from "antd";
 import Text from "antd/es/typography/Text";
 import dayjs from "dayjs";
 import { useMemo } from "react";
@@ -28,7 +28,7 @@ type ShiftPlanningTabProps = {
   shiftsForEvent: Shift[];
   addShift: (shift: Shift) => Promise<string>;
   updateShift: (id: string, field: string, value: unknown) => void;
-  removeShift: (shift: Shift) => void;
+  removeShift: (shift: Shift) => Promise<void>;
   periodResponses: ShiftPlanningResponse[];
 };
 
@@ -71,24 +71,32 @@ export default function ShiftPlanningTab({
     [shiftsForEvent]
   );
 
-  const handleRemoveShift = (shift: Shift) => {
-    const satellite = satelliteByPrimaryId.get(shift.id);
-    if (satellite) removeShift(satellite);
-    removeShift(shift);
+  const handleRemoveShift = async (shift: Shift) => {
+    try {
+      const satellite = satelliteByPrimaryId.get(shift.id);
+      if (satellite) await removeShift(satellite);
+      await removeShift(shift);
+    } catch {
+      message.error("Failed to remove shift.");
+    }
   };
 
-  const handleAddSatellite = (primary: Shift) => {
-    addShift({
-      id: "",
-      eventId: primary.eventId,
-      title: primary.title,
-      location: "Satellite",
-      start: primary.start,
-      end: primary.end,
-      tenders: primary.tenders,
-      category: primary.category,
-      linkedShiftId: primary.id,
-    });
+  const handleAddSatellite = async (primary: Shift) => {
+    try {
+      await addShift({
+        id: "",
+        eventId: primary.eventId,
+        title: primary.title,
+        location: "Satellite",
+        start: primary.start,
+        end: primary.end,
+        tenders: primary.tenders,
+        category: primary.category,
+        linkedShiftId: primary.id,
+      });
+    } catch {
+      message.error("Failed to add satellite shift.");
+    }
   };
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
@@ -231,7 +239,7 @@ export default function ShiftPlanningTab({
                           isMandatory={selectedPeriod.mandatoryEventIds?.includes(shift.eventId)}
                           satelliteShift={satellite}
                           onAddSatellite={() => handleAddSatellite(shift)}
-                          onRemoveSatellite={() => { if (satellite) removeShift(satellite); }}
+                          onRemoveSatellite={() => { if (satellite) removeShift(satellite).catch(() => message.error("Failed to remove satellite shift.")); }}
                           onUpdateSatellite={(field, value) => { if (satellite) updateShift(satellite.id, field, value); }}
                         />
                         <ShiftAssignmentInfo

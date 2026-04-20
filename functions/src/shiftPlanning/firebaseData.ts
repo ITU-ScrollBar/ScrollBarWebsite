@@ -7,7 +7,6 @@ import {
   chunkArray,
   hasRole,
   isExpectedSurveyUser,
-  isPlanningEligible,
   toDate,
 } from './helpers';
 
@@ -24,7 +23,6 @@ export type PlanningPeriodContext = {
   periodRef: FirebaseFirestore.DocumentReference;
   period: PlanningPeriodDoc;
   eventIds: string[];
-  submissionClosesAt: Date;
 };
 
 export type ShiftAssignmentRecord = {
@@ -104,18 +102,11 @@ export const loadPlanningPeriodContext = async (
     throw new HttpsError('failed-precondition', 'Planning period does not contain any events.');
   }
 
-  const submissionOpensAt = toDate(period.submissionOpensAt);
-  const submissionClosesAt = toDate(period.submissionClosesAt);
-  if (!submissionOpensAt || !submissionClosesAt) {
-    throw new HttpsError('failed-precondition', 'Planning period submission window is invalid.');
-  }
-
   return {
     envRef,
     periodRef,
     period,
     eventIds,
-    submissionClosesAt,
   };
 };
 
@@ -130,7 +121,7 @@ export const loadEligibleUsers = async (options?: {
   const usersSnapshot = await db.collection('users').get();
   const allEligibleUsers = usersSnapshot.docs
     .map((doc) => ({ ...(doc.data() as Tender), uid: doc.id }))
-    .filter(isPlanningEligible);
+    .filter(isExpectedSurveyUser);
 
   const users =
     surveyType === 'newbieShiftPlanning'

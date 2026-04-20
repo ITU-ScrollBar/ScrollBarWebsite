@@ -18,7 +18,8 @@ import {
   ResponseFilter,
   ShiftPlanningResponsesPageProps,
 } from "./ShiftPlanningResponses/types";
-import { getEventDecision, resolveSurveyType } from "./ShiftPlanningResponses/utils";
+import { getEventDecision } from "./ShiftPlanningResponses/utils";
+import { resolveSurveyType } from "../../firebase/api/shiftPlanning";
 
 const { Content } = Layout;
 const { Title } = Typography;

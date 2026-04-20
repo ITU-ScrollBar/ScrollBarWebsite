@@ -11,21 +11,7 @@ import { Loading } from "../Loading";
 import { Role } from "../../types/types-file";
 import useSettings from "../../hooks/useSettings";
 import useShiftPlanning from "../../hooks/useShiftPlanning";
-
-const resolvePeriodSurveyType = (period: {
-  surveyType?: "regularSemesterSurvey" | "excludeSemesterStatus" | "newbieShiftPlanning";
-  includeShiftStatusQuestions?: boolean;
-}): "regularSemesterSurvey" | "excludeSemesterStatus" | "newbieShiftPlanning" => {
-  if (period.surveyType) {
-    return period.surveyType;
-  }
-
-  if (period.includeShiftStatusQuestions === false) {
-    return "excludeSemesterStatus";
-  }
-
-  return "regularSemesterSurvey";
-};
+import { resolveSurveyType } from "../../firebase/api/shiftPlanning";
 
 interface TenderMenuProps {
   children?: ReactNode;
@@ -49,7 +35,7 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
     .filter((period) => period.submissionOpensAt?.getTime() <= now)
     .filter((period) => period.submissionClosesAt?.getTime() >= now)
     .some((period) => {
-      const surveyType = resolvePeriodSurveyType(period);
+      const surveyType = resolveSurveyType(period);
       return surveyType !== "newbieShiftPlanning" || isNewbie;
     });
 

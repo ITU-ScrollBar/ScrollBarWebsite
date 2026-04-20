@@ -15,6 +15,7 @@ import {
   Typography,
 } from "antd";
 import dayjs from "dayjs";
+import { formatIsoDate } from "../../../../utils/dateUtils";
 import {
   EventChoice,
   ParticipationStatus,
@@ -305,7 +306,7 @@ export default function ResponsesIndividualTab({
                             <Space direction="vertical">
                               {periodAnchorSeminarDays.map((day) => (
                                 <Checkbox key={day} value={day}>
-                                  {dayjs(day).format("DD/MM/YYYY")}
+                                  {formatIsoDate(day)}
                                 </Checkbox>
                               ))}
                             </Space>

@@ -1,5 +1,5 @@
 import { CallableRequest, HttpsError, onCall } from 'firebase-functions/v2/https';
-import { engagementType, Role, ShiftPlanningSurveyType } from '../types/types-file';
+import { engagementType, Role } from '../types/types-file';
 import {
   User,
   ShiftCategory,
@@ -7,6 +7,7 @@ import {
   assignSlotsRoundRobin,
   getResponseAvailability,
   getShiftCategoryMap,
+  resolveSurveyType,
 } from './helpers';
 import {
   ShiftAssignmentRecord,
@@ -34,21 +35,6 @@ type GenerateShiftPlanWarning = {
     | 'mandatory_assignment_not_met';
   message: string;
   details: Record<string, unknown>;
-};
-
-const resolveSurveyType = (period: {
-  surveyType?: ShiftPlanningSurveyType;
-  includeShiftStatusQuestions?: boolean;
-}): ShiftPlanningSurveyType => {
-  if (period.surveyType) {
-    return period.surveyType;
-  }
-
-  if (period.includeShiftStatusQuestions === false) {
-    return 'excludeSemesterStatus';
-  }
-
-  return 'regularSemesterSurvey';
 };
 
 export const generateShiftPlan = onCall(
@@ -455,7 +441,9 @@ export const generateShiftPlan = onCall(
         }
       }
       if (topDay) {
-        anchorSeminarCutoff = new Date(topDay);
+        // Parse as UTC midnight — shift.start values from Firestore are UTC timestamps,
+        // so this comparison is apples-to-apples.
+        anchorSeminarCutoff = new Date(topDay + 'T00:00:00.000Z');
       }
     }
 

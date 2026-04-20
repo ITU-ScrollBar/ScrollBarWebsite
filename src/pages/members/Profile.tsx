@@ -15,21 +15,7 @@ import { useEffect, useMemo, useState } from "react";
 import RoleTag from "../../components/RoleTag";
 import useTeams from "../../hooks/useTeams";
 import useShiftPlanning from "../../hooks/useShiftPlanning";
-
-const resolvePeriodSurveyType = (period: {
-  surveyType?: "regularSemesterSurvey" | "excludeSemesterStatus" | "newbieShiftPlanning";
-  includeShiftStatusQuestions?: boolean;
-}): "regularSemesterSurvey" | "excludeSemesterStatus" | "newbieShiftPlanning" => {
-  if (period.surveyType) {
-    return period.surveyType;
-  }
-
-  if (period.includeShiftStatusQuestions === false) {
-    return "excludeSemesterStatus";
-  }
-
-  return "regularSemesterSurvey";
-};
+import { resolveSurveyType } from "../../firebase/api/shiftPlanning";
 
 export default function Profile() {
   const { loading, currentUser } = useAuth();
@@ -52,7 +38,7 @@ export default function Profile() {
         .filter((period) => period.submissionOpensAt?.getTime() <= now)
         .filter((period) => period.submissionClosesAt?.getTime() >= now)
         .filter((period) => {
-          const surveyType = resolvePeriodSurveyType(period);
+          const surveyType = resolveSurveyType(period);
           return surveyType !== "newbieShiftPlanning" || isNewbie;
         })
         .sort(

@@ -23,6 +23,19 @@ import { ShiftPlanningPeriodStatus, ShiftPlanningSurveyType } from "../../types/
 
 const env = import.meta.env.VITE_APP_ENV as string;
 
+export const resolveSurveyType = (period: {
+  surveyType?: ShiftPlanningSurveyType;
+  includeShiftStatusQuestions?: boolean;
+}): ShiftPlanningSurveyType => {
+  if (period.surveyType) {
+    return period.surveyType;
+  }
+  if (period.includeShiftStatusQuestions === false) {
+    return "excludeSemesterStatus";
+  }
+  return "regularSemesterSurvey";
+};
+
 const getPeriodsCollection = () =>
   collection(doc(collection(db, "env"), env), "shiftPlanningPeriods");
 
@@ -107,8 +120,8 @@ export const streamShiftPlanningResponses = (
 
 export const createShiftPlanningPeriod = async (
   payload: CreateShiftPlanningPeriodPayload
-): Promise<DocumentData> => {
-  return addDoc(getPeriodsCollection(), {
+): Promise<string> => {
+  const ref = await addDoc(getPeriodsCollection(), {
     name: payload.name,
     eventIds: payload.eventIds,
     mandatoryEventIds: payload.mandatoryEventIds,
@@ -120,6 +133,7 @@ export const createShiftPlanningPeriod = async (
     createdAt: serverTimestamp(),
     anchorSeminarDays: payload.anchorSeminarDays ?? [],
   });
+  return ref.id;
 };
 
 export const updateShiftPlanningPeriod = async (

@@ -1,5 +1,18 @@
-import { Role, Shift, ShiftPlanningPeriod, ShiftPlanningResponse, Tender } from '../types/types-file';
+import { Role, Shift, ShiftPlanningPeriod, ShiftPlanningResponse, ShiftPlanningSurveyType, Tender } from '../types/types-file';
 import { Dinic } from './maxflow';
+
+export const resolveSurveyType = (period: {
+  surveyType?: ShiftPlanningSurveyType;
+  includeShiftStatusQuestions?: boolean;
+}): ShiftPlanningSurveyType => {
+  if (period.surveyType) {
+    return period.surveyType;
+  }
+  if (period.includeShiftStatusQuestions === false) {
+    return 'excludeSemesterStatus';
+  }
+  return 'regularSemesterSurvey';
+};
 
 export type ShiftCategory = 'opening' | 'closing' | 'middle' | 'other';
 
@@ -131,24 +144,6 @@ export const getShiftCategoryMap = (shifts: Shift[]): Map<string, ShiftCategory>
 
 export const hasRole = (user: Tender, role: Role): boolean => {
   return user.isAdmin || user.roles?.includes(role) === true;
-};
-
-export const isPlanningEligible = (user: Tender): boolean => {
-  if (!user.active) {
-    return false;
-  }
-
-  const roles = user.roles ?? [];
-  if (roles.includes(Role.PASSIVE) || roles.includes(Role.LEGACY)) {
-    return false;
-  }
-
-  return (
-    user.isAdmin ||
-    roles.includes(Role.TENDER) ||
-    roles.includes(Role.ANCHOR) ||
-    roles.includes(Role.REGULAR_ACCESS)
-  );
 };
 
 export const isExpectedSurveyUser = (user: Tender): boolean => {

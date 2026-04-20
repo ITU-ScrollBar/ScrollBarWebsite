@@ -38,6 +38,13 @@ applyTo: "src/**/*.ts", "src/**/*.tsx"
 - Keep loading, empty, and error states present for data-driven screens.
 - Reuse existing utility and context providers instead of duplicating stateful logic.
 
+# Error Handling
+
+- Every async user action (form submit, create, update, delete) must have a catch block that surfaces the failure to the user via message.error or notification.error.
+- Use message.error for brief inline feedback (member-facing pages, simple actions). Use notification.error with a description for admin flows where context helps diagnose the failure.
+- Never leave a try/finally without a catch when the operation can fail — a silent failure is worse than a visible one.
+- For sequential async operations (for example delete satellite then delete primary), await each step so a failure on the first step stops the chain and triggers the catch.
+
 # Validation
 
 - After frontend changes, run yarn lint and yarn build from repo root.

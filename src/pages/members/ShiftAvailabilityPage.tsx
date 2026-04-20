@@ -17,7 +17,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useShiftContext } from "../../contexts/ShiftContext";
 import useEvents from "../../hooks/useEvents";
 import useShiftPlanning from "../../hooks/useShiftPlanning";
-import { Role, Shift, ShiftPlanningSurveyType } from "../../types/types-file";
+import { Role, Shift } from "../../types/types-file";
+import { resolveSurveyType } from "../../firebase/api/shiftPlanning";
 import AnchorPreferenceCard from "./ShiftAvailability/components/AnchorPreferenceCard";
 import EventAvailabilityGrid from "./ShiftAvailability/components/EventAvailabilityGrid";
 import SemesterParticipationCard from "./ShiftAvailability/components/SemesterParticipationCard";
@@ -29,20 +30,6 @@ const { TextArea } = Input;
 type EventChoice = "can" | "cannot";
 type ParticipationStatus = "active" | "passive" | "legacy" | "leave";
 
-const resolvePeriodSurveyType = (period: {
-  surveyType?: ShiftPlanningSurveyType;
-  includeShiftStatusQuestions?: boolean;
-}): ShiftPlanningSurveyType => {
-  if (period.surveyType) {
-    return period.surveyType;
-  }
-
-  if (period.includeShiftStatusQuestions === false) {
-    return "excludeSemesterStatus";
-  }
-
-  return "regularSemesterSurvey";
-};
 
 export default function ShiftAvailabilityPage() {
   const { currentUser } = useAuth();
@@ -80,7 +67,7 @@ export default function ShiftAvailabilityPage() {
       .filter((period) => period.submissionOpensAt?.getTime() <= now)
       .filter((period) => period.submissionClosesAt?.getTime() >= now)
       .filter((period) => {
-        const surveyType = resolvePeriodSurveyType(period);
+        const surveyType = resolveSurveyType(period);
         if (surveyType === "newbieShiftPlanning" && !userIsNewbie) {
           return false;
         }
@@ -201,7 +188,7 @@ export default function ShiftAvailabilityPage() {
   }, [selectedPeriod]);
 
   const selectedPeriodSurveyType = selectedPeriod
-    ? resolvePeriodSurveyType(selectedPeriod)
+    ? resolveSurveyType(selectedPeriod)
     : "regularSemesterSurvey";
   const includesShiftStatusQuestions = selectedPeriodSurveyType === "regularSemesterSurvey";
   const isAnchor = currentUser?.roles?.includes(Role.ANCHOR) ?? false;
@@ -407,6 +394,8 @@ export default function ShiftAvailabilityPage() {
         ...previous,
         [selectedPeriod.id]: true,
       }));
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : "Failed to submit availability. Please try again.");
     } finally {
       setSaving(false);
     }

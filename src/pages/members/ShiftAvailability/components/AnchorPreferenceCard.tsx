@@ -1,5 +1,5 @@
 import { Card, Checkbox, Radio, Space, Typography } from "antd";
-import dayjs from "dayjs";
+import { formatIsoDate } from "../../../../utils/dateUtils";
 
 const { Text } = Typography;
 
@@ -70,7 +70,7 @@ export default function AnchorPreferenceCard({
               <Space direction="vertical">
                 {periodAnchorSeminarDays.map((day) => (
                   <Checkbox key={day} value={day}>
-                    {dayjs(day).format("DD/MM/YYYY")}
+                    {formatIsoDate(day)}
                   </Checkbox>
                 ))}
               </Space>

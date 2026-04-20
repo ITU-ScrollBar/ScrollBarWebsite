@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import { ShiftPlanningResponse } from "../../../../types/types-file";
 import { CommentsRow, EventAggregate, ParticipationStatus } from "../types";
 import { getParticipationTagColor } from "../utils";
+import { formatIsoDate } from "../../../../utils/dateUtils";
 
 const { Text } = Typography;
 
@@ -138,7 +139,7 @@ export default function ResponsesOverviewTab({
                 render: (_: string, row) => (
                   <Space>
                     <Text strong={row.canCount === maxCanCount && maxCanCount > 0}>
-                      {dayjs(row.day).format("DD/MM/YYYY")}
+                      {formatIsoDate(row.day)}
                     </Text>
                     {row.canCount === maxCanCount && maxCanCount > 0 && (
                       <Tag color="green">Most voted</Tag>

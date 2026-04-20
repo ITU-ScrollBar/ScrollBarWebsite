@@ -20,7 +20,7 @@ type UsePeriodFormParams = {
   selectedPeriod: ShiftPlanningPeriod | null;
   selectedPeriodSurveyType: ShiftPlanningSurveyType;
   submissionCount: number;
-  createPeriod: (payload: CreateShiftPlanningPeriodPayload) => Promise<{ id?: string }>;
+  createPeriod: (payload: CreateShiftPlanningPeriodPayload) => Promise<string>;
   updatePeriod: (id: string, updates: UpdatePeriodPayload) => Promise<void>;
   onPeriodCreated: (periodId: string) => void;
 };
@@ -135,11 +135,13 @@ export const usePeriodForm = ({
         anchorSeminarDays: newPeriodAnchorSeminarDays,
       });
 
-      if (created && typeof created.id === "string") {
-        onPeriodCreated(created.id);
-      }
-
+      onPeriodCreated(created);
       closeCreate();
+    } catch (err) {
+      notification.error({
+        message: "Failed to create period",
+        description: err instanceof Error ? err.message : "An unexpected error occurred.",
+      });
     } finally {
       setCreating(false);
     }
@@ -189,6 +191,11 @@ export const usePeriodForm = ({
       });
 
       closeEdit();
+    } catch (err) {
+      notification.error({
+        message: "Failed to update period",
+        description: err instanceof Error ? err.message : "An unexpected error occurred.",
+      });
     } finally {
       setEditing(false);
     }

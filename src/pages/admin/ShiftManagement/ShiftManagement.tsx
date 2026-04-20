@@ -7,6 +7,7 @@ import useEvents from "../../../hooks/useEvents";
 import useShiftPlanning from "../../../hooks/useShiftPlanning";
 import useTenders from "../../../hooks/useTenders";
 import { ShiftCategory, ShiftPlanningSurveyType } from "../../../types/types-file";
+import { resolveSurveyType } from "../../../firebase/api/shiftPlanning";
 import ShiftPlanningResponsesPage from "../ShiftPlanningResponsesPage";
 import CustomShiftModal from "./components/CustomShiftModal";
 import ShiftPeriodModals from "./components/ShiftPeriodModals";
@@ -61,18 +62,10 @@ export default function ShiftManagement() {
     ? (sortedPeriods.find((period) => period.id === selectedPeriodId) ?? null)
     : null;
 
-  const selectedPeriodSurveyType = useMemo<ShiftPlanningSurveyType>(() => {
-    if (!selectedPeriod) {
-      return "regularSemesterSurvey";
-    }
-    if (selectedPeriod.surveyType) {
-      return selectedPeriod.surveyType;
-    }
-    if (selectedPeriod.includeShiftStatusQuestions === false) {
-      return "excludeSemesterStatus";
-    }
-    return "regularSemesterSurvey";
-  }, [selectedPeriod]);
+  const selectedPeriodSurveyType = useMemo<ShiftPlanningSurveyType>(
+    () => (selectedPeriod ? resolveSurveyType(selectedPeriod) : "regularSemesterSurvey"),
+    [selectedPeriod]
+  );
 
   const selectedPeriodEvents = useMemo(() => {
     if (!selectedPeriod) {
@@ -95,10 +88,10 @@ export default function ShiftManagement() {
   }, [selectedPeriod, shiftState.shifts]);
 
   useEffect(() => {
-    if (!selectedPeriodId && selectedPeriod) {
-      setSelectedPeriodId(selectedPeriod.id);
+    if (!selectedPeriodId && sortedPeriods.length > 0) {
+      setSelectedPeriodId(sortedPeriods[0].id);
     }
-  }, [selectedPeriod, selectedPeriodId]);
+  }, [selectedPeriodId, sortedPeriods]);
 
   useEffect(() => {
     if (!selectedPeriodEvents.length) {
