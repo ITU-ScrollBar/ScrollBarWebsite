@@ -57,8 +57,9 @@ export default function ShiftManagement() {
     );
   }, [periodState.periods]);
 
-  const selectedPeriod =
-    sortedPeriods.find((period) => period.id === selectedPeriodId) ?? sortedPeriods[0] ?? null;
+  const selectedPeriod = selectedPeriodId
+    ? (sortedPeriods.find((period) => period.id === selectedPeriodId) ?? null)
+    : null;
 
   const selectedPeriodSurveyType = useMemo<ShiftPlanningSurveyType>(() => {
     if (!selectedPeriod) {
@@ -83,10 +84,9 @@ export default function ShiftManagement() {
       .sort((a, b) => a.start.getTime() - b.start.getTime());
   }, [allEvents, selectedPeriod]);
 
-  const currentEvent =
-    selectedPeriodEvents.find((event) => event.id === selectedEventId) ??
-    selectedPeriodEvents[0] ??
-    null;
+  const currentEvent = selectedEventId
+    ? (selectedPeriodEvents.find((event) => event.id === selectedEventId) ?? null)
+    : null;
 
   const periodShifts = useMemo(() => {
     if (!selectedPeriod) return [];
