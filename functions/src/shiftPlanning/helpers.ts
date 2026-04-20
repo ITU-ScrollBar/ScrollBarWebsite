@@ -152,12 +152,7 @@ export const isPlanningEligible = (user: Tender): boolean => {
 };
 
 export const isExpectedSurveyUser = (user: Tender): boolean => {
-  if (!user.active) {
-    return false;
-  }
-
-  const roles = user.roles ?? [];
-  return roles.includes(Role.REGULAR_ACCESS);
+  return user.active === true && (user.roles ?? []).includes(Role.TENDER);
 };
 
 export const getResponseAvailability = (

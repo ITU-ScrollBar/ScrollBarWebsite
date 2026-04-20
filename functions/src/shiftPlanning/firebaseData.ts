@@ -138,24 +138,9 @@ export const loadEligibleUsers = async (options?: {
       : allEligibleUsers;
 
   const requiredSurveyUsers =
-    surveyType === 'regularSemesterSurvey'
-      ? users.filter(isExpectedSurveyUser)
-      : users.filter((user) => {
-        const roles = user.roles ?? [];
-        if (roles.includes(Role.PASSIVE) || roles.includes(Role.LEGACY)) {
-          return false;
-        }
-
-        if (surveyType === 'newbieShiftPlanning') {
-          return roles.includes(Role.NEWBIE);
-        }
-
-        return (
-          roles.includes(Role.REGULAR_ACCESS) ||
-          roles.includes(Role.TENDER) ||
-          roles.includes(Role.ANCHOR)
-        );
-      });
+    surveyType === 'newbieShiftPlanning'
+      ? users.filter((user) => user.active === true && (user.roles ?? []).includes(Role.NEWBIE))
+      : users.filter(isExpectedSurveyUser);
 
   return { users, requiredSurveyUsers };
 };

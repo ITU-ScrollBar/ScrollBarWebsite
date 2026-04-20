@@ -148,7 +148,7 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
 
   const expectedSurveyUsers = useMemo(() => {
     const requiredRole =
-      selectedPeriodSurveyType === "newbieShiftPlanning" ? Role.NEWBIE : Role.REGULAR_ACCESS;
+      selectedPeriodSurveyType === "newbieShiftPlanning" ? Role.NEWBIE : Role.TENDER;
     return tenderState.tenders
       .filter((tender) => tender.active)
       .filter((tender) => tender.roles?.includes(requiredRole) === true)
