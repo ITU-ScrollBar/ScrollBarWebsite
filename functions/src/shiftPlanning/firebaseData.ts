@@ -46,7 +46,7 @@ export type PersistPlannerResultParams = {
   eventIds: string[];
   shifts: Shift[];
   assignments: ShiftAssignmentRecord[];
-  newAnchorUserIds: string[];
+  roleUpdates: Array<{ userId: string; roles: string[] }>;
   expectedSubmissions: number;
   submittedCount: number;
   assignedAnchorCount: number;
@@ -268,7 +268,7 @@ export const persistPlannerResult = async (
     eventIds,
     shifts,
     assignments,
-    newAnchorUserIds,
+    roleUpdates,
     expectedSubmissions,
     submittedCount,
     assignedAnchorCount,
@@ -286,13 +286,10 @@ export const persistPlannerResult = async (
     existingEngagementDocs.push(...existingSnapshot.docs);
   }
 
-  if (newAnchorUserIds.length > 0) {
+  if (roleUpdates.length > 0) {
     await Promise.all(
-      newAnchorUserIds.map((userId) =>
-        db.collection('users').doc(userId).set(
-          { roles: admin.firestore.FieldValue.arrayUnion(Role.ANCHOR) },
-          { merge: true }
-        )
+      roleUpdates.map(({ userId, roles }) =>
+        db.collection('users').doc(userId).update({ roles })
       )
     );
   }
