@@ -12,6 +12,8 @@ export default async function ({
 
   // Group shifts by eventId, then assign category by chronological position within each event.
   const byEvent = new Map<string, Array<{ id: string; start: Date }>>();
+  const unparseable: string[] = [];
+
   for (const doc of snapshot.docs) {
     const data = doc.data();
     if (data.category) {
@@ -25,6 +27,11 @@ export default async function ({
       startRaw && typeof startRaw.toDate === 'function'
         ? startRaw.toDate()
         : new Date(startRaw);
+
+    if (isNaN(start.getTime())) {
+      unparseable.push(doc.id);
+      continue;
+    }
 
     const bucket = byEvent.get(eventId) ?? [];
     bucket.push({ id: doc.id, start });
@@ -45,6 +52,14 @@ export default async function ({
       }
       updates.push({ id: sorted[i].id, category });
     }
+  }
+
+  // Shifts with unparseable start dates default to "middle".
+  for (const id of unparseable) {
+    updates.push({ id, category: 'middle' });
+  }
+  if (unparseable.length > 0) {
+    console.warn(`${unparseable.length} shift(s) had unparseable start dates and were set to "middle".`);
   }
 
   // Commit in batches of 500.

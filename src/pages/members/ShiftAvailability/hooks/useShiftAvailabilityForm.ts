@@ -238,6 +238,11 @@ export const useShiftAvailabilityForm = () => {
         setHasSubmitted(true);
         setSubmittedAt(response.submittedAt ?? response.updatedAt ?? new Date());
       })
+      .catch((err) => {
+        if (!cancelled) {
+          message.error(err instanceof Error ? err.message : "Failed to load your previous response.");
+        }
+      })
       .finally(() => {
         if (!cancelled) setLoadingResponse(false);
       });

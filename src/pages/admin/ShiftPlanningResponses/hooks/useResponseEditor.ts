@@ -1,4 +1,4 @@
-import { message } from "antd";
+import { message, notification } from "antd";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ShiftPlanningPeriod, ShiftPlanningResponse } from "../../../../types/types-file";
 import { EventChoice, ParticipationStatus, PeriodEventGroup } from "../types";
@@ -8,6 +8,7 @@ type SubmitPayload = {
   userId: string;
   participationStatus: ParticipationStatus;
   wantsAnchor: boolean;
+  isNewAnchor?: boolean;
   availability: Record<string, boolean>;
   anchorOnly: boolean;
   anchorSeminarDays?: string[];
@@ -23,6 +24,7 @@ type UseResponseEditorParams = {
   loadUserResponse: (periodId: string, userId: string) => Promise<ShiftPlanningResponse | null>;
   submitResponse: (payload: SubmitPayload) => Promise<void>;
   userNameById: Map<string, string>;
+  isSelectedUserAnchor: boolean;
 };
 
 export const useResponseEditor = ({
@@ -32,6 +34,7 @@ export const useResponseEditor = ({
   loadUserResponse,
   submitResponse,
   userNameById,
+  isSelectedUserAnchor,
 }: UseResponseEditorParams) => {
   const [participationStatus, setParticipationStatus] = useState<ParticipationStatus | undefined>(undefined);
   const [wantsAnchor, setWantsAnchor] = useState<boolean | undefined>(undefined);
@@ -114,6 +117,14 @@ export const useResponseEditor = ({
         setEventChoices(loadedChoices);
         setEventCanShiftIds(loadedCanShiftIds);
         setSubmittedAt(response.submittedAt ?? response.updatedAt ?? null);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          notification.error({
+            message: "Failed to load response",
+            description: err instanceof Error ? err.message : "An unexpected error occurred.",
+          });
+        }
       })
       .finally(() => {
         if (!cancelled) {
@@ -203,6 +214,7 @@ export const useResponseEditor = ({
     }
 
     const resolvedWantsAnchor = participationStatus === "active" && wantsAnchor === true;
+    const resolvedIsNewAnchor = resolvedWantsAnchor && !isSelectedUserAnchor;
 
     setSaving(true);
     try {
@@ -211,9 +223,10 @@ export const useResponseEditor = ({
         userId: selectedUserId,
         participationStatus,
         wantsAnchor: resolvedWantsAnchor,
+        isNewAnchor: resolvedIsNewAnchor,
         availability: normalizedAvailability,
-        anchorOnly: resolvedWantsAnchor ? anchorOnly : false,
-        anchorSeminarDays: resolvedWantsAnchor ? anchorSeminarDays : [],
+        anchorOnly: resolvedWantsAnchor && !resolvedIsNewAnchor ? anchorOnly : false,
+        anchorSeminarDays: resolvedIsNewAnchor ? anchorSeminarDays : [],
         comments,
         passiveReason,
         privateEmail,
@@ -234,6 +247,7 @@ export const useResponseEditor = ({
     comments,
     eventCanShiftIds,
     eventChoices,
+    isSelectedUserAnchor,
     participationStatus,
     passiveReason,
     periodEventGroups,

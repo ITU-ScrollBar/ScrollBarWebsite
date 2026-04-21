@@ -320,6 +320,10 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
       .sort((a, b) => (a.event?.start?.getTime() ?? 0) - (b.event?.start?.getTime() ?? 0));
   }, [eventsById, periodShiftsByEvent, selectedPeriod]);
 
+  const isSelectedUserAnchor = selectedUserId
+    ? tenderById.get(selectedUserId)?.roles?.includes(Role.ANCHOR) === true
+    : false;
+
   const editor = useResponseEditor({
     selectedPeriod,
     selectedUserId,
@@ -327,6 +331,7 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
     loadUserResponse,
     submitResponse,
     userNameById,
+    isSelectedUserAnchor,
   });
 
   const selectedUserPassiveConsecutiveWarning = useMemo(() => {
