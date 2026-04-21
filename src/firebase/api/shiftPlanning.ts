@@ -19,7 +19,7 @@ import {
 } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 import { db, functions } from "..";
-import { ShiftPlanningPeriodStatus, ShiftPlanningSurveyType } from "../../types/types-file";
+import { ShiftPlanningPeriod, ShiftPlanningPeriodStatus, ShiftPlanningSurveyType } from "../../types/types-file";
 
 const env = import.meta.env.VITE_APP_ENV as string;
 
@@ -34,6 +34,26 @@ export const resolveSurveyType = (period: {
     return "excludeSemesterStatus";
   }
   return "regularSemesterSurvey";
+};
+
+export const filterOpenPeriodsForUser = (
+  periods: ShiftPlanningPeriod[],
+  isNewbie = false
+): ShiftPlanningPeriod[] => {
+  const now = Date.now();
+  return periods
+    .filter((period) => period.status === "open")
+    .filter((period) => period.submissionOpensAt?.getTime() <= now)
+    .filter((period) => period.submissionClosesAt?.getTime() >= now)
+    .filter((period) => {
+      const surveyType = resolveSurveyType(period);
+      return surveyType !== "newbieShiftPlanning" || isNewbie;
+    })
+    .sort(
+      (a, b) =>
+        (a.submissionClosesAt?.getTime() ?? Number.MAX_SAFE_INTEGER) -
+        (b.submissionClosesAt?.getTime() ?? Number.MAX_SAFE_INTEGER)
+    );
 };
 
 const getPeriodsCollection = () =>
@@ -59,6 +79,7 @@ export type ShiftPlanningResponsePayload = {
   userId: string;
   participationStatus: "active" | "passive" | "legacy" | "leave";
   wantsAnchor: boolean;
+  isNewAnchor?: boolean;
   availability: Record<string, boolean>;
   anchorOnly: boolean;
   anchorSeminarDays?: string[];
@@ -166,6 +187,7 @@ export const submitShiftPlanningResponse = async (
       userId: payload.userId,
       participationStatus: payload.participationStatus,
       wantsAnchor: payload.wantsAnchor,
+      ...(payload.isNewAnchor !== undefined && { isNewAnchor: payload.isNewAnchor }),
       availability: payload.availability,
       anchorOnly: payload.anchorOnly,
       anchorSeminarDays: payload.anchorSeminarDays ?? [],
@@ -193,12 +215,11 @@ export const generateShiftPlan = async (
   payload: GenerateShiftPlanPayload
 ): Promise<GenerateShiftPlanResult> => {
   const callable = httpsCallable<
-    { env: string; periodId: string },
+    { periodId: string },
     GenerateShiftPlanResult
   >(functions, "generateShiftPlan");
 
   const result = await callable({
-    env,
     periodId: payload.periodId,
   });
 

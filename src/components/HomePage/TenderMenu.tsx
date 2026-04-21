@@ -11,7 +11,7 @@ import { Loading } from "../Loading";
 import { Role } from "../../types/types-file";
 import useSettings from "../../hooks/useSettings";
 import useShiftPlanning from "../../hooks/useShiftPlanning";
-import { resolveSurveyType } from "../../firebase/api/shiftPlanning";
+import { filterOpenPeriodsForUser } from "../../firebase/api/shiftPlanning";
 
 interface TenderMenuProps {
   children?: ReactNode;
@@ -28,16 +28,7 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
   const { isMobile } = useWindowSize();
   const getHelpLabel = settingsState.settings.getHelpTitle || "Get help";
   const isNewbie = currentUser?.roles?.includes(Role.NEWBIE) ?? false;
-  const now = Date.now();
-
-  const hasAccessibleOpenPeriod = periodState.periods
-    .filter((period) => period.status === "open")
-    .filter((period) => period.submissionOpensAt?.getTime() <= now)
-    .filter((period) => period.submissionClosesAt?.getTime() >= now)
-    .some((period) => {
-      const surveyType = resolveSurveyType(period);
-      return surveyType !== "newbieShiftPlanning" || isNewbie;
-    });
+  const hasAccessibleOpenPeriod = filterOpenPeriodsForUser(periodState.periods, isNewbie).length > 0;
 
   const items: MenuItem[] = [
     {

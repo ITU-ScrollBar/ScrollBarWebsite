@@ -285,6 +285,7 @@ export interface ShiftPlanningResponse {
   userId: string;
   participationStatus?: "active" | "passive" | "legacy" | "leave";
   wantsAnchor?: boolean;
+  isNewAnchor?: boolean;
   availability?: Record<string, boolean>;
   anchorOnly?: boolean;
   anchorSeminarDays?: string[];

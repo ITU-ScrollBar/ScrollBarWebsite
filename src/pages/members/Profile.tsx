@@ -16,7 +16,7 @@ import { useEffect, useMemo, useState } from "react";
 import RoleTag from "../../components/RoleTag";
 import useTeams from "../../hooks/useTeams";
 import useShiftPlanning from "../../hooks/useShiftPlanning";
-import { resolveSurveyType } from "../../firebase/api/shiftPlanning";
+import { filterOpenPeriodsForUser } from "../../firebase/api/shiftPlanning";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -31,25 +31,10 @@ export default function Profile() {
   const { teamState } = useTeams();
 
   const isNewbie = currentUser?.roles?.includes(Role.NEWBIE) ?? false;
-  const activeOpenPeriod = useMemo(() => {
-    const now = Date.now();
-
-    return (
-      periodState.periods
-        .filter((period) => period.status === "open")
-        .filter((period) => period.submissionOpensAt?.getTime() <= now)
-        .filter((period) => period.submissionClosesAt?.getTime() >= now)
-        .filter((period) => {
-          const surveyType = resolveSurveyType(period);
-          return surveyType !== "newbieShiftPlanning" || isNewbie;
-        })
-        .sort(
-          (a, b) =>
-            (a.submissionClosesAt?.getTime() ?? Number.MAX_SAFE_INTEGER) -
-            (b.submissionClosesAt?.getTime() ?? Number.MAX_SAFE_INTEGER)
-        )[0] ?? null
-    );
-  }, [isNewbie, periodState.periods]);
+  const activeOpenPeriod = useMemo(
+    () => filterOpenPeriodsForUser(periodState.periods, isNewbie)[0] ?? null,
+    [isNewbie, periodState.periods]
+  );
 
   useEffect(() => {
     (async () => {

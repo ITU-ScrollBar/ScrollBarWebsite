@@ -38,16 +38,16 @@ export default function ResponsesOverviewTab({
   periodAnchorSeminarDays,
   responses,
 }: ResponsesOverviewTabProps) {
-  const wantsAnchorResponses = responses.filter(
-    (r) => r.wantsAnchor === true && r.participationStatus === "active"
+  const newAnchorResponses = responses.filter(
+    (r) => r.isNewAnchor === true && r.participationStatus === "active"
   );
-  const totalWantsAnchor = wantsAnchorResponses.length;
+  const totalNewAnchors = newAnchorResponses.length;
 
   const seminarDayRows = periodAnchorSeminarDays.map((day) => {
-    const canCount = wantsAnchorResponses.filter((r) =>
+    const canCount = newAnchorResponses.filter((r) =>
       Array.isArray(r.anchorSeminarDays) && r.anchorSeminarDays.includes(day)
     ).length;
-    return { day, canCount, cannotCount: totalWantsAnchor - canCount };
+    return { day, canCount, cannotCount: totalNewAnchors - canCount };
   });
 
   const maxCanCount = seminarDayRows.reduce((max, row) => Math.max(max, row.canCount), 0);

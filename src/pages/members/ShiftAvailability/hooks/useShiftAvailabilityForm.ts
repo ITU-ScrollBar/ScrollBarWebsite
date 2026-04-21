@@ -5,7 +5,7 @@ import { useShiftContext } from "../../../../contexts/ShiftContext";
 import useEvents from "../../../../hooks/useEvents";
 import useShiftPlanning from "../../../../hooks/useShiftPlanning";
 import { Role, Shift } from "../../../../types/types-file";
-import { resolveSurveyType } from "../../../../firebase/api/shiftPlanning";
+import { filterOpenPeriodsForUser, resolveSurveyType } from "../../../../firebase/api/shiftPlanning";
 
 export type EventChoice = "can" | "cannot";
 export type ParticipationStatus = "active" | "passive" | "legacy" | "leave";
@@ -35,23 +35,10 @@ export const useShiftAvailabilityForm = () => {
 
   const userIsNewbie = currentUser?.roles?.includes(Role.NEWBIE) ?? false;
 
-  const availablePeriods = useMemo(() => {
-    const now = Date.now();
-    return [...periodState.periods]
-      .filter((period) => period.status === "open")
-      .filter((period) => period.submissionOpensAt?.getTime() <= now)
-      .filter((period) => period.submissionClosesAt?.getTime() >= now)
-      .filter((period) => {
-        const surveyType = resolveSurveyType(period);
-        if (surveyType === "newbieShiftPlanning" && !userIsNewbie) return false;
-        return true;
-      })
-      .sort(
-        (a, b) =>
-          (a.submissionClosesAt?.getTime() ?? Number.MAX_SAFE_INTEGER) -
-          (b.submissionClosesAt?.getTime() ?? Number.MAX_SAFE_INTEGER)
-      );
-  }, [periodState.periods, userIsNewbie]);
+  const availablePeriods = useMemo(
+    () => filterOpenPeriodsForUser(periodState.periods, userIsNewbie),
+    [periodState.periods, userIsNewbie]
+  );
 
   const selectedPeriod = useMemo(() => {
     if (!selectedPeriodId) return null;
@@ -345,6 +332,7 @@ export const useShiftAvailabilityForm = () => {
           ? (participationStatus as ParticipationStatus)
           : "active",
         wantsAnchor: anchorEnabled,
+        isNewAnchor,
         availability: normalizedAvailability,
         anchorOnly: anchorEnabled && !isNewAnchor ? anchorOnly : false,
         anchorSeminarDays: isNewAnchor ? anchorSeminarDays : [],

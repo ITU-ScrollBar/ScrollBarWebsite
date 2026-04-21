@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   createShiftPlanningPeriod,
   CreateShiftPlanningPeriodPayload,
+  filterOpenPeriodsForUser,
   generateShiftPlan,
   GenerateShiftPlanResult,
   getUserShiftPlanningResponse,
@@ -168,6 +169,7 @@ const useShiftPlanning = (periodId?: string) => {
     userId: string;
     participationStatus: "active" | "passive" | "legacy" | "leave";
     wantsAnchor: boolean;
+    isNewAnchor?: boolean;
     availability: Record<string, boolean>;
     anchorOnly: boolean;
     anchorSeminarDays?: string[];
@@ -200,20 +202,10 @@ const useShiftPlanning = (periodId?: string) => {
     return result;
   }, []);
 
-  const activeOpenPeriod = useMemo(() => {
-    const now = Date.now();
-
-    return (
-      periodState.periods
-        .filter((period) => period.status === "open")
-        .filter((period) => period.submissionOpensAt?.getTime() <= now)
-        .filter((period) => period.submissionClosesAt?.getTime() >= now)
-        .sort(
-          (a, b) =>
-            (a.submissionClosesAt?.getTime() ?? 0) - (b.submissionClosesAt?.getTime() ?? 0)
-        )[0] ?? null
-    );
-  }, [periodState.periods]);
+  const activeOpenPeriod = useMemo(
+    () => filterOpenPeriodsForUser(periodState.periods)[0] ?? null,
+    [periodState.periods]
+  );
 
   return {
     periodState,

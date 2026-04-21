@@ -21,7 +21,6 @@ import {
 } from './firebaseData';
 
 type GenerateShiftPlanRequest = {
-  env?: string;
   periodId?: string;
 };
 
@@ -47,7 +46,7 @@ export const generateShiftPlan = onCall(
     const warnings: GenerateShiftPlanWarning[] = [];
 
     const uid = request.auth.uid;
-    const env = request.data?.env ?? 'dev';
+    const env = process.env.VITE_APP_ENV || 'dev';
     const periodId = request.data?.periodId?.trim();
 
     if (!periodId) {
