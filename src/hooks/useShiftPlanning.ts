@@ -176,7 +176,6 @@ const useShiftPlanning = (periodId?: string) => {
     privateEmail?: string;
   }) => {
     await submitShiftPlanningResponse(payload);
-    message.success("Availability submitted.");
   }, []);
 
   const loadUserResponse = useCallback(async (targetPeriodId: string, userId: string) => {

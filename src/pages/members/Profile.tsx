@@ -1,4 +1,5 @@
 import { Alert, Button, Layout, Space, Row, Col, Select, notification } from "antd";
+import { useNavigate } from "react-router-dom";
 import Title from "antd/es/typography/Title";
 import Text from "antd/es/typography/Text";
 import { useAuth } from "../../contexts/AuthContext";
@@ -18,6 +19,7 @@ import useShiftPlanning from "../../hooks/useShiftPlanning";
 import { resolveSurveyType } from "../../firebase/api/shiftPlanning";
 
 export default function Profile() {
+  const navigate = useNavigate();
   const { loading, currentUser } = useAuth();
   const { engagementState, getProfileData } = useEngagements();
   const { periodState, loadUserResponse } = useShiftPlanning();
@@ -236,7 +238,7 @@ export default function Profile() {
                         <Text>
                           Please submit your shift planning response before {activeOpenPeriod.submissionClosesAt.toLocaleString()}.
                         </Text>
-                        <Button type="primary" href="/members/availability" style={{ width: "fit-content" }}>
+                        <Button type="primary" onClick={() => navigate("/members/availability")} style={{ width: "fit-content" }}>
                           Go to shift availability form
                         </Button>
                       </Space>

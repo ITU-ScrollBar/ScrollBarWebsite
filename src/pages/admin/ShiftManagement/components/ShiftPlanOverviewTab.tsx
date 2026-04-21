@@ -21,9 +21,17 @@ function ExpandableCell({ text }: { text?: string }) {
   return (
     <div
       ref={ref}
+      role="button"
       tabIndex={0}
+      aria-expanded={expanded}
       onClick={() => setExpanded(true)}
       onBlur={() => setExpanded(false)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          setExpanded((prev) => !prev);
+        }
+      }}
       style={
         expanded
           ? { whiteSpace: "pre-wrap", outline: "none", cursor: "default" }
