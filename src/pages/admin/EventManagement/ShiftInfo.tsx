@@ -92,7 +92,7 @@ export default function ShiftInfo(props: {
             size="small"
             min={1}
             value={shift.tenders}
-            onChange={(value) => updateShift(shift.id, "tenders", value)}
+            onChange={(value) => { if (value !== null) updateShift(shift.id, "tenders", value); }}
             style={{ width: 96 }}
           />
         </div>
@@ -116,7 +116,7 @@ export default function ShiftInfo(props: {
                 size="small"
                 min={1}
                 value={satelliteShift.tenders}
-                onChange={(value) => onUpdateSatellite("tenders", value)}
+                onChange={(value) => { if (value !== null) onUpdateSatellite("tenders", value); }}
                 style={{ width: 80 }}
               />
             )}

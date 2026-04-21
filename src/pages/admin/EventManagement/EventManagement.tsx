@@ -49,8 +49,8 @@ export default function EventManagement() {
       internal: false,
       shiftsPublished: false,
     };
-    addEvent(event).then((e) => {
-      if (e.id != null) setSelectedEventId(e.id);
+    addEvent(event).then((id) => {
+      if (id != null) setSelectedEventId(id);
     });
   };
 

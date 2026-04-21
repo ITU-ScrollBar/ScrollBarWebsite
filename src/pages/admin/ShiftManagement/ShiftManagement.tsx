@@ -147,6 +147,11 @@ export default function ShiftManagement() {
         `Generated ${result.createdEngagementCount} engagements (${result.assignedAnchorCount} anchors, ${result.assignedTenderCount} tenders). Unfilled tender slots: ${result.unfilledTenderSlots}.`
       );
       setGenerationWarnings((result.warnings ?? []).map((warning) => warning.message));
+    } catch (err) {
+      notification.error({
+        message: "Failed to generate shift plan",
+        description: err instanceof Error ? err.message : "An unexpected error occurred.",
+      });
     } finally {
       setGeneratingPlan(false);
     }
