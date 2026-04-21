@@ -24,8 +24,8 @@ type Observer = {
 const getShiftsCollection = () =>
   collection(doc(collection(db, 'env'), env), 'shifts');
 
-export const createShift = (shift: Shift): Promise<DocumentData> => {
-  return addDoc(getShiftsCollection(), shift);
+export const createShift = (shift: Shift): Promise<string> => {
+  return addDoc(getShiftsCollection(), shift).then((ref) => ref.id);
 };
 
 export const deleteShift = (shift: Shift): Promise<void> => {
