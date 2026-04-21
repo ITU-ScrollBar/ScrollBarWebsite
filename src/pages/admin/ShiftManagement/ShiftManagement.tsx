@@ -353,11 +353,18 @@ export default function ShiftManagement() {
     }
   };
 
-  const handleToggleCurrentEventPublished = (checked: boolean) => {
+  const handleToggleCurrentEventPublished = async (checked: boolean) => {
     if (!currentEvent) {
       return;
     }
-    updateEvent(currentEvent.id, "shiftsPublished", checked);
+    try {
+      await updateEvent(currentEvent.id, "shiftsPublished", checked);
+    } catch {
+      notification.error({
+        message: "Failed to update",
+        description: "Could not update the published state. Please try again.",
+      });
+    }
   };
 
   if (allEvents.length === 0) {
