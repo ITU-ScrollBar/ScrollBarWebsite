@@ -17,7 +17,6 @@ type EventAvailabilityGridProps = {
   mandatoryEventIds: Set<string>;
   eventChoices: Partial<Record<string, EventChoice>>;
   eventCanShiftIds: Record<string, string[]>;
-  isClosed: boolean;
   onEventChoiceChange: (eventId: string, value: EventChoice) => void;
   onCanShiftIdsChange: (eventId: string, shiftIds: string[]) => void;
 };
@@ -27,7 +26,6 @@ export default function EventAvailabilityGrid({
   mandatoryEventIds,
   eventChoices,
   eventCanShiftIds,
-  isClosed,
   onEventChoiceChange,
   onCanShiftIdsChange,
 }: EventAvailabilityGridProps) {
@@ -64,7 +62,6 @@ export default function EventAvailabilityGrid({
                   onChange={(event) =>
                     onEventChoiceChange(group.eventId, event.target.value as EventChoice)
                   }
-                  disabled={isClosed}
                 >
                   <Radio.Button value="can">Can work</Radio.Button>
                   <Radio.Button value="cannot">Cannot work</Radio.Button>
@@ -79,7 +76,6 @@ export default function EventAvailabilityGrid({
                       onChange={(values) =>
                         onCanShiftIdsChange(group.eventId, values.map(String))
                       }
-                      disabled={isClosed}
                     >
                       <Space direction="vertical">
                         {group.shifts.map((shift) => (

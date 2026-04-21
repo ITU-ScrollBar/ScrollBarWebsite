@@ -50,7 +50,6 @@ export default function ShiftAvailabilityPage() {
     isCurrentlyPassive,
     isCurrentlyLegacy,
     includesShiftStatusQuestions,
-    isClosed,
     isActiveParticipant,
     isLoading,
     isSubmitDisabled,
@@ -76,7 +75,7 @@ export default function ShiftAvailabilityPage() {
         <Content style={{ padding: 24 }}>
           <Card>
             <Title level={3}>Shift Availability</Title>
-            <Empty description="There is no open shift planning period right now." />
+            <Empty description="No available surveys to submit." />
           </Card>
         </Content>
       </Layout>
@@ -113,20 +112,16 @@ export default function ShiftAvailabilityPage() {
             </div>
 
             <Alert
-              type={isClosed ? "warning" : "info"}
+              type="info"
               showIcon
               message={
                 includesShiftStatusQuestions
-                  ? isClosed
-                    ? "The submission window has closed. You can view your latest response below."
-                    : hasSubmitted
-                      ? `You have already submitted this form but are able to make changes until the deadline at ${selectedPeriod.submissionClosesAt.toLocaleString()}.`
-                      : `Submission deadline: ${selectedPeriod.submissionClosesAt.toLocaleString()}`
-                  : isClosed
-                    ? "The submission window has closed. You can view your latest response below."
-                    : hasSubmitted
-                      ? `You have already submitted event availability and can edit it until ${selectedPeriod.submissionClosesAt.toLocaleString()}.`
-                      : `Submission deadline: ${selectedPeriod.submissionClosesAt.toLocaleString()}`
+                  ? hasSubmitted
+                    ? `You have already submitted this form but are able to make changes until the deadline at ${selectedPeriod.submissionClosesAt.toLocaleString()}.`
+                    : `Submission deadline: ${selectedPeriod.submissionClosesAt.toLocaleString()}`
+                  : hasSubmitted
+                    ? `You have already submitted event availability and can edit it until ${selectedPeriod.submissionClosesAt.toLocaleString()}.`
+                    : `Submission deadline: ${selectedPeriod.submissionClosesAt.toLocaleString()}`
               }
               description={
                 hasSubmitted && submittedAt
@@ -142,7 +137,6 @@ export default function ShiftAvailabilityPage() {
                 isCurrentlyLegacy={isCurrentlyLegacy}
                 isCurrentlyPassive={isCurrentlyPassive}
                 participationStatus={participationStatus}
-                isClosed={isClosed}
                 onChange={handleSetParticipationStatus}
               />
             )}
@@ -152,7 +146,6 @@ export default function ShiftAvailabilityPage() {
                 wantsAnchor={wantsAnchor}
                 isAnchor={isAnchor}
                 anchorOnly={anchorOnly}
-                isClosed={isClosed}
                 anchorSeminarDays={anchorSeminarDays}
                 periodAnchorSeminarDays={selectedPeriod.anchorSeminarDays ?? []}
                 onWantsAnchorChange={setWantsAnchor}
@@ -167,7 +160,6 @@ export default function ShiftAvailabilityPage() {
                   rows={3}
                   value={passiveReason}
                   onChange={(e) => setPassiveReason(e.target.value)}
-                  disabled={isClosed}
                   placeholder="Please provide a reason for being passive this semester."
                 />
               </Card>
@@ -182,7 +174,6 @@ export default function ShiftAvailabilityPage() {
                   <Input
                     value={privateEmail}
                     onChange={(e) => setPrivateEmail(e.target.value)}
-                    disabled={isClosed}
                     placeholder="your@email.com"
                     type="email"
                   />
@@ -196,7 +187,6 @@ export default function ShiftAvailabilityPage() {
                 mandatoryEventIds={mandatoryEventIds}
                 eventChoices={eventChoices}
                 eventCanShiftIds={eventCanShiftIds}
-                isClosed={isClosed}
                 onEventChoiceChange={handleSetEventChoice}
                 onCanShiftIdsChange={handleSetCanShiftIdsForEvent}
               />
@@ -207,7 +197,6 @@ export default function ShiftAvailabilityPage() {
                 rows={4}
                 value={comments}
                 onChange={(event) => setComments(event.target.value)}
-                disabled={isClosed}
                 placeholder="Optional: add anything the shift manager should know."
               />
             </Card>

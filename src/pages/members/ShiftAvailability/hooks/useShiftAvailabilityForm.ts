@@ -165,9 +165,6 @@ export const useShiftAvailabilityForm = () => {
   const isAnchor = currentUser?.roles?.includes(Role.ANCHOR) ?? false;
   const isCurrentlyPassive = currentUser?.roles?.includes(Role.PASSIVE) ?? false;
   const isCurrentlyLegacy = currentUser?.roles?.includes(Role.LEGACY) ?? false;
-  const isClosed =
-    selectedPeriod?.submissionClosesAt !== undefined &&
-    selectedPeriod.submissionClosesAt.getTime() < Date.now();
   const isActiveParticipant = includesShiftStatusQuestions
     ? participationStatus === "active"
     : true;
@@ -352,8 +349,8 @@ export const useShiftAvailabilityForm = () => {
         anchorOnly: anchorEnabled && !isNewAnchor ? anchorOnly : false,
         anchorSeminarDays: isNewAnchor ? anchorSeminarDays : [],
         comments,
-        passiveReason,
-        privateEmail,
+        passiveReason: participationStatus === "passive" ? passiveReason : "",
+        privateEmail: participationStatus === "legacy" ? privateEmail : "",
       });
       message.success("Availability submitted.");
       setHasSubmitted(true);
@@ -379,7 +376,6 @@ export const useShiftAvailabilityForm = () => {
     loadingPeriodSelection;
 
   const isSubmitDisabled =
-    isClosed ||
     !currentUser ||
     (includesShiftStatusQuestions
       ? !participationStatus ||
@@ -417,7 +413,6 @@ export const useShiftAvailabilityForm = () => {
     isCurrentlyPassive,
     isCurrentlyLegacy,
     includesShiftStatusQuestions,
-    isClosed,
     isActiveParticipant,
     isLoading,
     isSubmitDisabled,

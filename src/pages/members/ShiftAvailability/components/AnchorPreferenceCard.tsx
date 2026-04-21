@@ -7,7 +7,6 @@ type AnchorPreferenceCardProps = {
   wantsAnchor: boolean | undefined;
   isAnchor: boolean;
   anchorOnly: boolean;
-  isClosed: boolean;
   anchorSeminarDays: string[];
   periodAnchorSeminarDays: string[];
   onWantsAnchorChange: (value: boolean) => void;
@@ -19,7 +18,6 @@ export default function AnchorPreferenceCard({
   wantsAnchor,
   isAnchor,
   anchorOnly,
-  isClosed,
   anchorSeminarDays,
   periodAnchorSeminarDays,
   onWantsAnchorChange,
@@ -40,7 +38,6 @@ export default function AnchorPreferenceCard({
               onAnchorSeminarDaysChange([]);
             }
           }}
-          disabled={isClosed}
         >
           <Radio value="yes">Yes</Radio>
           <Radio value="no">No</Radio>
@@ -50,7 +47,6 @@ export default function AnchorPreferenceCard({
           <Radio.Group
             value={anchorOnly ? "anchor-only" : "mixed"}
             onChange={(event) => onAnchorOnlyChange(event.target.value === "anchor-only")}
-            disabled={isClosed}
           >
             <Radio value="mixed">Mix of anchor and tender shifts</Radio>
             <Radio value="anchor-only">Only anchor shifts</Radio>
@@ -65,7 +61,6 @@ export default function AnchorPreferenceCard({
             <Checkbox.Group
               value={anchorSeminarDays}
               onChange={(values) => onAnchorSeminarDaysChange(values.map(String))}
-              disabled={isClosed}
             >
               <Space direction="vertical">
                 {periodAnchorSeminarDays.map((day) => (

@@ -8,7 +8,6 @@ type SemesterParticipationCardProps = {
   isCurrentlyLegacy: boolean;
   isCurrentlyPassive: boolean;
   participationStatus: ParticipationStatus | undefined;
-  isClosed: boolean;
   onChange: (status: ParticipationStatus) => void;
 };
 
@@ -16,7 +15,6 @@ export default function SemesterParticipationCard({
   isCurrentlyLegacy,
   isCurrentlyPassive,
   participationStatus,
-  isClosed,
   onChange,
 }: SemesterParticipationCardProps) {
   return (
@@ -27,7 +25,6 @@ export default function SemesterParticipationCard({
           <Radio.Group
             value={participationStatus}
             onChange={(event) => onChange(event.target.value as ParticipationStatus)}
-            disabled={isClosed}
           >
             <Radio value="legacy">Stay legacy</Radio>
             <Radio value="leave">Become implicit member (Leave the bar)</Radio>
@@ -37,7 +34,6 @@ export default function SemesterParticipationCard({
             <Radio.Group
               value={participationStatus}
               onChange={(event) => onChange(event.target.value as ParticipationStatus)}
-              disabled={isClosed}
             >
               <Radio value="active">Become active member again</Radio>
               <Radio value="passive">Apply to stay passive</Radio>
@@ -57,7 +53,6 @@ export default function SemesterParticipationCard({
           <Radio.Group
             value={participationStatus}
             onChange={(event) => onChange(event.target.value as ParticipationStatus)}
-            disabled={isClosed}
           >
             <Radio value="active">Active member</Radio>
             <Radio value="passive">Passive member</Radio>
