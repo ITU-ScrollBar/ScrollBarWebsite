@@ -127,6 +127,8 @@ export enum ShiftFiltering {
   ALL_SHIFTS = "ALL_SHIFTS",
 }
 
+export type ShiftCategory = "opening" | "middle" | "closing";
+
 // Shift-related types
 export interface Shift {
   id: string;
@@ -134,9 +136,10 @@ export interface Shift {
   location: string;
   title: string;
   tenders: number;
-  anchors: number;
   start: Date;
   end: Date;
+  category?: ShiftCategory;
+  linkedShiftId?: string; // Set on satellite shifts; points to the primary shift's ID
 }
 
 export interface ShiftUpdateParams {
@@ -159,12 +162,13 @@ export type Tender = {
   name?: string;
   active: boolean;
   email: string;
-  displayName?: string;
+  displayName: string;
   photoUrl?: string;
   isAdmin: boolean;
   roles?: string[];
   studyline?: string;
   teamIds?: string[];
+  avoidShiftWithUserIds?: string[];
   lastCalendarDownload?: Date;
   // Add other fields here
 };
@@ -234,6 +238,62 @@ export interface BoardRole {
   assignedUser?: Tender;
   sortingIndex?: number;
   contactEmail?: string;
+}
+
+export type ShiftPlanningPeriodStatus =
+  | "draft"
+  | "open"
+  | "closed"
+  | "generated";
+
+export type ShiftPlanningSurveyType =
+  | "regularSemesterSurvey"
+  | "excludeSemesterStatus"
+  | "newbieShiftPlanning";
+
+export interface ShiftPlanningPeriod {
+  id: string;
+  key?: string;
+  name: string;
+  eventIds: string[];
+  mandatoryEventIds: string[];
+  surveyType?: ShiftPlanningSurveyType;
+  // Legacy field kept for older documents.
+  includeShiftStatusQuestions?: boolean;
+  submissionOpensAt: Date;
+  submissionClosesAt: Date;
+  status: ShiftPlanningPeriodStatus;
+  createdBy: string;
+  createdAt?: Date;
+  generatedAt?: Date;
+  generatedBy?: string;
+  anchorSeminarDays?: string[];
+  stats?: {
+    expectedSubmissions?: number;
+    submittedCount?: number;
+    assignedAnchorCount?: number;
+    assignedTenderCount?: number;
+    unfilledAnchorSlots?: number;
+    unfilledTenderSlots?: number;
+  };
+}
+
+export interface ShiftPlanningResponse {
+  id: string;
+  key?: string;
+  periodId: string;
+  userId: string;
+  participationStatus?: "active" | "passive" | "legacy" | "leave";
+  wantsAnchor?: boolean;
+  isNewAnchor?: boolean;
+  availability?: Record<string, boolean>;
+  anchorOnly?: boolean;
+  anchorSeminarDays?: string[];
+  comments?: string;
+  passiveReason?: string;
+  privateEmail?: string;
+  submittedAt?: Date;
+  updatedAt?: Date;
 }
 
 export type ApplicationDecision = "pending" | "maybe" | "accept" | "reject";

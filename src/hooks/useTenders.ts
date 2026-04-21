@@ -209,7 +209,7 @@ const useTenders = () => {
     const tenderShifts = engagementState.engagements.filter(engagement => engagement.userId === id && engagement.shiftEnd > new Date());
 
     if (tenderShifts.length > 0) {
-      message.error(`Cannot delete ${tender.displayName ?? "tender"}. Remove them from ${tenderShifts.length} upcoming shifts first.`);
+      message.error(`Cannot delete ${tender.displayName}. Remove them from ${tenderShifts.length} upcoming shifts first.`);
       return;
     }
 

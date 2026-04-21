@@ -10,6 +10,8 @@ import { UserAvatar } from "../UserAvatar";
 import { Loading } from "../Loading";
 import { Role } from "../../types/types-file";
 import useSettings from "../../hooks/useSettings";
+import useShiftPlanning from "../../hooks/useShiftPlanning";
+import { filterOpenPeriodsForUser } from "../../firebase/api/shiftPlanning";
 
 interface TenderMenuProps {
   children?: ReactNode;
@@ -20,10 +22,13 @@ type MenuItem = Required<MenuProps>['items'][number];
 export const TenderMenu = ({ children }: TenderMenuProps) => {
   const { currentUser, loading, logout } = useAuth();
   const { settingsState } = useSettings();
+  const { periodState } = useShiftPlanning();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { isMobile } = useWindowSize();
   const getHelpLabel = settingsState.settings.getHelpTitle || "Get help";
+  const isNewbie = currentUser?.roles?.includes(Role.NEWBIE) ?? false;
+  const hasAccessibleOpenPeriod = filterOpenPeriodsForUser(periodState.periods, isNewbie).length > 0;
 
   const items: MenuItem[] = [
     {
@@ -43,6 +48,13 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
       key: 'tenders/gethelp',
     }
   ];
+
+  if (hasAccessibleOpenPeriod) {
+    items.push({
+      label: "Shift Availability",
+      key: 'members/availability',
+    });
+  }
 
   if (loading || !currentUser) {
     return <Loading />
