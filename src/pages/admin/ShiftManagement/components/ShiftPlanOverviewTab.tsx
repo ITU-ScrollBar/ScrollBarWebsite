@@ -7,7 +7,6 @@ import { UserAvatar } from "../../../../components/UserAvatar";
 import {
   engagementType,
   Shift,
-  ShiftPlanningPeriod,
   ShiftPlanningResponse,
   Tender,
 } from "../../../../types/types-file";
@@ -111,7 +110,6 @@ function commentsColumn<T extends { comments: string }>(): ColumnType<T> {
 }
 
 type Props = {
-  selectedPeriod: ShiftPlanningPeriod;
   periodShifts: Shift[];
   tenders: Tender[];
   responses: ShiftPlanningResponse[];
