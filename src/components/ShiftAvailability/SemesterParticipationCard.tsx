@@ -1,8 +1,7 @@
 import { Alert, Card, Radio, Space, Typography } from "antd";
+import { ParticipationStatus } from "../../types/types-file";
 
 const { Text } = Typography;
-
-type ParticipationStatus = "active" | "passive" | "legacy" | "leave";
 
 type SemesterParticipationCardProps = {
   isCurrentlyLegacy: boolean;

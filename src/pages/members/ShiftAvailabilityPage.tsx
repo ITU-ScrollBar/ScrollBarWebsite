@@ -1,24 +1,10 @@
-import {
-  Alert,
-  Button,
-  Card,
-  Empty,
-  Input,
-  Layout,
-  Popconfirm,
-  Select,
-  Space,
-  Typography,
-} from "antd";
+import { Alert, Card, Empty, Layout, Select, Space, Typography } from "antd";
 import dayjs from "dayjs";
-import AnchorPreferenceCard from "./ShiftAvailability/components/AnchorPreferenceCard";
-import EventAvailabilityGrid from "./ShiftAvailability/components/EventAvailabilityGrid";
-import SemesterParticipationCard from "./ShiftAvailability/components/SemesterParticipationCard";
+import ShiftAvailabilityForm from "../../components/ShiftAvailability/ShiftAvailabilityForm";
 import { useShiftAvailabilityForm } from "./ShiftAvailability/hooks/useShiftAvailabilityForm";
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
-const { TextArea } = Input;
 
 export default function ShiftAvailabilityPage() {
   const {
@@ -50,7 +36,6 @@ export default function ShiftAvailabilityPage() {
     isCurrentlyPassive,
     isCurrentlyLegacy,
     includesShiftStatusQuestions,
-    isActiveParticipant,
     isLoading,
     isSubmitDisabled,
     handleSetEventChoice,
@@ -132,91 +117,38 @@ export default function ShiftAvailabilityPage() {
               }
             />
 
-            {includesShiftStatusQuestions && (
-              <SemesterParticipationCard
-                isCurrentlyLegacy={isCurrentlyLegacy}
-                isCurrentlyPassive={isCurrentlyPassive}
-                participationStatus={participationStatus}
-                onChange={handleSetParticipationStatus}
-              />
-            )}
-
-            {includesShiftStatusQuestions && isActiveParticipant && (
-              <AnchorPreferenceCard
-                wantsAnchor={wantsAnchor}
-                isAnchor={isAnchor}
-                anchorOnly={anchorOnly}
-                anchorSeminarDays={anchorSeminarDays}
-                periodAnchorSeminarDays={selectedPeriod.anchorSeminarDays ?? []}
-                onWantsAnchorChange={setWantsAnchor}
-                onAnchorOnlyChange={setAnchorOnly}
-                onAnchorSeminarDaysChange={setAnchorSeminarDays}
-              />
-            )}
-
-            {participationStatus === "passive" && (
-              <Card size="small" title="Reason for being passive">
-                <TextArea
-                  rows={3}
-                  value={passiveReason}
-                  onChange={(e) => setPassiveReason(e.target.value)}
-                  placeholder="Please provide a reason for being passive this semester."
-                />
-              </Card>
-            )}
-
-            {participationStatus === "legacy" && (
-              <Card size="small" title="Contact for Teams">
-                <Space direction="vertical" style={{ width: "100%" }}>
-                  <Text type="secondary">
-                    Private email that we can invite to Teams (leave blank to use your ITU email).
-                  </Text>
-                  <Input
-                    value={privateEmail}
-                    onChange={(e) => setPrivateEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    type="email"
-                  />
-                </Space>
-              </Card>
-            )}
-
-            {isActiveParticipant && (
-              <EventAvailabilityGrid
-                groupedShifts={groupedShifts}
-                mandatoryEventIds={mandatoryEventIds}
-                eventChoices={eventChoices}
-                eventCanShiftIds={eventCanShiftIds}
-                onEventChoiceChange={handleSetEventChoice}
-                onCanShiftIdsChange={handleSetCanShiftIdsForEvent}
-              />
-            )}
-
-            <Card size="small" title="Any other comments?">
-              <TextArea
-                rows={4}
-                value={comments}
-                onChange={(event) => setComments(event.target.value)}
-                placeholder="Optional: add anything the shift manager should know."
-              />
-            </Card>
-
-            <Popconfirm
-              title="Submit shift availability"
-              description="You can keep editing your answers until the submission deadline."
-              onConfirm={handleSubmit}
-              okText="Submit"
-              disabled={isSubmitDisabled}
-            >
-              <Button
-                type="primary"
-                size="large"
-                loading={saving}
-                disabled={isSubmitDisabled}
-              >
-                Submit availability
-              </Button>
-            </Popconfirm>
+            <ShiftAvailabilityForm
+              includesShiftStatusQuestions={includesShiftStatusQuestions}
+              isCurrentlyPassive={isCurrentlyPassive}
+              isCurrentlyLegacy={isCurrentlyLegacy}
+              participationStatus={participationStatus}
+              onParticipationStatusChange={handleSetParticipationStatus}
+              isAnchor={isAnchor}
+              wantsAnchor={wantsAnchor}
+              onWantsAnchorChange={setWantsAnchor}
+              anchorOnly={anchorOnly}
+              onAnchorOnlyChange={setAnchorOnly}
+              anchorSeminarDays={anchorSeminarDays}
+              onAnchorSeminarDaysChange={setAnchorSeminarDays}
+              periodAnchorSeminarDays={selectedPeriod.anchorSeminarDays ?? []}
+              periodEventGroups={groupedShifts}
+              mandatoryEventIds={mandatoryEventIds}
+              eventChoices={eventChoices}
+              eventCanShiftIds={eventCanShiftIds}
+              onEventChoiceChange={handleSetEventChoice}
+              onEventCanShiftIdsChange={handleSetCanShiftIdsForEvent}
+              passiveReason={passiveReason}
+              onPassiveReasonChange={setPassiveReason}
+              privateEmail={privateEmail}
+              onPrivateEmailChange={setPrivateEmail}
+              comments={comments}
+              onCommentsChange={setComments}
+              onSubmit={handleSubmit}
+              submitting={saving}
+              isSubmitDisabled={isSubmitDisabled}
+              hasExistingResponse={hasSubmitted}
+              confirmBeforeSubmit
+            />
           </Space>
         </Card>
       </Content>

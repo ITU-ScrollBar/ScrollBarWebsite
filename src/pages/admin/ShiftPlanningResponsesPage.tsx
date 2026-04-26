@@ -494,6 +494,8 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
                       editorLoading={editor.loading}
                       editorHasExistingResponse={editor.hasExistingResponse}
                       editorSubmittedAt={editor.submittedAt}
+                      includesShiftStatusQuestions={isRegularSemesterSurvey}
+                      isSelectedUserAnchor={isSelectedUserAnchor}
                       editorParticipationStatus={editor.participationStatus}
                       onEditorParticipationStatusChange={editor.handleParticipationStatusChange}
                       editorWantsAnchor={editor.wantsAnchor}
@@ -501,6 +503,7 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
                       editorAnchorOnly={editor.anchorOnly}
                       onEditorAnchorOnlyChange={editor.setAnchorOnly}
                       editorAnchorSeminarDays={editor.anchorSeminarDays}
+                      onEditorAnchorSeminarDaysChange={editor.setAnchorSeminarDays}
                       periodAnchorSeminarDays={selectedPeriod?.anchorSeminarDays ?? []}
                       periodEventGroups={periodEventGroups}
                       editorEventChoices={editor.eventChoices}

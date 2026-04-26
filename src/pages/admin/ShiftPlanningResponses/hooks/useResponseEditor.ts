@@ -265,6 +265,7 @@ export const useResponseEditor = ({
     anchorOnly,
     setAnchorOnly,
     anchorSeminarDays,
+    setAnchorSeminarDays,
     comments,
     setComments,
     passiveReason,

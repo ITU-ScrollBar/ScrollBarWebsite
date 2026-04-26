@@ -1,8 +1,7 @@
-import { Shift } from "../../../types/types-file";
+import { EventChoice, ParticipationStatus, Shift } from "../../../types/types-file";
 
-export type ParticipationStatus = "active" | "passive" | "legacy" | "leave";
+export type { EventChoice, ParticipationStatus };
 export type EventDecision = "can" | "partial" | "cannot" | "unanswered";
-export type EventChoice = "can" | "cannot";
 export type SurveyResponseSection = "overview" | "individual";
 export type ResponseFilter =
   | "all"

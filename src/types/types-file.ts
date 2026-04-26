@@ -240,6 +240,9 @@ export interface BoardRole {
   contactEmail?: string;
 }
 
+export type ParticipationStatus = "active" | "passive" | "legacy" | "leave";
+export type EventChoice = "can" | "cannot";
+
 export type ShiftPlanningPeriodStatus =
   | "draft"
   | "open"
@@ -283,7 +286,7 @@ export interface ShiftPlanningResponse {
   key?: string;
   periodId: string;
   userId: string;
-  participationStatus?: "active" | "passive" | "legacy" | "leave";
+  participationStatus?: ParticipationStatus;
   wantsAnchor?: boolean;
   isNewAnchor?: boolean;
   availability?: Record<string, boolean>;

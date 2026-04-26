@@ -1,31 +1,10 @@
-import {
-  Alert,
-  Button,
-  Card,
-  Checkbox,
-  Col,
-  Empty,
-  Input,
-  Radio,
-  Row,
-  Select,
-  Space,
-  Table,
-  Tag,
-  Typography,
-} from "antd";
+import { Alert, Card, Col, Empty, Input, Row, Select, Space, Table, Tag, Typography } from "antd";
 import dayjs from "dayjs";
-import { formatIsoDate } from "../../../../utils/dateUtils";
-import {
-  EventChoice,
-  ParticipationStatus,
-  PeriodEventGroup,
-  ResponseFilter,
-  SurveyUser,
-} from "../types";
+import ShiftAvailabilityForm from "../../../../components/ShiftAvailability/ShiftAvailabilityForm";
+import { EventChoice, ParticipationStatus } from "../../../../types/types-file";
+import { PeriodEventGroup, ResponseFilter, SurveyUser } from "../types";
 
 const { Text } = Typography;
-const { TextArea } = Input;
 
 type ResponsesIndividualTabProps = {
   filteredUsers: SurveyUser[];
@@ -44,6 +23,8 @@ type ResponsesIndividualTabProps = {
   editorLoading: boolean;
   editorHasExistingResponse: boolean;
   editorSubmittedAt: Date | null;
+  includesShiftStatusQuestions: boolean;
+  isSelectedUserAnchor: boolean;
   editorParticipationStatus?: ParticipationStatus;
   onEditorParticipationStatusChange: (status: ParticipationStatus) => void;
   editorWantsAnchor?: boolean;
@@ -51,6 +32,7 @@ type ResponsesIndividualTabProps = {
   editorAnchorOnly: boolean;
   onEditorAnchorOnlyChange: (value: boolean) => void;
   editorAnchorSeminarDays: string[];
+  onEditorAnchorSeminarDaysChange: (value: string[]) => void;
   periodAnchorSeminarDays: string[];
   periodEventGroups: PeriodEventGroup[];
   editorEventChoices: Partial<Record<string, EventChoice>>;
@@ -84,6 +66,8 @@ export default function ResponsesIndividualTab({
   editorLoading,
   editorHasExistingResponse,
   editorSubmittedAt,
+  includesShiftStatusQuestions,
+  isSelectedUserAnchor,
   editorParticipationStatus,
   onEditorParticipationStatusChange,
   editorWantsAnchor,
@@ -91,6 +75,7 @@ export default function ResponsesIndividualTab({
   editorAnchorOnly,
   onEditorAnchorOnlyChange,
   editorAnchorSeminarDays,
+  onEditorAnchorSeminarDaysChange,
   periodAnchorSeminarDays,
   periodEventGroups,
   editorEventChoices,
@@ -157,12 +142,7 @@ export default function ResponsesIndividualTab({
                   title: "Name",
                   dataIndex: "name",
                   render: (value: string) => (
-                    <div
-                      style={{
-                        whiteSpace: "normal",
-                        overflowWrap: "anywhere",
-                      }}
-                    >
+                    <div style={{ whiteSpace: "normal", overflowWrap: "anywhere" }}>
                       <div>{value}</div>
                     </div>
                   ),
@@ -182,12 +162,7 @@ export default function ResponsesIndividualTab({
                   dataIndex: "email",
                   responsive: ["md"],
                   render: (value: string | undefined) => (
-                    <div
-                      style={{
-                        whiteSpace: "normal",
-                        overflowWrap: "anywhere",
-                      }}
-                    >
+                    <div style={{ whiteSpace: "normal", overflowWrap: "anywhere" }}>
                       {value ?? "-"}
                     </div>
                   ),
@@ -248,164 +223,36 @@ export default function ResponsesIndividualTab({
                     : "No existing response for this user in the selected period."}
                 </Text>
 
-                <Card size="small" title="Semester participation">
-                  <Radio.Group
-                    value={editorParticipationStatus}
-                    onChange={(event) =>
-                      onEditorParticipationStatusChange(
-                        event.target.value as ParticipationStatus
-                      )
-                    }
-                  >
-                    <Radio value="active">Active</Radio>
-                    <Radio value="passive">Passive</Radio>
-                    <Radio value="legacy">Legacy</Radio>
-                    <Radio value="leave">Leave</Radio>
-                  </Radio.Group>
-                </Card>
-
-                {editorParticipationStatus === "active" && (
-                  <Card size="small" title="Anchor preference">
-                    <Space direction="vertical" style={{ width: "100%" }}>
-                      <Radio.Group
-                        value={
-                          editorWantsAnchor === undefined
-                            ? undefined
-                            : editorWantsAnchor
-                              ? "yes"
-                              : "no"
-                        }
-                        onChange={(event) =>
-                          onEditorWantsAnchorChange(event.target.value === "yes")
-                        }
-                      >
-                        <Radio value="yes">Yes</Radio>
-                        <Radio value="no">No</Radio>
-                      </Radio.Group>
-
-                      {editorWantsAnchor === true && (
-                        <Radio.Group
-                          value={editorAnchorOnly ? "anchor-only" : "mixed"}
-                          onChange={(event) =>
-                            onEditorAnchorOnlyChange(
-                              event.target.value === "anchor-only"
-                            )
-                          }
-                        >
-                          <Radio value="mixed">Mix of anchor and tender shifts</Radio>
-                          <Radio value="anchor-only">Only anchor shifts</Radio>
-                        </Radio.Group>
-                      )}
-
-                      {editorWantsAnchor === true && periodAnchorSeminarDays.length > 0 && (
-                        <div>
-                          <Typography.Text type="secondary" style={{ display: "block", marginBottom: 6 }}>
-                            Anchor seminar days they can attend
-                          </Typography.Text>
-                          <Checkbox.Group value={editorAnchorSeminarDays} disabled>
-                            <Space direction="vertical">
-                              {periodAnchorSeminarDays.map((day) => (
-                                <Checkbox key={day} value={day}>
-                                  {formatIsoDate(day)}
-                                </Checkbox>
-                              ))}
-                            </Space>
-                          </Checkbox.Group>
-                        </div>
-                      )}
-                    </Space>
-                  </Card>
-                )}
-
-                {editorParticipationStatus === "active" && (
-                  <Card size="small" title="Availability by event">
-                    <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-                      {periodEventGroups.map((group) => {
-                        const choice = editorEventChoices[group.eventId];
-
-                        return (
-                          <Card
-                            key={group.eventId}
-                            size="small"
-                            title={group.event?.title ?? group.eventId}
-                            extra={
-                              group.event?.start
-                                ? dayjs(group.event.start).format("DD/MM/YYYY")
-                                : "-"
-                            }
-                          >
-                            <Space direction="vertical" style={{ width: "100%" }}>
-                              <Radio.Group
-                                value={choice}
-                                onChange={(event) =>
-                                  onEditorEventChoice(
-                                    group.eventId,
-                                    event.target.value as EventChoice
-                                  )
-                                }
-                              >
-                                <Radio value="can">Can work whole event</Radio>
-                                <Radio value="cannot">Cannot fully work event</Radio>
-                              </Radio.Group>
-
-                              {choice === "cannot" && (
-                                <Checkbox.Group
-                                  value={editorEventCanShiftIds[group.eventId] ?? []}
-                                  onChange={(values) =>
-                                    onEditorCanShiftIds(group.eventId, values as string[])
-                                  }
-                                >
-                                  <Space direction="vertical">
-                                    {group.shifts.map((shift) => (
-                                      <Checkbox key={shift.id} value={shift.id}>
-                                        {shift.title} (
-                                        {dayjs(shift.start).format("HH:mm")}-
-                                        {dayjs(shift.end).format("HH:mm")})
-                                      </Checkbox>
-                                    ))}
-                                  </Space>
-                                </Checkbox.Group>
-                              )}
-                            </Space>
-                          </Card>
-                        );
-                      })}
-                    </Space>
-                  </Card>
-                )}
-
-                {editorParticipationStatus === "passive" && (
-                  <Card size="small" title="Reason for being passive">
-                    <TextArea
-                      rows={3}
-                      value={editorPassiveReason}
-                      onChange={(event) => onEditorPassiveReasonChange(event.target.value)}
-                    />
-                  </Card>
-                )}
-
-                {editorParticipationStatus === "legacy" && (
-                  <Card size="small" title="Private email for Teams">
-                    <TextArea
-                      rows={1}
-                      value={editorPrivateEmail}
-                      onChange={(event) => onEditorPrivateEmailChange(event.target.value)}
-                      placeholder="your@email.com"
-                    />
-                  </Card>
-                )}
-
-                <Card size="small" title="Comments">
-                  <TextArea
-                    rows={3}
-                    value={editorComments}
-                    onChange={(event) => onEditorCommentsChange(event.target.value)}
-                  />
-                </Card>
-
-                <Button type="primary" loading={editorSaving} onClick={onSubmitOrEditResponse}>
-                  {editorHasExistingResponse ? "Edit response" : "Submit response"}
-                </Button>
+                <ShiftAvailabilityForm
+                  includesShiftStatusQuestions={includesShiftStatusQuestions}
+                  isCurrentlyPassive={false}
+                  isCurrentlyLegacy={false}
+                  participationStatus={editorParticipationStatus}
+                  onParticipationStatusChange={onEditorParticipationStatusChange}
+                  isAnchor={isSelectedUserAnchor}
+                  wantsAnchor={editorWantsAnchor}
+                  onWantsAnchorChange={onEditorWantsAnchorChange}
+                  anchorOnly={editorAnchorOnly}
+                  onAnchorOnlyChange={onEditorAnchorOnlyChange}
+                  anchorSeminarDays={editorAnchorSeminarDays}
+                  onAnchorSeminarDaysChange={onEditorAnchorSeminarDaysChange}
+                  periodAnchorSeminarDays={periodAnchorSeminarDays}
+                  anchorSeminarDaysReadOnly
+                  periodEventGroups={periodEventGroups}
+                  eventChoices={editorEventChoices}
+                  eventCanShiftIds={editorEventCanShiftIds}
+                  onEventChoiceChange={onEditorEventChoice}
+                  onEventCanShiftIdsChange={onEditorCanShiftIds}
+                  passiveReason={editorPassiveReason}
+                  onPassiveReasonChange={onEditorPassiveReasonChange}
+                  privateEmail={editorPrivateEmail}
+                  onPrivateEmailChange={onEditorPrivateEmailChange}
+                  comments={editorComments}
+                  onCommentsChange={onEditorCommentsChange}
+                  onSubmit={onSubmitOrEditResponse}
+                  submitting={editorSaving}
+                  hasExistingResponse={editorHasExistingResponse}
+                />
               </Space>
             </Card>
           </Space>

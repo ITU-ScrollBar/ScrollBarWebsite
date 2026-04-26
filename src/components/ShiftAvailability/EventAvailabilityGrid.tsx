@@ -1,6 +1,6 @@
 import { Card, Checkbox, Col, Empty, Radio, Row, Space, Tag, Typography } from "antd";
 import dayjs from "dayjs";
-import { Shift } from "../../../../types/types-file";
+import { EventChoice, Shift } from "../../types/types-file";
 
 const { Text } = Typography;
 
@@ -9,8 +9,6 @@ type EventGroup = {
   event?: { id: string; title: string; start: Date };
   shifts: Shift[];
 };
-
-type EventChoice = "can" | "cannot";
 
 type EventAvailabilityGridProps = {
   groupedShifts: EventGroup[];

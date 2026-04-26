@@ -4,11 +4,8 @@ import { useAuth } from "../../../../contexts/AuthContext";
 import { useShiftContext } from "../../../../contexts/ShiftContext";
 import useEvents from "../../../../hooks/useEvents";
 import useShiftPlanning from "../../../../hooks/useShiftPlanning";
-import { Role, Shift } from "../../../../types/types-file";
+import { EventChoice, ParticipationStatus, Role, Shift } from "../../../../types/types-file";
 import { filterOpenPeriodsForUser, resolveSurveyType } from "../../../../firebase/api/shiftPlanning";
-
-export type EventChoice = "can" | "cannot";
-export type ParticipationStatus = "active" | "passive" | "legacy" | "leave";
 
 export const useShiftAvailabilityForm = () => {
   const { currentUser } = useAuth();
