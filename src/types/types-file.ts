@@ -43,6 +43,7 @@ export interface PasswordResetParams {
 // Settings-related types
 export interface Settings {
   constitution: string;
+  djdescription?: string;
   hero: string;
   homepageTitle: string;
   homepageDescription: string;
