@@ -47,7 +47,7 @@ export const usePeriodForm = ({
   const [newPeriodAnchorSeminarDays, setNewPeriodAnchorSeminarDays] = useState<string[]>([]);
 
   const [editPeriodName, setEditPeriodName] = useState("");
-  const [editPeriodDeadline, setEditPeriodDeadline] = useState<Dayjs | null>(null);
+  const [editPeriodWindow, setEditPeriodWindow] = useState<[Dayjs, Dayjs] | null>(null);
   const [editPeriodEventIds, setEditPeriodEventIds] = useState<string[]>([]);
   const [editPeriodMandatoryEventIds, setEditPeriodMandatoryEventIds] = useState<string[]>([]);
   const [editPeriodSurveyType, setEditPeriodSurveyType] = useState<ShiftPlanningSurveyType>("regularSemesterSurvey");
@@ -74,7 +74,10 @@ export const usePeriodForm = ({
       return;
     }
     setEditPeriodName(selectedPeriod.name);
-    setEditPeriodDeadline(dayjs(selectedPeriod.submissionClosesAt));
+    setEditPeriodWindow([
+      dayjs(selectedPeriod.submissionOpensAt),
+      dayjs(selectedPeriod.submissionClosesAt),
+    ]);
     setEditPeriodEventIds(selectedPeriod.eventIds);
     setEditPeriodMandatoryEventIds(selectedPeriod.mandatoryEventIds ?? []);
     setEditPeriodSurveyType(selectedPeriodSurveyType);
@@ -85,7 +88,7 @@ export const usePeriodForm = ({
   const closeEdit = () => {
     setIsEditOpen(false);
     setEditPeriodName("");
-    setEditPeriodDeadline(null);
+    setEditPeriodWindow(null);
     setEditPeriodEventIds([]);
     setEditPeriodMandatoryEventIds([]);
     setEditPeriodSurveyType("regularSemesterSurvey");
@@ -160,10 +163,18 @@ export const usePeriodForm = ({
       return;
     }
 
-    if (!editPeriodDeadline) {
+    if (!editPeriodWindow) {
       notification.error({
-        message: "Missing submission deadline",
-        description: "Please pick a submission deadline.",
+        message: "Missing submission window",
+        description: "Please pick a submission start and end time.",
+      });
+      return;
+    }
+
+    if (editPeriodWindow[1].valueOf() <= editPeriodWindow[0].valueOf()) {
+      notification.error({
+        message: "Invalid submission window",
+        description: "Submission end must be after submission start.",
       });
       return;
     }
@@ -181,7 +192,8 @@ export const usePeriodForm = ({
       const periodEventIds = submissionCount === 0 ? editPeriodEventIds : selectedPeriod.eventIds;
       await updatePeriod(selectedPeriod.id, {
         name: editPeriodName.trim(),
-        submissionClosesAt: editPeriodDeadline.toDate(),
+        submissionOpensAt: editPeriodWindow[0].toDate(),
+        submissionClosesAt: editPeriodWindow[1].toDate(),
         surveyType: editPeriodSurveyType,
         eventIds: periodEventIds,
         mandatoryEventIds: editPeriodMandatoryEventIds.filter((eventId) =>
@@ -226,8 +238,8 @@ export const usePeriodForm = ({
     setNewPeriodAnchorSeminarDays,
     editPeriodName,
     setEditPeriodName,
-    editPeriodDeadline,
-    setEditPeriodDeadline,
+    editPeriodWindow,
+    setEditPeriodWindow,
     editPeriodEventIds,
     setEditPeriodEventIds,
     editPeriodMandatoryEventIds,

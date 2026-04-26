@@ -1,9 +1,9 @@
 import { PlusOutlined, RocketOutlined } from "@ant-design/icons";
-import { Alert, Button, Card, Col, Divider, Empty, message, Popconfirm, Row, Select, Space, Switch } from "antd";
+import { Alert, Button, Card, Col, Empty, message, Popconfirm, Row, Select, Space, Switch } from "antd";
 import Text from "antd/es/typography/Text";
 import dayjs from "dayjs";
 import { useMemo } from "react";
-import ShiftConfigInfo from "../../EventManagement/ShiftInfo";
+import ShiftInfo from "../../EventManagement/ShiftInfo";
 import ShiftAssignmentInfo from "../ShiftInfo";
 import { Event, Shift, ShiftPlanningPeriod, ShiftPlanningResponse } from "../../../../types/types-file";
 
@@ -232,31 +232,38 @@ export default function ShiftPlanningTab({
                       }}
                     >
                       <Space direction="vertical" style={{ width: "100%" }} size="middle">
-                        <ShiftConfigInfo
+                        <ShiftInfo
                           shift={shift}
                           updateShift={updateShift}
                           removeShift={handleRemoveShift}
                           isMandatory={selectedPeriod.mandatoryEventIds?.includes(shift.eventId)}
                           satelliteShift={satellite}
                           onAddSatellite={() => handleAddSatellite(shift)}
-                          onRemoveSatellite={() => { if (satellite) removeShift(satellite).catch(() => message.error("Failed to remove satellite shift.")); }}
-                          onUpdateSatellite={(field, value) => { if (satellite) updateShift(satellite.id, field, value); }}
-                        />
-                        <ShiftAssignmentInfo
-                          shift={shift}
-                          periodResponses={periodResponses}
-                          eventTitle={currentEvent?.title ?? ""}
-                        />
-                        {satellite && (
-                          <>
-                            <Divider style={{ margin: "4px 0" }} />
+                          onRemoveSatellite={() => {
+                            if (satellite) {
+                              removeShift(satellite).catch(() => message.error("Failed to remove satellite shift."));
+                            }
+                          }}
+                          onUpdateSatellite={(field, value) => {
+                            if (satellite) {
+                              updateShift(satellite.id, field, value);
+                            }
+                          }}
+                          primaryAssignment={(
+                            <ShiftAssignmentInfo
+                              shift={shift}
+                              periodResponses={periodResponses}
+                              eventTitle={currentEvent?.title ?? ""}
+                            />
+                          )}
+                          satelliteAssignment={satellite ? (
                             <ShiftAssignmentInfo
                               shift={satellite}
                               periodResponses={periodResponses}
                               eventTitle={currentEvent?.title ?? ""}
                             />
-                          </>
-                        )}
+                          ) : undefined}
+                        />
                       </Space>
                     </Card>
                   </Col>

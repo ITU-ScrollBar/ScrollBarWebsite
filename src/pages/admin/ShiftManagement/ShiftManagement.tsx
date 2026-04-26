@@ -534,8 +534,8 @@ export default function ShiftManagement() {
               onNewPeriodSurveyTypeChange={periodForm.setNewPeriodSurveyType}
               editPeriodName={periodForm.editPeriodName}
               onEditPeriodNameChange={periodForm.setEditPeriodName}
-              editPeriodDeadline={periodForm.editPeriodDeadline}
-              onEditPeriodDeadlineChange={periodForm.setEditPeriodDeadline}
+              editPeriodWindow={periodForm.editPeriodWindow}
+              onEditPeriodWindowChange={periodForm.setEditPeriodWindow}
               editPeriodEventIds={periodForm.editPeriodEventIds}
               onEditPeriodEventIdsChange={periodForm.setEditPeriodEventIds}
               editPeriodMandatoryEventIds={periodForm.editPeriodMandatoryEventIds}

@@ -62,7 +62,7 @@ export default function HeaderBar() {
         </Link>
       ),
     },
-      {
+    {
       key: "7",
       label: (
         <Link style={linkcss} onClick={() => navigate("/dj")}>
