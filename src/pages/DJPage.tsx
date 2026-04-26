@@ -70,7 +70,7 @@ export default function DJPage() {
             textAlign: 'left',
           }}
         >
-          DJ's in ScrollBar
+          Become a DJ in ScrollBar
         </h1>
       </div>
 
