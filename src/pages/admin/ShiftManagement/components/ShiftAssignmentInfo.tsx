@@ -15,10 +15,10 @@ import {
   engagementType,
   Role,
   ShiftPlanningResponse,
-} from "../../../types/types-file";
-import { useEngagementContext } from "../../../contexts/EngagementContext";
-import useTenders from "../../../hooks/useTenders";
-import { UserAvatar } from "../../../components/UserAvatar";
+} from "../../../../types/types-file";
+import { useEngagementContext } from "../../../../contexts/EngagementContext";
+import useTenders from "../../../../hooks/useTenders";
+import { UserAvatar } from "../../../../components/UserAvatar";
 
 const { Text } = Typography;
 

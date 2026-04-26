@@ -4,7 +4,7 @@ import Text from "antd/es/typography/Text";
 import dayjs from "dayjs";
 import { useMemo } from "react";
 import ShiftInfo from "./ShiftInfo";
-import ShiftAssignmentInfo from "../ShiftInfo";
+import ShiftAssignmentInfo from "./ShiftAssignmentInfo";
 import { Event, Shift, ShiftPlanningPeriod, ShiftPlanningResponse } from "../../../../types/types-file";
 
 type ShiftPlanningTabProps = {
