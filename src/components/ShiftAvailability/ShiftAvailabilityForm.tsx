@@ -1,6 +1,5 @@
 import { Button, Card, Input, Popconfirm, Space, Typography } from "antd";
 import { EventChoice, ParticipationStatus, Shift } from "../../types/types-file";
-import AnchorPreferenceCard from "./AnchorPreferenceCard";
 import EventAvailabilityGrid from "./EventAvailabilityGrid";
 import SemesterParticipationCard from "./SemesterParticipationCard";
 
@@ -28,7 +27,6 @@ export type ShiftAvailabilityFormProps = {
   anchorSeminarDays: string[];
   onAnchorSeminarDaysChange: (value: string[]) => void;
   periodAnchorSeminarDays: string[];
-  anchorSeminarDaysReadOnly?: boolean;
 
   periodEventGroups: EventGroup[];
   mandatoryEventIds?: Set<string>;
@@ -67,7 +65,6 @@ export default function ShiftAvailabilityForm({
   anchorSeminarDays,
   onAnchorSeminarDaysChange,
   periodAnchorSeminarDays,
-  anchorSeminarDaysReadOnly,
   periodEventGroups,
   mandatoryEventIds,
   eventChoices,
@@ -110,32 +107,17 @@ export default function ShiftAvailabilityForm({
           isCurrentlyPassive={isCurrentlyPassive}
           participationStatus={participationStatus}
           onChange={onParticipationStatusChange}
-        />
-      )}
-
-      {includesShiftStatusQuestions && isActiveParticipant && (
-        <AnchorPreferenceCard
-          wantsAnchor={wantsAnchor}
+          passiveReason={passiveReason}
+          onPassiveReasonChange={onPassiveReasonChange}
           isAnchor={isAnchor}
-          anchorOnly={anchorOnly}
-          anchorSeminarDays={anchorSeminarDays}
-          periodAnchorSeminarDays={periodAnchorSeminarDays}
+          wantsAnchor={wantsAnchor}
           onWantsAnchorChange={onWantsAnchorChange}
+          anchorOnly={anchorOnly}
           onAnchorOnlyChange={onAnchorOnlyChange}
+          anchorSeminarDays={anchorSeminarDays}
           onAnchorSeminarDaysChange={onAnchorSeminarDaysChange}
-          anchorSeminarDaysReadOnly={anchorSeminarDaysReadOnly}
+          periodAnchorSeminarDays={periodAnchorSeminarDays}
         />
-      )}
-
-      {participationStatus === "passive" && (
-        <Card size="small" title="Reason for being passive">
-          <TextArea
-            rows={3}
-            value={passiveReason}
-            onChange={(e) => onPassiveReasonChange(e.target.value)}
-            placeholder="Please provide a reason for being passive this semester."
-          />
-        </Card>
       )}
 
       {participationStatus === "legacy" && (

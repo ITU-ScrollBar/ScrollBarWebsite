@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
-import { Button, Popconfirm, Segmented, Space } from "antd";
-import { DeleteOutlined } from "@ant-design/icons";
+import { Segmented, Space } from "antd";
 import { useEngagementContext } from "../../../../contexts/EngagementContext";
 import {
   Engagement,
@@ -78,30 +77,16 @@ export default function ShiftPlanOverviewTab({
 
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-        <Segmented<ViewKey>
-          value={view}
-          onChange={setView}
-          options={[
-            { label: `Assigned (${assignedRows.length})`, value: "assigned" },
-            { label: `Passive (${passiveRows.length})`, value: "passive" },
-            { label: `Legacy (${legacyRows.length})`, value: "legacy" },
-            { label: `Leaving (${leavingRows.length})`, value: "leaving" },
-          ]}
-        />
-        {view === "leaving" && leavingRows.length > 0 && (
-          <Popconfirm
-            title="Delete all leaving members?"
-            description={`This will soft-delete ${leavingRows.length} member${leavingRows.length === 1 ? "" : "s"}.`}
-            onConfirm={() => leavingRows.forEach((r) => deleteTender(r.uid))}
-            okText="Delete all"
-            cancelText="Cancel"
-            okButtonProps={{ danger: true }}
-          >
-            <Button danger icon={<DeleteOutlined />}>Delete all leaving</Button>
-          </Popconfirm>
-        )}
-      </div>
+      <Segmented<ViewKey>
+        value={view}
+        onChange={setView}
+        options={[
+          { label: `Assigned (${assignedRows.length})`, value: "assigned" },
+          { label: `Passive (${passiveRows.length})`, value: "passive" },
+          { label: `Legacy (${legacyRows.length})`, value: "legacy" },
+          { label: `Leaving (${leavingRows.length})`, value: "leaving" },
+        ]}
+      />
 
       {view === "assigned" && (
         <ShiftPlanOverviewAssignedView rows={assignedRows} nameFilter={nameFilter} />

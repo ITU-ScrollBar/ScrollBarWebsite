@@ -57,46 +57,27 @@ export default function ShiftInfo({ shift, periodResponses, eventTitle }: ShiftI
       !shiftEngagements.some((e) => e.userId === t.uid)
   );
 
-  const handleAddTender = (userId: string) => {
+  const handleAdd = (userId: string, anchor: boolean) => {
     if (!userId) return;
 
+    const label = anchor ? "Anchor" : "Tender";
     const engagement: Engagement = {
       id: "",
       key: "",
       shiftId: shift.id!,
       shiftEnd: new Date(shift.end),
       userId: userId,
-      type: engagementType.TENDER,
+      type: anchor ? engagementType.ANCHOR : engagementType.TENDER,
       upForGrabs: false,
     };
 
     addEngagement(engagement)
       .then(() => {
-        message.success("Tender added successfully");
-        setTenderSelection(undefined);
+        message.success(`${label} added successfully`);
+        if (anchor) setAnchorSelection(undefined);
+        else setTenderSelection(undefined);
       })
-      .catch(() => message.error("Failed to add tender"));
-  };
-
-  const handleAddAnchor = (userId: string) => {
-    if (!userId) return;
-
-    const engagement: Engagement = {
-      id: "",
-      key: "",
-      shiftId: shift.id!,
-      shiftEnd: new Date(shift.end),
-      userId: userId,
-      type: engagementType.ANCHOR,
-      upForGrabs: false,
-    };
-
-    addEngagement(engagement)
-      .then(() => {
-        message.success("Anchor added successfully");
-        setAnchorSelection(undefined);
-      })
-      .catch(() => message.error("Failed to add anchor"));
+      .catch(() => message.error(`Failed to add ${label.toLowerCase()}`));
   };
 
   const handleRemove = (engagement: Engagement) => {
@@ -104,6 +85,27 @@ export default function ShiftInfo({ shift, periodResponses, eventTitle }: ShiftI
       .then(() => message.success("Removed successfully"))
       .catch(() => message.error("Failed to remove"));
   };
+
+  const renderEngagementTag = (engagement: Engagement, color: string) => (
+    <Popconfirm
+      key={engagement.id}
+      title="Remove from shift?"
+      onConfirm={() => handleRemove(engagement)}
+      okText="Yes"
+      cancelText="No"
+    >
+      <Tag color={color} style={{ cursor: "pointer", marginRight: 0 }}>
+        <Space size={4}>
+          <UserAvatar
+            user={tenderById.get(engagement.userId ?? "") ?? { uid: "", email: "", displayName: "", active: true, isAdmin: false }}
+            size={32}
+            showHats={true}
+          />
+          <span>{getTenderLabel(engagement.userId)}</span>
+        </Space>
+      </Tag>
+    </Popconfirm>
+  );
 
   const getTenderLabel = (userId: string | undefined): string => {
     if (!userId) {
@@ -203,26 +205,7 @@ export default function ShiftInfo({ shift, periodResponses, eventTitle }: ShiftI
         <div style={{ marginTop: 6 }}>
           {anchors.length > 0 ? (
             <Space size={[6, 6]} wrap>
-              {anchors.map((engagement) => (
-                <Popconfirm
-                  key={engagement.id}
-                  title="Remove this anchor?"
-                  onConfirm={() => handleRemove(engagement)}
-                  okText="Yes"
-                  cancelText="No"
-                >
-                  <Tag color="gold" style={{ cursor: "pointer", marginRight: 0 }}>
-                    <Space size={4}>
-                      <UserAvatar
-                        user={tenderById.get(engagement.userId ?? "") ?? { uid: "", email: "", displayName: "", active: true, isAdmin: false }}
-                        size={32}
-                        showHats={true}
-                      />
-                      <span>{getTenderLabel(engagement.userId)}</span>
-                    </Space>
-                  </Tag>
-                </Popconfirm>
-              ))}
+              {anchors.map((engagement) => renderEngagementTag(engagement, "gold"))}
             </Space>
           ) : (
             <Text type="secondary">None</Text>
@@ -237,7 +220,7 @@ export default function ShiftInfo({ shift, periodResponses, eventTitle }: ShiftI
         placeholder="Add anchor"
         onChange={(value) => {
           setAnchorSelection(value);
-          handleAddAnchor(value);
+          handleAdd(value, true);
         }}
         showSearch
         optionFilterProp="children"
@@ -254,26 +237,7 @@ export default function ShiftInfo({ shift, periodResponses, eventTitle }: ShiftI
         <div style={{ marginTop: 6 }}>
           {tenders.length > 0 ? (
             <Space size={[6, 6]} wrap>
-              {tenders.map((engagement) => (
-                <Popconfirm
-                  key={engagement.id}
-                  title="Remove this tender?"
-                  onConfirm={() => handleRemove(engagement)}
-                  okText="Yes"
-                  cancelText="No"
-                >
-                  <Tag color="blue" style={{ cursor: "pointer", marginRight: 0 }}>
-                    <Space size={4}>
-                      <UserAvatar
-                        user={tenderById.get(engagement.userId ?? "") ?? { uid: "", email: "", displayName: "", active: true, isAdmin: false }}
-                        size={32}
-                        showHats={true}
-                      />
-                      <span>{getTenderLabel(engagement.userId)}</span>
-                    </Space>
-                  </Tag>
-                </Popconfirm>
-              ))}
+              {tenders.map((engagement) => renderEngagementTag(engagement, "blue"))}
             </Space>
           ) : (
             <Text type="secondary">None</Text>
@@ -288,7 +252,7 @@ export default function ShiftInfo({ shift, periodResponses, eventTitle }: ShiftI
         placeholder="Add tender"
         onChange={(value) => {
           setTenderSelection(value);
-          handleAddTender(value);
+          handleAdd(value, false);
         }}
         showSearch
         optionFilterProp="children"

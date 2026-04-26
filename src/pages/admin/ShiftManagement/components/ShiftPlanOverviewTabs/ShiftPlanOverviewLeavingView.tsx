@@ -56,7 +56,7 @@ export default function ShiftPlanOverviewLeavingView({
       render: (_: unknown, row: LeavingRow) => (
         <Popconfirm
           title={`Delete ${row.displayName}?`}
-          description="This is a soft delete. The user will be removed from the system."
+          description="The user will be removed from the system."
           onConfirm={() => deleteTender(row.uid)}
           okText="Delete"
           cancelText="Cancel"
@@ -69,12 +69,28 @@ export default function ShiftPlanOverviewLeavingView({
   ];
 
   return (
-    <Table<LeavingRow>
-      dataSource={filterByName(rows, nameFilter.searchText)}
-      columns={columns}
-      rowKey="uid"
-      size="small"
-      pagination={{ pageSize: 50, showSizeChanger: false }}
-    />
+    <>
+      {rows.length > 0 && (
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+          <Popconfirm
+            title="Delete all leaving members?"
+            description={`This will delete ${rows.length} member${rows.length === 1 ? "" : "s"}.`}
+            onConfirm={() => rows.forEach((r) => deleteTender(r.uid))}
+            okText="Delete all"
+            cancelText="Cancel"
+            okButtonProps={{ danger: true }}
+          >
+            <Button danger icon={<DeleteOutlined />}>Delete all leaving</Button>
+          </Popconfirm>
+        </div>
+      )}
+      <Table<LeavingRow>
+        dataSource={filterByName(rows, nameFilter.searchText)}
+        columns={columns}
+        rowKey="uid"
+        size="small"
+        pagination={{ pageSize: 50, showSizeChanger: false }}
+      />
+    </>
   );
 }

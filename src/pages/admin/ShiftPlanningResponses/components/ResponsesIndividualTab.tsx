@@ -237,7 +237,6 @@ export default function ResponsesIndividualTab({
                   anchorSeminarDays={editorAnchorSeminarDays}
                   onAnchorSeminarDaysChange={onEditorAnchorSeminarDaysChange}
                   periodAnchorSeminarDays={periodAnchorSeminarDays}
-                  anchorSeminarDaysReadOnly
                   periodEventGroups={periodEventGroups}
                   eventChoices={editorEventChoices}
                   eventCanShiftIds={editorEventCanShiftIds}

@@ -63,8 +63,7 @@ export function useAssignedRows(params: {
           total: userEngagements.length,
           comments: responseMap.get(uid)?.comments ?? "",
         };
-      })
-      .filter((row) => row.total > 0);
+      });
   }, [engagementsByUser, shiftById, tenderMap, responseMap]);
 }
 

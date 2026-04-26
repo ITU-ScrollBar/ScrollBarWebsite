@@ -12,7 +12,6 @@ type AnchorPreferenceCardProps = {
   onWantsAnchorChange: (value: boolean) => void;
   onAnchorOnlyChange: (value: boolean) => void;
   onAnchorSeminarDaysChange: (value: string[]) => void;
-  anchorSeminarDaysReadOnly?: boolean;
 };
 
 export default function AnchorPreferenceCard({
@@ -24,7 +23,6 @@ export default function AnchorPreferenceCard({
   onWantsAnchorChange,
   onAnchorOnlyChange,
   onAnchorSeminarDaysChange,
-  anchorSeminarDaysReadOnly,
 }: AnchorPreferenceCardProps) {
   return (
     <Card size="small" title="Anchor preference">
@@ -58,18 +56,11 @@ export default function AnchorPreferenceCard({
         {wantsAnchor === true && !isAnchor && periodAnchorSeminarDays.length > 0 && (
           <div>
             <Text type="secondary" style={{ display: "block", marginBottom: 8 }}>
-              {anchorSeminarDaysReadOnly
-                ? "Anchor seminar dates they can attend"
-                : "Which anchor seminar dates can you attend? (select all that apply)"}
+              Which anchor seminar dates can you attend? (select all that apply)
             </Text>
             <Checkbox.Group
               value={anchorSeminarDays}
-              disabled={anchorSeminarDaysReadOnly}
-              onChange={
-                anchorSeminarDaysReadOnly
-                  ? undefined
-                  : (values) => onAnchorSeminarDaysChange(values.map(String))
-              }
+              onChange={(values) => onAnchorSeminarDaysChange(values.map(String))}
             >
               <Space direction="vertical">
                 {periodAnchorSeminarDays.map((day) => (
