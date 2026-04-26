@@ -2,7 +2,7 @@ import { InputNumber, Input, DatePicker, Button, Divider, Popconfirm, Select, Sp
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { ReactNode } from "react";
 import dayjs from "dayjs";
-import { Shift, ShiftCategory } from "../../../types/types-file";
+import { Shift, ShiftCategory } from "../../../../types/types-file";
 
 const { Text } = Typography;
 

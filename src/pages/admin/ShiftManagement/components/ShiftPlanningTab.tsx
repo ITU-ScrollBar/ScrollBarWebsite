@@ -3,7 +3,7 @@ import { Alert, Button, Card, Col, Empty, message, Popconfirm, Row, Select, Spac
 import Text from "antd/es/typography/Text";
 import dayjs from "dayjs";
 import { useMemo } from "react";
-import ShiftInfo from "../../EventManagement/ShiftInfo";
+import ShiftInfo from "./ShiftInfo";
 import ShiftAssignmentInfo from "../ShiftInfo";
 import { Event, Shift, ShiftPlanningPeriod, ShiftPlanningResponse } from "../../../../types/types-file";
 
