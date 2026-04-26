@@ -53,7 +53,7 @@ export default function ShiftInfo(props: {
 
         <Popconfirm
           title="Delete this shift?"
-          description="This will permanently delete the shift. Engagements will remain."
+          description="This will permanently delete the shift and all tenders assigned to it."
           onConfirm={() => removeShift(shift)}
           okText="Delete"
           cancelText="Cancel"
@@ -149,7 +149,7 @@ export default function ShiftInfo(props: {
               />
               <Popconfirm
                 title="Remove satellite shift?"
-                description="Engagements for this satellite shift will remain."
+                description="This will remove the satellite shift and all tenders assigned to it."
                 onConfirm={onRemoveSatellite}
                 okText="Remove"
                 cancelText="Cancel"

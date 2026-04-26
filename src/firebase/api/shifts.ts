@@ -2,11 +2,13 @@ import {
   collection,
   doc,
   addDoc,
-  deleteDoc,
+  getDocs,
   updateDoc,
   orderBy,
   query,
   onSnapshot,
+  where,
+  writeBatch,
   QuerySnapshot,
   DocumentData,
   Unsubscribe,
@@ -24,13 +26,28 @@ type Observer = {
 const getShiftsCollection = () =>
   collection(doc(collection(db, 'env'), env), 'shifts');
 
+const getEngagementsCollection = () =>
+  collection(doc(collection(db, 'env'), env), 'engagements');
+
 export const createShift = (shift: Shift): Promise<string> => {
   return addDoc(getShiftsCollection(), shift).then((ref) => ref.id);
 };
 
-export const deleteShift = (shift: Shift): Promise<void> => {
+export const deleteShift = async (shift: Shift): Promise<void> => {
   const docRef = doc(getShiftsCollection(), shift.id!);
-  return deleteDoc(docRef);
+
+  const engagementSnapshot = await getDocs(
+    query(getEngagementsCollection(), where('shiftId', '==', shift.id))
+  );
+
+  const batch = writeBatch(db);
+  batch.delete(docRef);
+
+  for (const engagementDoc of engagementSnapshot.docs) {
+    batch.delete(engagementDoc.ref);
+  }
+
+  await batch.commit();
 };
 
 export const updateShift = ({
