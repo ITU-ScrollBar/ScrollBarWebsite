@@ -1,176 +1,182 @@
-import { Alert, Card, Col, Empty, Input, Row, Select, Space, Table, Tag, Typography } from "antd";
+import { Alert, Card, Col, Empty, Row, Select, Space, Typography, message } from "antd";
 import dayjs from "dayjs";
-import ShiftAvailabilityForm from "../../../../components/ShiftAvailability/ShiftAvailabilityForm";
-import { EventChoice, ParticipationStatus } from "../../../../types/types-file";
-import { PeriodEventGroup, ResponseFilter, SurveyUser } from "../types";
+import { useCallback, useMemo, useState } from "react";
+import ShiftAvailabilityForm, { FormEditorState } from "../../../../components/ShiftAvailability/ShiftAvailabilityForm";
+import { useShiftPlanningContext } from "../../../../contexts/ShiftPlanningContext";
+import { useShiftContext } from "../../../../contexts/ShiftContext";
+import { updateMutualAvoidShiftPair, resolveSurveyType } from "../../../../firebase/api/shiftPlanning";
+import useEvents from "../../../../hooks/useEvents";
+import useTenders from "../../../../hooks/useTenders";
+import { Role, Shift } from "../../../../types/types-file";
+import { useResponseEditor } from "../hooks/useResponseEditor";
+import UserSelectionColumn from "./UserSelectionColumn";
 
 const { Text } = Typography;
 
-type ResponsesIndividualTabProps = {
-  filteredUsers: SurveyUser[];
-  selectedUserId?: string;
-  onSelectedUserIdChange: (userId?: string) => void;
-  userSearch: string;
-  onUserSearchChange: (value: string) => void;
-  responseFilter: ResponseFilter;
-  onResponseFilterChange: (value: ResponseFilter) => void;
-  selectedUserDisplayName: string;
-  selectedUserPassiveConsecutiveWarning: boolean;
-  selectedUserAvoidIds: string[];
-  onAvoidListChange: (nextUserIds: string[]) => void;
-  avoidListOptions: Array<{ value: string; label: string }>;
-  avoidSaving: boolean;
-  editorLoading: boolean;
-  editorHasExistingResponse: boolean;
-  editorSubmittedAt: Date | null;
-  includesShiftStatusQuestions: boolean;
-  isSelectedUserAnchor: boolean;
-  editorParticipationStatus?: ParticipationStatus;
-  onEditorParticipationStatusChange: (status: ParticipationStatus) => void;
-  editorWantsAnchor?: boolean;
-  onEditorWantsAnchorChange: (value: boolean) => void;
-  editorAnchorOnly: boolean;
-  onEditorAnchorOnlyChange: (value: boolean) => void;
-  editorAnchorSeminarDays: string[];
-  onEditorAnchorSeminarDaysChange: (value: string[]) => void;
-  periodAnchorSeminarDays: string[];
-  periodEventGroups: PeriodEventGroup[];
-  editorEventChoices: Partial<Record<string, EventChoice>>;
-  editorEventCanShiftIds: Record<string, string[]>;
-  onEditorEventChoice: (eventId: string, value: EventChoice) => void;
-  onEditorCanShiftIds: (eventId: string, shiftIds: string[]) => void;
-  editorComments: string;
-  onEditorCommentsChange: (value: string) => void;
-  editorPassiveReason: string;
-  onEditorPassiveReasonChange: (value: string) => void;
-  editorPrivateEmail: string;
-  onEditorPrivateEmailChange: (value: string) => void;
-  editorSaving: boolean;
-  onSubmitOrEditResponse: () => void;
-};
+export default function ResponsesIndividualTab() {
+  const { periodState, selectedPeriodId, loadUserResponse, submitResponse } =
+    useShiftPlanningContext();
+  const { shiftState } = useShiftContext();
+  const { eventState } = useEvents();
+  const { tenderState } = useTenders();
 
-export default function ResponsesIndividualTab({
-  filteredUsers,
-  selectedUserId,
-  onSelectedUserIdChange,
-  userSearch,
-  onUserSearchChange,
-  responseFilter,
-  onResponseFilterChange,
-  selectedUserDisplayName,
-  selectedUserPassiveConsecutiveWarning,
-  selectedUserAvoidIds,
-  onAvoidListChange,
-  avoidListOptions,
-  avoidSaving,
-  editorLoading,
-  editorHasExistingResponse,
-  editorSubmittedAt,
-  includesShiftStatusQuestions,
-  isSelectedUserAnchor,
-  editorParticipationStatus,
-  onEditorParticipationStatusChange,
-  editorWantsAnchor,
-  onEditorWantsAnchorChange,
-  editorAnchorOnly,
-  onEditorAnchorOnlyChange,
-  editorAnchorSeminarDays,
-  onEditorAnchorSeminarDaysChange,
-  periodAnchorSeminarDays,
-  periodEventGroups,
-  editorEventChoices,
-  editorEventCanShiftIds,
-  onEditorEventChoice,
-  onEditorCanShiftIds,
-  editorComments,
-  onEditorCommentsChange,
-  editorPassiveReason,
-  onEditorPassiveReasonChange,
-  editorPrivateEmail,
-  onEditorPrivateEmailChange,
-  editorSaving,
-  onSubmitOrEditResponse,
-}: ResponsesIndividualTabProps) {
+  const [selectedUserId, setSelectedUserId] = useState<string | undefined>(undefined);
+  const [avoidSaving, setAvoidSaving] = useState(false);
+
+  const selectedPeriod = useMemo(
+    () => periodState.periods.find((p) => p.id === selectedPeriodId) ?? null,
+    [periodState.periods, selectedPeriodId]
+  );
+
+  const isRegularSemesterSurvey = selectedPeriod
+    ? resolveSurveyType(selectedPeriod) === "regularSemesterSurvey"
+    : false;
+
+  const tenderById = useMemo(
+    () => new Map(tenderState.tenders.map((t) => [t.uid, t])),
+    [tenderState.tenders]
+  );
+
+  const userNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const tender of tenderState.tenders) {
+      map.set(tender.uid, tender.displayName);
+    }
+    return map;
+  }, [tenderState.tenders]);
+
+  const eventsById = useMemo(() => {
+    const map = new Map<string, { id: string; title: string; start: Date }>();
+    for (const event of [...eventState.events, ...eventState.previousEvents]) {
+      map.set(event.id, { id: event.id, title: event.title, start: event.start });
+    }
+    return map;
+  }, [eventState.events, eventState.previousEvents]);
+
+  const periodShiftsByEvent = useMemo(() => {
+    const map = new Map<string, Shift[]>();
+    if (!selectedPeriod) return map;
+
+    const eventIds = new Set(selectedPeriod.eventIds);
+    for (const shift of shiftState.shifts) {
+      if (!eventIds.has(shift.eventId) || shift.linkedShiftId) continue;
+      const current = map.get(shift.eventId) ?? [];
+      current.push(shift);
+      map.set(shift.eventId, current);
+    }
+    for (const [eventId, shifts] of map) {
+      map.set(eventId, [...shifts].sort((a, b) => a.start.getTime() - b.start.getTime()));
+    }
+    return map;
+  }, [selectedPeriod, shiftState.shifts]);
+
+  const periodEventGroups = useMemo(() => {
+    if (!selectedPeriod) return [];
+    return selectedPeriod.eventIds
+      .map((eventId) => {
+        const event = eventsById.get(eventId);
+        const shifts = (periodShiftsByEvent.get(eventId) ?? []).slice().sort(
+          (a, b) => a.start.getTime() - b.start.getTime()
+        );
+        return { eventId, event, shifts };
+      })
+      .sort((a, b) => (a.event?.start?.getTime() ?? 0) - (b.event?.start?.getTime() ?? 0));
+  }, [eventsById, periodShiftsByEvent, selectedPeriod]);
+
+  const selectedUserTender = useMemo(
+    () => tenderState.tenders.find((t) => t.uid === selectedUserId) ?? null,
+    [selectedUserId, tenderState.tenders]
+  );
+
+  const isSelectedUserAnchor = selectedUserId
+    ? tenderById.get(selectedUserId)?.roles?.includes(Role.ANCHOR) === true
+    : false;
+
+  const avoidListOptions = useMemo(
+    () =>
+      tenderState.tenders
+        .filter((t) => t.active && t.uid !== selectedUserId)
+        .map((t) => ({ value: t.uid, label: t.displayName }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [selectedUserId, tenderState.tenders]
+  );
+
+  const editor = useResponseEditor({
+    selectedPeriod,
+    selectedUserId,
+    periodEventGroups,
+    loadUserResponse,
+    submitResponse,
+    userNameById,
+    isSelectedUserAnchor,
+  });
+
+  const selectedUserPassiveConsecutiveWarning = useMemo(() => {
+    if (!selectedUserId || editor.participationStatus !== "passive" || !isRegularSemesterSurvey) {
+      return false;
+    }
+    return tenderById.get(selectedUserId)?.roles?.includes(Role.PASSIVE) === true;
+  }, [editor.participationStatus, isRegularSemesterSurvey, selectedUserId, tenderById]);
+
+  const handleAvoidListChange = useCallback(async (nextUserIds: string[]) => {
+    if (!selectedUserId) return;
+
+    const previous = new Set(selectedUserTender?.avoidShiftWithUserIds ?? []);
+    const next = new Set(nextUserIds);
+    const toAdd = Array.from(next).filter((uid) => !previous.has(uid));
+    const toRemove = Array.from(previous).filter((uid) => !next.has(uid));
+
+    if (toAdd.length === 0 && toRemove.length === 0) return;
+
+    setAvoidSaving(true);
+    try {
+      await Promise.all([
+        ...toAdd.map((otherUserId) =>
+          updateMutualAvoidShiftPair({ userId: selectedUserId, otherUserId, shouldAvoid: true })
+        ),
+        ...toRemove.map((otherUserId) =>
+          updateMutualAvoidShiftPair({ userId: selectedUserId, otherUserId, shouldAvoid: false })
+        ),
+      ]);
+      message.success("Updated avoid list.");
+    } catch (error) {
+      const casted = error as { message?: string };
+      message.error(casted.message ?? "Failed to update avoid list.");
+    } finally {
+      setAvoidSaving(false);
+    }
+  }, [selectedUserId, selectedUserTender?.avoidShiftWithUserIds]);
+
+  const editorState: FormEditorState = {
+    participationStatus: editor.participationStatus,
+    onParticipationStatusChange: editor.handleParticipationStatusChange,
+    wantsAnchor: editor.wantsAnchor,
+    onWantsAnchorChange: editor.handleWantsAnchorChange,
+    anchorOnly: editor.anchorOnly,
+    onAnchorOnlyChange: editor.setAnchorOnly,
+    anchorSeminarDays: editor.anchorSeminarDays,
+    onAnchorSeminarDaysChange: editor.setAnchorSeminarDays,
+    eventChoices: editor.eventChoices,
+    onEventChoiceChange: editor.handleEventChoice,
+    eventCanShiftIds: editor.eventCanShiftIds,
+    onEventCanShiftIdsChange: editor.handleCanShiftIds,
+    passiveReason: editor.passiveReason,
+    onPassiveReasonChange: editor.setPassiveReason,
+    privateEmail: editor.privateEmail,
+    onPrivateEmailChange: editor.setPrivateEmail,
+    comments: editor.comments,
+    onCommentsChange: editor.setComments,
+  };
+
+  const selectedUserDisplayName = userNameById.get(selectedUserId ?? "") ?? selectedUserId ?? "";
+
   return (
     <Row gutter={[16, 16]}>
       <Col xs={24} lg={8}>
-        <Card size="small" title="Users">
-          <Space direction="vertical" style={{ width: "100%" }} size="middle">
-            <Input
-              placeholder="Search by name or email"
-              value={userSearch}
-              onChange={(event) => onUserSearchChange(event.target.value)}
-            />
-            <Select
-              value={responseFilter}
-              onChange={(value) => onResponseFilterChange(value)}
-              style={{ minWidth: 220, width: 220 }}
-              options={[
-                { value: "all", label: "All users" },
-                { value: "responded", label: "Already responded" },
-                { value: "missing", label: "Missing response" },
-                { value: "allAnchors", label: "All anchors" },
-                { value: "newAnchors", label: "New anchors" },
-                { value: "passiveMembers", label: "Passive members" },
-                { value: "legacyMembers", label: "Legacy members" },
-                { value: "leavingBar", label: "Leaving the bar" },
-              ]}
-            />
-            <Table
-              size="small"
-              rowKey="uid"
-              dataSource={filteredUsers}
-              tableLayout="fixed"
-              pagination={{
-                defaultPageSize: 10,
-                showSizeChanger: true,
-                pageSizeOptions: ["10", "20", "50", "100"],
-                showTotal: (total, range) => `${range[0]}-${range[1]} of ${total}`,
-              }}
-              rowSelection={{
-                type: "radio",
-                selectedRowKeys: selectedUserId ? [selectedUserId] : [],
-                onChange: (selectedRowKeys) => {
-                  onSelectedUserIdChange(selectedRowKeys[0] as string | undefined);
-                },
-              }}
-              onRow={(record) => ({
-                onClick: () => onSelectedUserIdChange(record.uid),
-              })}
-              columns={[
-                {
-                  title: "Name",
-                  dataIndex: "name",
-                  render: (value: string) => (
-                    <div style={{ whiteSpace: "normal", overflowWrap: "anywhere" }}>
-                      <div>{value}</div>
-                    </div>
-                  ),
-                },
-                {
-                  title: "Status",
-                  dataIndex: "responded",
-                  width: 120,
-                  render: (responded: boolean) => (
-                    <Tag color={responded ? "green" : "orange"}>
-                      {responded ? "Responded" : "Missing"}
-                    </Tag>
-                  ),
-                },
-                {
-                  title: "Email",
-                  dataIndex: "email",
-                  responsive: ["md"],
-                  render: (value: string | undefined) => (
-                    <div style={{ whiteSpace: "normal", overflowWrap: "anywhere" }}>
-                      {value ?? "-"}
-                    </div>
-                  ),
-                },
-              ]}
-            />
-          </Space>
-        </Card>
+        <UserSelectionColumn
+          selectedUserId={selectedUserId}
+          onSelectedUserIdChange={setSelectedUserId}
+        />
       </Col>
 
       <Col xs={24} lg={16}>
@@ -205,8 +211,8 @@ export default function ResponsesIndividualTab({
                   mode="multiple"
                   style={{ width: "100%" }}
                   placeholder="Add users to avoid pairing"
-                  value={selectedUserAvoidIds}
-                  onChange={onAvoidListChange}
+                  value={selectedUserTender?.avoidShiftWithUserIds ?? []}
+                  onChange={handleAvoidListChange}
                   options={avoidListOptions}
                   loading={avoidSaving}
                   optionFilterProp="label"
@@ -215,42 +221,25 @@ export default function ResponsesIndividualTab({
               </Space>
             </Card>
 
-            <Card size="small" title="Shift availability response" loading={editorLoading}>
+            <Card size="small" title="Shift availability response" loading={editor.loading}>
               <Space direction="vertical" style={{ width: "100%" }} size="middle">
                 <Text type="secondary">
-                  {editorHasExistingResponse
-                    ? `Latest submitted at ${editorSubmittedAt ? dayjs(editorSubmittedAt).format("DD/MM/YYYY HH:mm") : "-"}.`
+                  {editor.hasExistingResponse
+                    ? `Latest submitted at ${editor.submittedAt ? dayjs(editor.submittedAt).format("DD/MM/YYYY HH:mm") : "-"}.`
                     : "No existing response for this user in the selected period."}
                 </Text>
 
                 <ShiftAvailabilityForm
-                  includesShiftStatusQuestions={includesShiftStatusQuestions}
+                  includesShiftStatusQuestions={isRegularSemesterSurvey}
                   isCurrentlyPassive={false}
                   isCurrentlyLegacy={false}
-                  participationStatus={editorParticipationStatus}
-                  onParticipationStatusChange={onEditorParticipationStatusChange}
                   isAnchor={isSelectedUserAnchor}
-                  wantsAnchor={editorWantsAnchor}
-                  onWantsAnchorChange={onEditorWantsAnchorChange}
-                  anchorOnly={editorAnchorOnly}
-                  onAnchorOnlyChange={onEditorAnchorOnlyChange}
-                  anchorSeminarDays={editorAnchorSeminarDays}
-                  onAnchorSeminarDaysChange={onEditorAnchorSeminarDaysChange}
-                  periodAnchorSeminarDays={periodAnchorSeminarDays}
+                  periodAnchorSeminarDays={selectedPeriod?.anchorSeminarDays ?? []}
                   periodEventGroups={periodEventGroups}
-                  eventChoices={editorEventChoices}
-                  eventCanShiftIds={editorEventCanShiftIds}
-                  onEventChoiceChange={onEditorEventChoice}
-                  onEventCanShiftIdsChange={onEditorCanShiftIds}
-                  passiveReason={editorPassiveReason}
-                  onPassiveReasonChange={onEditorPassiveReasonChange}
-                  privateEmail={editorPrivateEmail}
-                  onPrivateEmailChange={onEditorPrivateEmailChange}
-                  comments={editorComments}
-                  onCommentsChange={onEditorCommentsChange}
-                  onSubmit={onSubmitOrEditResponse}
-                  submitting={editorSaving}
-                  hasExistingResponse={editorHasExistingResponse}
+                  editor={editorState}
+                  onSubmit={editor.handleSubmitOrEdit}
+                  submitting={editor.saving}
+                  hasExistingResponse={editor.hasExistingResponse}
                 />
               </Space>
             </Card>

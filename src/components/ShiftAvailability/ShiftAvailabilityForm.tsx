@@ -1,5 +1,6 @@
 import { Button, Card, Input, Popconfirm, Space, Typography } from "antd";
 import { EventChoice, ParticipationStatus, Shift } from "../../types/types-file";
+import AnchorPreferenceCard from "./AnchorPreferenceCard";
 import EventAvailabilityGrid from "./EventAvailabilityGrid";
 import SemesterParticipationCard from "./SemesterParticipationCard";
 
@@ -11,39 +12,36 @@ type EventGroup = {
   shifts: Shift[];
 };
 
-export type ShiftAvailabilityFormProps = {
-  includesShiftStatusQuestions: boolean;
-
-  isCurrentlyPassive: boolean;
-  isCurrentlyLegacy: boolean;
+export type FormEditorState = {
   participationStatus: ParticipationStatus | undefined;
   onParticipationStatusChange: (status: ParticipationStatus) => void;
-
-  isAnchor: boolean;
   wantsAnchor: boolean | undefined;
   onWantsAnchorChange: (value: boolean) => void;
   anchorOnly: boolean;
   onAnchorOnlyChange: (value: boolean) => void;
   anchorSeminarDays: string[];
   onAnchorSeminarDaysChange: (value: string[]) => void;
-  periodAnchorSeminarDays: string[];
-
-  periodEventGroups: EventGroup[];
-  mandatoryEventIds?: Set<string>;
   eventChoices: Partial<Record<string, EventChoice>>;
-  eventCanShiftIds: Record<string, string[]>;
   onEventChoiceChange: (eventId: string, value: EventChoice) => void;
+  eventCanShiftIds: Record<string, string[]>;
   onEventCanShiftIdsChange: (eventId: string, shiftIds: string[]) => void;
-
   passiveReason: string;
   onPassiveReasonChange: (value: string) => void;
-
   privateEmail: string;
   onPrivateEmailChange: (value: string) => void;
-
   comments: string;
   onCommentsChange: (value: string) => void;
+};
 
+export type ShiftAvailabilityFormProps = {
+  includesShiftStatusQuestions: boolean;
+  isCurrentlyPassive: boolean;
+  isCurrentlyLegacy: boolean;
+  isAnchor: boolean;
+  periodAnchorSeminarDays: string[];
+  periodEventGroups: EventGroup[];
+  mandatoryEventIds?: Set<string>;
+  editor: FormEditorState;
   onSubmit: () => void;
   submitting?: boolean;
   isSubmitDisabled?: boolean;
@@ -55,28 +53,11 @@ export default function ShiftAvailabilityForm({
   includesShiftStatusQuestions,
   isCurrentlyPassive,
   isCurrentlyLegacy,
-  participationStatus,
-  onParticipationStatusChange,
   isAnchor,
-  wantsAnchor,
-  onWantsAnchorChange,
-  anchorOnly,
-  onAnchorOnlyChange,
-  anchorSeminarDays,
-  onAnchorSeminarDaysChange,
   periodAnchorSeminarDays,
   periodEventGroups,
   mandatoryEventIds,
-  eventChoices,
-  eventCanShiftIds,
-  onEventChoiceChange,
-  onEventCanShiftIdsChange,
-  passiveReason,
-  onPassiveReasonChange,
-  privateEmail,
-  onPrivateEmailChange,
-  comments,
-  onCommentsChange,
+  editor,
   onSubmit,
   submitting,
   isSubmitDisabled,
@@ -84,7 +65,7 @@ export default function ShiftAvailabilityForm({
   confirmBeforeSubmit,
 }: ShiftAvailabilityFormProps) {
   const isActiveParticipant = includesShiftStatusQuestions
-    ? participationStatus === "active"
+    ? editor.participationStatus === "active"
     : true;
 
   const submitButton = (
@@ -105,30 +86,35 @@ export default function ShiftAvailabilityForm({
         <SemesterParticipationCard
           isCurrentlyLegacy={isCurrentlyLegacy}
           isCurrentlyPassive={isCurrentlyPassive}
-          participationStatus={participationStatus}
-          onChange={onParticipationStatusChange}
-          passiveReason={passiveReason}
-          onPassiveReasonChange={onPassiveReasonChange}
-          isAnchor={isAnchor}
-          wantsAnchor={wantsAnchor}
-          onWantsAnchorChange={onWantsAnchorChange}
-          anchorOnly={anchorOnly}
-          onAnchorOnlyChange={onAnchorOnlyChange}
-          anchorSeminarDays={anchorSeminarDays}
-          onAnchorSeminarDaysChange={onAnchorSeminarDaysChange}
-          periodAnchorSeminarDays={periodAnchorSeminarDays}
+          participationStatus={editor.participationStatus}
+          onChange={editor.onParticipationStatusChange}
+          passiveReason={editor.passiveReason}
+          onPassiveReasonChange={editor.onPassiveReasonChange}
         />
       )}
 
-      {participationStatus === "legacy" && (
+      {includesShiftStatusQuestions && editor.participationStatus === "active" && (
+        <AnchorPreferenceCard
+          wantsAnchor={editor.wantsAnchor}
+          isAnchor={isAnchor}
+          anchorOnly={editor.anchorOnly}
+          anchorSeminarDays={editor.anchorSeminarDays}
+          periodAnchorSeminarDays={periodAnchorSeminarDays}
+          onWantsAnchorChange={editor.onWantsAnchorChange}
+          onAnchorOnlyChange={editor.onAnchorOnlyChange}
+          onAnchorSeminarDaysChange={editor.onAnchorSeminarDaysChange}
+        />
+      )}
+
+      {editor.participationStatus === "legacy" && (
         <Card size="small" title="Contact for Teams">
           <Space direction="vertical" style={{ width: "100%" }}>
             <Typography.Text type="secondary">
               Private email that we can invite to Teams (leave blank to use your ITU email).
             </Typography.Text>
             <Input
-              value={privateEmail}
-              onChange={(e) => onPrivateEmailChange(e.target.value)}
+              value={editor.privateEmail}
+              onChange={(e) => editor.onPrivateEmailChange(e.target.value)}
               placeholder="your@email.com"
               type="email"
             />
@@ -140,18 +126,18 @@ export default function ShiftAvailabilityForm({
         <EventAvailabilityGrid
           groupedShifts={periodEventGroups}
           mandatoryEventIds={mandatoryEventIds ?? new Set()}
-          eventChoices={eventChoices}
-          eventCanShiftIds={eventCanShiftIds}
-          onEventChoiceChange={onEventChoiceChange}
-          onCanShiftIdsChange={onEventCanShiftIdsChange}
+          eventChoices={editor.eventChoices}
+          eventCanShiftIds={editor.eventCanShiftIds}
+          onEventChoiceChange={editor.onEventChoiceChange}
+          onCanShiftIdsChange={editor.onEventCanShiftIdsChange}
         />
       )}
 
       <Card size="small" title="Any other comments?">
         <TextArea
           rows={4}
-          value={comments}
-          onChange={(e) => onCommentsChange(e.target.value)}
+          value={editor.comments}
+          onChange={(e) => editor.onCommentsChange(e.target.value)}
           placeholder="Optional: add anything the shift manager should know."
         />
       </Card>

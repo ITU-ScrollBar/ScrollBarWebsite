@@ -2,7 +2,7 @@ import { RocketOutlined } from "@ant-design/icons";
 import { Alert, Button, Popconfirm, Space } from "antd";
 import Text from "antd/es/typography/Text";
 import ShiftEventInformationSection from "./ShiftEventInformationSection";
-import { Event, Shift, ShiftPlanningPeriod, ShiftPlanningResponse } from "../../../../types/types-file";
+import { Event, ShiftPlanningPeriod } from "../../../../types/types-file";
 
 type ShiftPlanningTabProps = {
   selectedPeriod: ShiftPlanningPeriod;
@@ -16,17 +16,11 @@ type ShiftPlanningTabProps = {
   generationSummary: string | null;
   generationWarnings: string[];
   currentEvent: Event | null;
-  selectedPeriodEvents: Event[];
   onSelectedEventChange: (eventId: string) => void;
   onToggleShiftsPublished: (checked: boolean) => void;
   onAddDefaultShifts: () => void;
   onOpenCustomShiftModal: () => void;
   onAddBigPartyShifts: () => void;
-  shiftsForEvent: Shift[];
-  addShift: (shift: Shift) => Promise<string>;
-  updateShift: (id: string, field: string, value: unknown) => void;
-  removeShift: (shift: Shift) => Promise<void>;
-  periodResponses: ShiftPlanningResponse[];
 };
 
 export default function ShiftPlanningTab({
@@ -41,17 +35,11 @@ export default function ShiftPlanningTab({
   generationSummary,
   generationWarnings,
   currentEvent,
-  selectedPeriodEvents,
   onSelectedEventChange,
   onToggleShiftsPublished,
   onAddDefaultShifts,
   onOpenCustomShiftModal,
   onAddBigPartyShifts,
-  shiftsForEvent,
-  addShift,
-  updateShift,
-  removeShift,
-  periodResponses,
 }: ShiftPlanningTabProps) {
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
@@ -111,19 +99,12 @@ export default function ShiftPlanningTab({
       </div>
 
       <ShiftEventInformationSection
-        selectedPeriod={selectedPeriod}
         currentEvent={currentEvent}
-        selectedPeriodEvents={selectedPeriodEvents}
         onSelectedEventChange={onSelectedEventChange}
         onToggleShiftsPublished={onToggleShiftsPublished}
         onAddDefaultShifts={onAddDefaultShifts}
         onOpenCustomShiftModal={onOpenCustomShiftModal}
         onAddBigPartyShifts={onAddBigPartyShifts}
-        shiftsForEvent={shiftsForEvent}
-        addShift={addShift}
-        updateShift={updateShift}
-        removeShift={removeShift}
-        periodResponses={periodResponses}
       />
     </Space>
   );

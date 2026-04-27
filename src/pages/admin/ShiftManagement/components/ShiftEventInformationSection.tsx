@@ -3,41 +3,62 @@ import { Button, Card, Col, Empty, message, Row, Select, Space, Switch } from "a
 import Text from "antd/es/typography/Text";
 import dayjs from "dayjs";
 import { useMemo } from "react";
-import { Event, Shift, ShiftPlanningPeriod, ShiftPlanningResponse } from "../../../../types/types-file";
+import { useShiftContext } from "../../../../contexts/ShiftContext";
+import { useShiftPlanningContext } from "../../../../contexts/ShiftPlanningContext";
+import useEvents from "../../../../hooks/useEvents";
+import { Event, Shift } from "../../../../types/types-file";
 import ShiftAssignmentInfo from "./ShiftAssignmentInfo";
 import ShiftInfo from "./ShiftInfo";
 
 type ShiftEventInformationSectionProps = {
-  selectedPeriod: ShiftPlanningPeriod;
   currentEvent: Event | null;
-  selectedPeriodEvents: Event[];
   onSelectedEventChange: (eventId: string) => void;
   onToggleShiftsPublished: (checked: boolean) => void;
   onAddDefaultShifts: () => void;
   onOpenCustomShiftModal: () => void;
   onAddBigPartyShifts: () => void;
-  shiftsForEvent: Shift[];
-  addShift: (shift: Shift) => Promise<string>;
-  updateShift: (id: string, field: string, value: unknown) => void;
-  removeShift: (shift: Shift) => Promise<void>;
-  periodResponses: ShiftPlanningResponse[];
 };
 
 export default function ShiftEventInformationSection({
-  selectedPeriod,
   currentEvent,
-  selectedPeriodEvents,
   onSelectedEventChange,
   onToggleShiftsPublished,
   onAddDefaultShifts,
   onOpenCustomShiftModal,
   onAddBigPartyShifts,
-  shiftsForEvent,
-  addShift,
-  updateShift,
-  removeShift,
-  periodResponses,
 }: ShiftEventInformationSectionProps) {
+  const { shiftState, addShift, updateShift, removeShift } = useShiftContext();
+  const { periodState, selectedPeriodId, responseState } = useShiftPlanningContext();
+  const { eventState } = useEvents();
+
+  const selectedPeriod = useMemo(
+    () => periodState.periods.find((p) => p.id === selectedPeriodId) ?? null,
+    [periodState.periods, selectedPeriodId]
+  );
+
+  const allEvents = useMemo(
+    () => [...eventState.events, ...eventState.previousEvents],
+    [eventState.events, eventState.previousEvents]
+  );
+
+  const selectedPeriodEvents = useMemo(() => {
+    if (!selectedPeriod) return [];
+    const selectedEventIds = new Set(selectedPeriod.eventIds);
+    return allEvents
+      .filter((event) => selectedEventIds.has(event.id))
+      .sort((a, b) => a.start.getTime() - b.start.getTime());
+  }, [allEvents, selectedPeriod]);
+
+  const shiftsForEvent = useMemo(
+    () =>
+      shiftState.shifts
+        .filter((shift) => shift.eventId === currentEvent?.id)
+        .sort((a, b) => a.start.getTime() - b.start.getTime()),
+    [currentEvent?.id, shiftState.shifts]
+  );
+
+  const periodResponses = responseState.responses;
+
   const satelliteByPrimaryId = useMemo(() => {
     const map = new Map<string, Shift>();
     for (const shift of shiftsForEvent) {
@@ -164,9 +185,8 @@ export default function ShiftEventInformationSection({
                       <Space direction="vertical" style={{ width: "100%" }} size="middle">
                         <ShiftInfo
                           shift={shift}
-                          updateShift={updateShift}
                           removeShift={handleRemoveShift}
-                          isMandatory={selectedPeriod.mandatoryEventIds?.includes(shift.eventId)}
+                          isMandatory={selectedPeriod?.mandatoryEventIds?.includes(shift.eventId)}
                           satelliteShift={satellite}
                           onAddSatellite={() => handleAddSatellite(shift)}
                           onRemoveSatellite={() => {

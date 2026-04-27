@@ -3,7 +3,7 @@ import { message } from "antd";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useShiftContext } from "../../../../contexts/ShiftContext";
 import useEvents from "../../../../hooks/useEvents";
-import useShiftPlanning from "../../../../hooks/useShiftPlanning";
+import { useShiftPlanningContext } from "../../../../contexts/ShiftPlanningContext";
 import { EventChoice, ParticipationStatus, Role, Shift } from "../../../../types/types-file";
 import { filterOpenPeriodsForUser, resolveSurveyType } from "../../../../firebase/api/shiftPlanning";
 
@@ -11,7 +11,13 @@ export const useShiftAvailabilityForm = () => {
   const { currentUser } = useAuth();
   const { shiftState } = useShiftContext();
   const { eventState } = useEvents();
-  const { periodState, loadUserResponse, submitResponse } = useShiftPlanning();
+  const {
+    periodState,
+    loadUserResponse,
+    submitResponse,
+    selectedPeriodId,
+    setSelectedPeriodId,
+  } = useShiftPlanningContext();
 
   const [eventChoices, setEventChoices] = useState<Partial<Record<string, EventChoice>>>({});
   const [eventCanShiftIds, setEventCanShiftIds] = useState<Record<string, string[]>>({});
@@ -27,7 +33,6 @@ export const useShiftAvailabilityForm = () => {
   const [loadingResponse, setLoadingResponse] = useState(false);
   const [loadingPeriodSelection, setLoadingPeriodSelection] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [selectedPeriodId, setSelectedPeriodId] = useState<string | undefined>(undefined);
   const [answeredByPeriodId, setAnsweredByPeriodId] = useState<Record<string, boolean>>({});
 
   const userIsNewbie = currentUser?.roles?.includes(Role.NEWBIE) ?? false;
@@ -103,7 +108,7 @@ export const useShiftAvailabilityForm = () => {
     return () => {
       cancelled = true;
     };
-  }, [availablePeriods, currentUser?.uid, loadUserResponse]);
+  }, [availablePeriods, currentUser?.uid, loadUserResponse, setSelectedPeriodId]);
 
   const periodShifts = useMemo(() => {
     if (!selectedPeriod) return [];

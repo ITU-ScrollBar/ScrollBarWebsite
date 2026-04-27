@@ -10,7 +10,7 @@ import { UserAvatar } from "../UserAvatar";
 import { Loading } from "../Loading";
 import { Role } from "../../types/types-file";
 import useSettings from "../../hooks/useSettings";
-import useShiftPlanning from "../../hooks/useShiftPlanning";
+import { useShiftPlanningContext } from "../../contexts/ShiftPlanningContext";
 import { filterOpenPeriodsForUser } from "../../firebase/api/shiftPlanning";
 
 interface TenderMenuProps {
@@ -22,7 +22,7 @@ type MenuItem = Required<MenuProps>['items'][number];
 export const TenderMenu = ({ children }: TenderMenuProps) => {
   const { currentUser, loading, logout } = useAuth();
   const { settingsState } = useSettings();
-  const { periodState } = useShiftPlanning();
+  const { periodState } = useShiftPlanningContext();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { isMobile } = useWindowSize();

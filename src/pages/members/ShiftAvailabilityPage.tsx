@@ -1,6 +1,6 @@
 import { Alert, Card, Empty, Layout, Select, Space, Typography } from "antd";
 import dayjs from "dayjs";
-import ShiftAvailabilityForm from "../../components/ShiftAvailability/ShiftAvailabilityForm";
+import ShiftAvailabilityForm, { FormEditorState } from "../../components/ShiftAvailability/ShiftAvailabilityForm";
 import { useShiftAvailabilityForm } from "./ShiftAvailability/hooks/useShiftAvailabilityForm";
 
 const { Content } = Layout;
@@ -67,6 +67,27 @@ export default function ShiftAvailabilityPage() {
     );
   }
 
+  const editor: FormEditorState = {
+    participationStatus,
+    onParticipationStatusChange: handleSetParticipationStatus,
+    wantsAnchor,
+    onWantsAnchorChange: setWantsAnchor,
+    anchorOnly,
+    onAnchorOnlyChange: setAnchorOnly,
+    anchorSeminarDays,
+    onAnchorSeminarDaysChange: setAnchorSeminarDays,
+    eventChoices,
+    onEventChoiceChange: handleSetEventChoice,
+    eventCanShiftIds,
+    onEventCanShiftIdsChange: handleSetCanShiftIdsForEvent,
+    passiveReason,
+    onPassiveReasonChange: setPassiveReason,
+    privateEmail,
+    onPrivateEmailChange: setPrivateEmail,
+    comments,
+    onCommentsChange: setComments,
+  };
+
   return (
     <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
       <Content style={{ padding: 24 }}>
@@ -121,28 +142,11 @@ export default function ShiftAvailabilityPage() {
               includesShiftStatusQuestions={includesShiftStatusQuestions}
               isCurrentlyPassive={isCurrentlyPassive}
               isCurrentlyLegacy={isCurrentlyLegacy}
-              participationStatus={participationStatus}
-              onParticipationStatusChange={handleSetParticipationStatus}
               isAnchor={isAnchor}
-              wantsAnchor={wantsAnchor}
-              onWantsAnchorChange={setWantsAnchor}
-              anchorOnly={anchorOnly}
-              onAnchorOnlyChange={setAnchorOnly}
-              anchorSeminarDays={anchorSeminarDays}
-              onAnchorSeminarDaysChange={setAnchorSeminarDays}
               periodAnchorSeminarDays={selectedPeriod.anchorSeminarDays ?? []}
               periodEventGroups={groupedShifts}
               mandatoryEventIds={mandatoryEventIds}
-              eventChoices={eventChoices}
-              eventCanShiftIds={eventCanShiftIds}
-              onEventChoiceChange={handleSetEventChoice}
-              onEventCanShiftIdsChange={handleSetCanShiftIdsForEvent}
-              passiveReason={passiveReason}
-              onPassiveReasonChange={setPassiveReason}
-              privateEmail={privateEmail}
-              onPrivateEmailChange={setPrivateEmail}
-              comments={comments}
-              onCommentsChange={setComments}
+              editor={editor}
               onSubmit={handleSubmit}
               submitting={saving}
               isSubmitDisabled={isSubmitDisabled}

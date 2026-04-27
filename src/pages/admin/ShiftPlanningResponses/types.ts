@@ -27,8 +27,6 @@ export type EventAggregate = {
 export type ShiftPlanningResponsesPageProps = {
   embedded?: boolean;
   embeddedSection?: SurveyResponseSection;
-  selectedPeriodId?: string;
-  onSelectedPeriodIdChange?: (periodId: string) => void;
 };
 
 export type SurveyUser = {

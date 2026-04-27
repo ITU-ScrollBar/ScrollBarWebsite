@@ -2,13 +2,13 @@ import { InputNumber, Input, DatePicker, Button, Divider, Popconfirm, Select, Sp
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { ReactNode } from "react";
 import dayjs from "dayjs";
+import { useShiftContext } from "../../../../contexts/ShiftContext";
 import { Shift, ShiftCategory } from "../../../../types/types-file";
 
 const { Text } = Typography;
 
 export default function ShiftInfo(props: {
   shift: Shift;
-  updateShift: (id: string, field: string, value: unknown) => void;
   removeShift: (shift: Shift) => void;
   isMandatory?: boolean;
   satelliteShift?: Shift;
@@ -20,7 +20,6 @@ export default function ShiftInfo(props: {
 }) {
   const {
     shift,
-    updateShift,
     removeShift,
     isMandatory,
     satelliteShift,
@@ -30,6 +29,7 @@ export default function ShiftInfo(props: {
     primaryAssignment,
     satelliteAssignment,
   } = props;
+  const { updateShift } = useShiftContext();
 
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="small">

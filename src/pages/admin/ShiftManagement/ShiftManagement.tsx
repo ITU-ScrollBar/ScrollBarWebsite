@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useShiftContext } from "../../../contexts/ShiftContext";
 import useEvents from "../../../hooks/useEvents";
-import useShiftPlanning from "../../../hooks/useShiftPlanning";
+import { useShiftPlanningContext } from "../../../contexts/ShiftPlanningContext";
 import useTenders from "../../../hooks/useTenders";
 import { ShiftCategory, ShiftPlanningSurveyType } from "../../../types/types-file";
 import { resolveSurveyType } from "../../../firebase/api/shiftPlanning";
@@ -23,11 +23,10 @@ type ShiftManagementTabKey = "planning" | "survey-overview" | "survey-individual
 export default function ShiftManagement() {
   const { currentUser } = useAuth();
   const { eventState, updateEvent } = useEvents();
-  const { shiftState, addShift, removeShift, updateShift } = useShiftContext();
-  const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null);
+  const { shiftState, addShift } = useShiftContext();
   const [activeTab, setActiveTab] = useState<ShiftManagementTabKey>("planning");
-  const { periodState, responseState, createPeriod, updatePeriod, triggerGeneratePlan } =
-    useShiftPlanning(selectedPeriodId ?? undefined);
+  const { periodState, responseState, createPeriod, updatePeriod, triggerGeneratePlan, selectedPeriodId, setSelectedPeriodId } =
+    useShiftPlanningContext();
   const { tenderState, deleteTender } = useTenders();
 
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
@@ -91,7 +90,7 @@ export default function ShiftManagement() {
     if (!selectedPeriodId && sortedPeriods.length > 0) {
       setSelectedPeriodId(sortedPeriods[0].id);
     }
-  }, [selectedPeriodId, sortedPeriods]);
+  }, [selectedPeriodId, setSelectedPeriodId, sortedPeriods]);
 
   useEffect(() => {
     if (!selectedPeriodEvents.length) {
@@ -393,10 +392,6 @@ export default function ShiftManagement() {
     );
   }
 
-  const shiftsForEvent = shiftState.shifts
-    .filter((shift) => shift.eventId === currentEvent?.id)
-    .sort((a, b) => a.start.getTime() - b.start.getTime());
-
   return eventState.isLoaded && shiftState.isLoaded ? (
     <Layout style={{ minHeight: "100vh", background: "#f5f5f5" }}>
       <Content style={{ padding: "24px" }}>
@@ -452,17 +447,11 @@ export default function ShiftManagement() {
                         generationSummary={generationSummary}
                         generationWarnings={generationWarnings}
                         currentEvent={currentEvent}
-                        selectedPeriodEvents={selectedPeriodEvents}
                         onSelectedEventChange={setSelectedEventId}
                         onToggleShiftsPublished={handleToggleCurrentEventPublished}
                         onAddDefaultShifts={addDefaultShifts}
                         onOpenCustomShiftModal={openCustomShiftModal}
                         onAddBigPartyShifts={addBigPartyShifts}
-                        shiftsForEvent={shiftsForEvent}
-                        addShift={addShift}
-                        updateShift={updateShift}
-                        removeShift={removeShift}
-                        periodResponses={responseState.responses}
                       />
                     ),
                   },
@@ -473,8 +462,6 @@ export default function ShiftManagement() {
                       <ShiftPlanningResponsesPage
                         embedded
                         embeddedSection="overview"
-                        selectedPeriodId={selectedPeriod.id}
-                        onSelectedPeriodIdChange={(periodId) => setSelectedPeriodId(periodId)}
                       />
                     ),
                   },
@@ -485,8 +472,6 @@ export default function ShiftManagement() {
                       <ShiftPlanningResponsesPage
                         embedded
                         embeddedSection="individual"
-                        selectedPeriodId={selectedPeriod.id}
-                        onSelectedPeriodIdChange={(periodId) => setSelectedPeriodId(periodId)}
                       />
                     ),
                   },

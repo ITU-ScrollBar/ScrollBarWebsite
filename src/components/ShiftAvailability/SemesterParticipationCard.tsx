@@ -1,6 +1,5 @@
 import { Alert, Card, Input, Radio, Space, Typography } from "antd";
 import { ParticipationStatus } from "../../types/types-file";
-import AnchorPreferenceCard from "./AnchorPreferenceCard";
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -12,14 +11,6 @@ type SemesterParticipationCardProps = {
   onChange: (status: ParticipationStatus) => void;
   passiveReason: string;
   onPassiveReasonChange: (value: string) => void;
-  isAnchor: boolean;
-  wantsAnchor: boolean | undefined;
-  onWantsAnchorChange: (value: boolean) => void;
-  anchorOnly: boolean;
-  onAnchorOnlyChange: (value: boolean) => void;
-  anchorSeminarDays: string[];
-  onAnchorSeminarDaysChange: (value: string[]) => void;
-  periodAnchorSeminarDays: string[];
 };
 
 export default function SemesterParticipationCard({
@@ -29,14 +20,6 @@ export default function SemesterParticipationCard({
   onChange,
   passiveReason,
   onPassiveReasonChange,
-  isAnchor,
-  wantsAnchor,
-  onWantsAnchorChange,
-  anchorOnly,
-  onAnchorOnlyChange,
-  anchorSeminarDays,
-  onAnchorSeminarDaysChange,
-  periodAnchorSeminarDays,
 }: SemesterParticipationCardProps) {
   return (
     <Card size="small" title="Semester participation">
@@ -88,18 +71,6 @@ export default function SemesterParticipationCard({
             <Radio value="legacy">Legacy member</Radio>
             <Radio value="leave">Implicit member (Leaving the bar)</Radio>
           </Radio.Group>
-        )}
-        {participationStatus === "active" && (
-          <AnchorPreferenceCard
-            wantsAnchor={wantsAnchor}
-            isAnchor={isAnchor}
-            anchorOnly={anchorOnly}
-            anchorSeminarDays={anchorSeminarDays}
-            periodAnchorSeminarDays={periodAnchorSeminarDays}
-            onWantsAnchorChange={onWantsAnchorChange}
-            onAnchorOnlyChange={onAnchorOnlyChange}
-            onAnchorSeminarDaysChange={onAnchorSeminarDaysChange}
-          />
         )}
       </Space>
     </Card>
