@@ -4,6 +4,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext'; // Adjust path
 import { EngagementProvider } from '../contexts/EngagementContext';
 import { ShiftProvider } from '../contexts/ShiftContext';
+import { ShiftPlanningProvider } from '../contexts/ShiftPlanningContext';
 import { Loading } from '../components/Loading';
 
 const ProtectedRoutes: React.FC = () => {
@@ -26,7 +27,9 @@ const ProtectedRoutes: React.FC = () => {
   // If user is logged in, render the child route components
   return <EngagementProvider>
     <ShiftProvider>
-      <Outlet />
+      <ShiftPlanningProvider>
+        <Outlet />
+      </ShiftPlanningProvider>
     </ShiftProvider>
   </EngagementProvider>;
 };

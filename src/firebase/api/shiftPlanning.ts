@@ -1,0 +1,264 @@
+import {
+  addDoc,
+  arrayRemove,
+  arrayUnion,
+  writeBatch,
+  collection,
+  doc,
+  getDoc,
+  onSnapshot,
+  orderBy,
+  query,
+  QuerySnapshot,
+  DocumentData,
+  serverTimestamp,
+  setDoc,
+  Unsubscribe,
+  updateDoc,
+  where,
+} from "firebase/firestore";
+import { httpsCallable } from "firebase/functions";
+import { db, functions } from "..";
+import { ShiftPlanningPeriod, ShiftPlanningPeriodStatus, ShiftPlanningSurveyType } from "../../types/types-file";
+
+const env = import.meta.env.VITE_APP_ENV as string;
+
+export const resolveSurveyType = (period: {
+  surveyType?: ShiftPlanningSurveyType;
+  includeShiftStatusQuestions?: boolean;
+}): ShiftPlanningSurveyType => {
+  if (period.surveyType) {
+    return period.surveyType;
+  }
+  if (period.includeShiftStatusQuestions === false) {
+    return "excludeSemesterStatus";
+  }
+  return "regularSemesterSurvey";
+};
+
+export const filterOpenPeriodsForUser = (
+  periods: ShiftPlanningPeriod[],
+  isNewbie = false
+): ShiftPlanningPeriod[] => {
+  const now = Date.now();
+  return periods
+    .filter((period) => period.status === "open")
+    .filter((period) => period.submissionOpensAt?.getTime() <= now)
+    .filter((period) => period.submissionClosesAt?.getTime() >= now)
+    .filter((period) => {
+      const surveyType = resolveSurveyType(period);
+      return surveyType !== "newbieShiftPlanning" || isNewbie;
+    })
+    .sort(
+      (a, b) =>
+        (a.submissionClosesAt?.getTime() ?? Number.MAX_SAFE_INTEGER) -
+        (b.submissionClosesAt?.getTime() ?? Number.MAX_SAFE_INTEGER)
+    );
+};
+
+const getPeriodsCollection = () =>
+  collection(doc(collection(db, "env"), env), "shiftPlanningPeriods");
+
+const getResponsesCollection = () =>
+  collection(doc(collection(db, "env"), env), "shiftPlanningResponses");
+
+export type CreateShiftPlanningPeriodPayload = {
+  name: string;
+  eventIds: string[];
+  mandatoryEventIds: string[];
+  surveyType?: ShiftPlanningSurveyType;
+  submissionOpensAt: Date;
+  submissionClosesAt: Date;
+  status?: ShiftPlanningPeriodStatus;
+  createdBy: string;
+  anchorSeminarDays?: string[];
+};
+
+export type ShiftPlanningResponsePayload = {
+  periodId: string;
+  userId: string;
+  participationStatus: "active" | "passive" | "legacy" | "leave";
+  wantsAnchor: boolean;
+  isNewAnchor?: boolean;
+  availability: Record<string, boolean>;
+  anchorOnly: boolean;
+  anchorSeminarDays?: string[];
+  comments?: string;
+  passiveReason?: string;
+  privateEmail?: string;
+};
+
+export type GenerateShiftPlanPayload = {
+  periodId: string;
+};
+
+export type GenerateShiftPlanResult = {
+  success: boolean;
+  periodId: string;
+  env: string;
+  createdEngagementCount: number;
+  assignedAnchorCount: number;
+  assignedTenderCount: number;
+  unfilledTenderSlots: number;
+  warnings: Array<{
+    code:
+      | "shift_missing_category"
+      | "shift_missing_experienced_anchor"
+      | "new_anchor_opening_closing_not_met"
+      | "shift_has_no_anchor"
+      | "underfilled_tender_shifts"
+      | "mandatory_assignment_not_met";
+    message: string;
+    details: Record<string, unknown>;
+  }>;
+};
+
+export const streamShiftPlanningPeriods = (
+  observer: {
+    next: (snapshot: QuerySnapshot<DocumentData>) => void;
+    error: (error: Error) => void;
+  }
+): Unsubscribe => {
+  const q = query(getPeriodsCollection(), orderBy("submissionOpensAt", "desc"));
+  return onSnapshot(q, observer.next, observer.error);
+};
+
+export const streamShiftPlanningResponses = (
+  periodId: string,
+  observer: {
+    next: (snapshot: QuerySnapshot<DocumentData>) => void;
+    error: (error: Error) => void;
+  }
+): Unsubscribe => {
+  const q = query(
+    getResponsesCollection(),
+    where("periodId", "==", periodId),
+    orderBy("updatedAt", "desc")
+  );
+
+  return onSnapshot(q, observer.next, observer.error);
+};
+
+export const createShiftPlanningPeriod = async (
+  payload: CreateShiftPlanningPeriodPayload
+): Promise<string> => {
+  const ref = await addDoc(getPeriodsCollection(), {
+    name: payload.name,
+    eventIds: payload.eventIds,
+    mandatoryEventIds: payload.mandatoryEventIds,
+    surveyType: payload.surveyType ?? "regularSemesterSurvey",
+    submissionOpensAt: payload.submissionOpensAt,
+    submissionClosesAt: payload.submissionClosesAt,
+    status: payload.status ?? "open",
+    createdBy: payload.createdBy,
+    createdAt: serverTimestamp(),
+    anchorSeminarDays: payload.anchorSeminarDays ?? [],
+  });
+  return ref.id;
+};
+
+export const updateShiftPlanningPeriod = async (
+  periodId: string,
+  updates: Partial<{
+    name: string;
+    eventIds: string[];
+    mandatoryEventIds: string[];
+    surveyType: ShiftPlanningSurveyType;
+    submissionOpensAt: Date;
+    submissionClosesAt: Date;
+    status: ShiftPlanningPeriodStatus;
+    anchorSeminarDays: string[];
+  }>
+): Promise<void> => {
+  const ref = doc(getPeriodsCollection(), periodId);
+  return updateDoc(ref, updates);
+};
+
+export const submitShiftPlanningResponse = async (
+  payload: ShiftPlanningResponsePayload
+): Promise<void> => {
+  const responseId = `${payload.periodId}_${payload.userId}`;
+  const ref = doc(getResponsesCollection(), responseId);
+
+  await setDoc(
+    ref,
+    {
+      periodId: payload.periodId,
+      userId: payload.userId,
+      participationStatus: payload.participationStatus,
+      wantsAnchor: payload.wantsAnchor,
+      ...(payload.isNewAnchor !== undefined && { isNewAnchor: payload.isNewAnchor }),
+      availability: payload.availability,
+      anchorOnly: payload.anchorOnly,
+      anchorSeminarDays: payload.anchorSeminarDays ?? [],
+      comments: payload.comments?.trim() ?? "",
+      passiveReason: payload.passiveReason?.trim() ?? "",
+      privateEmail: payload.privateEmail?.trim() ?? "",
+      submittedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
+};
+
+export const getUserShiftPlanningResponse = async (
+  periodId: string,
+  userId: string
+): Promise<DocumentData | null> => {
+  const responseId = `${periodId}_${userId}`;
+  const ref = doc(getResponsesCollection(), responseId);
+  const snapshot = await getDoc(ref);
+  return snapshot.exists() ? snapshot.data() : null;
+};
+
+export const generateShiftPlan = async (
+  payload: GenerateShiftPlanPayload
+): Promise<GenerateShiftPlanResult> => {
+  const callable = httpsCallable<
+    { periodId: string },
+    GenerateShiftPlanResult
+  >(functions, "generateShiftPlan");
+
+  const result = await callable({
+    periodId: payload.periodId,
+  });
+
+  return result.data;
+};
+
+export const updateMutualAvoidShiftPair = async (params: {
+  userId: string;
+  otherUserId: string;
+  shouldAvoid: boolean;
+}): Promise<void> => {
+  const { userId, otherUserId, shouldAvoid } = params;
+
+  if (!userId || !otherUserId || userId === otherUserId) {
+    return;
+  }
+
+  const userRef = doc(collection(db, "users"), userId);
+  const otherUserRef = doc(collection(db, "users"), otherUserId);
+
+  const batch = writeBatch(db);
+  batch.set(
+    userRef,
+    {
+      avoidShiftWithUserIds: shouldAvoid
+        ? arrayUnion(otherUserId)
+        : arrayRemove(otherUserId),
+    },
+    { merge: true }
+  );
+  batch.set(
+    otherUserRef,
+    {
+      avoidShiftWithUserIds: shouldAvoid
+        ? arrayUnion(userId)
+        : arrayRemove(userId),
+    },
+    { merge: true }
+  );
+
+  await batch.commit();
+};

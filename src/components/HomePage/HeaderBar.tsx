@@ -66,7 +66,7 @@ export default function HeaderBar() {
       key: "7",
       label: (
         <Link style={linkcss} onClick={() => navigate("/dj")}>
-          Become a DJ
+          BECOME A DJ
         </Link>
       ),
     },

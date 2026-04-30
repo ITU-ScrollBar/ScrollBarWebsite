@@ -89,7 +89,7 @@ export default function EngagementList({
                     />
                   </Col>
                   <Col span={18}>
-                    <Text>{tender.displayName || "Unknown"}</Text>
+                    <Text>{tender.displayName}</Text>
                     <br />
                     <Text type="secondary">{tender.email}</Text>
                   </Col>

@@ -29,8 +29,9 @@ const getEventsCollection = () =>
 /**
  * Creates a new event.
  */
-export const createEvent = (event: EventCreateParams): Promise<DocumentData> => {
-  return addDoc(getEventsCollection(), event);
+export const createEvent = async (event: EventCreateParams): Promise<string> => {
+  const ref = await addDoc(getEventsCollection(), {...event, deleted: false});
+  return ref.id;
 };
 
 /**

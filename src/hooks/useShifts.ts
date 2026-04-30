@@ -15,7 +15,6 @@ type FirebaseShift = {
   location: string;
   title: string;
   tenders: number;
-  anchors: number;
   start: Timestamp;
   end: Timestamp;
 }
@@ -85,7 +84,7 @@ const useShifts = () => {
     return unsubscribe;
   }, []);
 
-  const addShift = (shift: Shift): Promise<DocumentData> => {
+  const addShift = (shift: Shift): Promise<string> => {
     return createShift(shift);
   };
 

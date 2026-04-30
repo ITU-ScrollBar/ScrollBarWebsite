@@ -1,7 +1,6 @@
 // context/ShiftContext.tsx
 
 import { createContext, useContext, useMemo, ReactNode } from "react";
-import { DocumentData } from "firebase/firestore";
 import { Shift } from "../types/types-file"; // Ensure this is the correct import
 import useShifts from "../hooks/useShifts"; // Assuming this is your hook
 
@@ -11,7 +10,7 @@ export interface ShiftContextType {
     isLoaded: boolean;
     shifts: Shift[];
   };
-  addShift: (shift: Shift) => Promise<DocumentData>;
+  addShift: (shift: Shift) => Promise<string>;
   removeShift: (shift: Shift) => Promise<void>;
   updateShift: (id: string, field: string, value: any) => Promise<void>;
 }

@@ -289,20 +289,13 @@ export const ExistingUsersTab = () => {
                 }))}
                 value={editingUser?.roles || []}
                 labelRender={role => <RoleTag role={role.value.toString()} />}
-                onOpenChange={open => {
-                  if (!open) {
-                    if (editingUser)
-                      updateTender(
-                        editingUser.uid,
-                        "roles",
-                        editingUser.roles
-                      );
-                  }
-                }}
                 onChange={(value) => {
                   setEditingUser((prev) =>
                     prev ? { ...prev, roles: value } : prev
                   );
+                  if (editingUser) {
+                    updateTender(editingUser.uid, "roles", value);
+                  }
                 }}
               />
             </Form.Item>

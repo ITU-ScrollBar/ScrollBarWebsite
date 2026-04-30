@@ -27,12 +27,12 @@ export const getTenderForEngagement = (
 };
 
 /**
- * Gets the display name for a tender, with fallback
+ * Gets the display name for a tender
  * @param tender - The tender object
- * @returns The display name or "Unknown"
+ * @returns The display name
  */
 export const getTenderDisplayName = (tender: Tender): string => {
-  return tender.displayName || tender.name || "Unknown";
+  return tender.displayName;
 };
 
 /**
