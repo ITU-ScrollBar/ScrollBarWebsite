@@ -31,6 +31,7 @@ import dayjs from 'dayjs';
 import updateLocale from 'dayjs/plugin/updateLocale';
 import BoardManagementPage from "./pages/admin/BoardManagement/BoardManagementPage";
 import ApplicationsReviewPage from "./pages/admin/ApplicationsReviewPage";
+import DJPage from "./pages/DJPage";
 
 
 function App() {
@@ -61,6 +62,7 @@ function App() {
                 <Route path="/apply" element={<ApplyPage />} />
                 <Route path="/events" element={<EventsPage />} /> 
                 <Route path="/deletedUser" element={<InactiveUserPage />} /> 
+                <Route path="/dj" element={<DJPage />} /> 
 
                 {/* --- Protected Routes --- */}
                 <Route element={<ProtectedRoutes />}>

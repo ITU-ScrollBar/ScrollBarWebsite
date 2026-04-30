@@ -273,6 +273,13 @@ const GlobalSettingsPage = () => {
       label: "Signups open until",
       value: settingsState.settings.openForSignupsEnd || "",
     },
+    {
+      key: "djdescription",
+      inputType: "textarea",
+      label: "DJ description",
+      value: settingsState.settings.djdescription || "",
+    }
+
   ];
 
   const columns: TableProps<Setting>["columns"] = [
