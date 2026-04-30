@@ -38,7 +38,7 @@ export const ExistingUsersTab = () => {
   const [data, setData] = useState<(Tender & { teams: Team[] })[]>([]);
   const [searchValue, setSearchValue] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
-  const changeUserEmail = httpsCallable(getFunctions(), "resetUserMail");
+  const changeUserEmail = httpsCallable(getFunctions(undefined, "europe-west1"), "resetUserMail");
 
   useEffect(() => {
     getStudyLines()
