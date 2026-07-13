@@ -327,6 +327,8 @@ export interface Ticket {
   key?: string;
   title: string;
   description: string;
+  imageUrls?: string[];
+  imagePaths?: string[];
   department: TicketDepartment;
   requestType: TicketRequestType;
   impact: TicketImpact;
@@ -339,6 +341,8 @@ export interface Ticket {
 export interface TicketCreateParams {
   title: string;
   description: string;
+  imageUrls?: string[];
+  imagePaths?: string[];
   department: TicketDepartment;
   requestType: TicketRequestType;
   impact: TicketImpact;

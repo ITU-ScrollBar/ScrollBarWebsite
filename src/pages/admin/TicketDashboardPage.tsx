@@ -8,6 +8,7 @@ import {
   Descriptions,
   Drawer,
   Empty,
+  Image,
   Layout,
   Popconfirm,
   Row,
@@ -399,6 +400,36 @@ export default function TicketDashboardPage() {
                   {selectedTicket.description || "No description"}
                 </div>
               </div>
+
+              {selectedTicket.imageUrls?.length ? (
+                <div>
+                  <Text strong>Images</Text>
+                  <Image.PreviewGroup>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
+                        gap: 12,
+                        marginTop: 8,
+                      }}
+                    >
+                      {selectedTicket.imageUrls.map((url) => (
+                        <Image
+                          key={url}
+                          src={url}
+                          alt="Ticket attachment"
+                          style={{
+                            width: "100%",
+                            height: 120,
+                            objectFit: "cover",
+                            borderRadius: 8,
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </Image.PreviewGroup>
+                </div>
+              ) : null}
 
               <Descriptions bordered column={1} size="small">
                 <Descriptions.Item label="Department">

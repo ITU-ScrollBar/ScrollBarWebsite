@@ -65,8 +65,8 @@ const useTickets = () => {
     };
   }, [loadTickets]);
 
-  const addTicket = async (ticket: TicketCreateParams) => {
-    return createTicket(ticket);
+  const addTicket = async (ticket: TicketCreateParams, imageFiles: File[] = []) => {
+    return createTicket(ticket, imageFiles);
   };
 
   const updateTicketStatus = async (id: string, status: TicketStatus) => {

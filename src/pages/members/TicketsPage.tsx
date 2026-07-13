@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   App as AntdApp,
   Button,
@@ -9,8 +10,11 @@ import {
   Layout,
   Row,
   Select,
+  Upload,
   Typography,
 } from "antd";
+import type { UploadFile } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
 import { useAuth } from "../../contexts/AuthContext";
 import useTickets from "../../hooks/useTickets";
 import {
@@ -27,6 +31,7 @@ const { TextArea } = Input;
 type TicketFormValues = {
   title: string;
   description: string;
+  images?: UploadFile[];
   department: TicketDepartment;
   requestType: TicketRequestType;
   impact: TicketImpact;
@@ -52,6 +57,7 @@ export default function TicketsPage() {
   const { message } = AntdApp.useApp();
   const { currentUser } = useAuth();
   const { addTicket } = useTickets();
+  const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [form] = Form.useForm<TicketFormValues>();
 
@@ -75,16 +81,15 @@ export default function TicketsPage() {
       impact: values.impact,
     };
 
+    const imageFiles = (values.images ?? []).flatMap((file) =>
+      file.originFileObj ? [file.originFileObj as File] : []
+    );
+
     setSubmitting(true);
     try {
-      await addTicket(payload);
+      await addTicket(payload, imageFiles);
       message.success("Ticket created successfully!");
-      form.resetFields();
-      form.setFieldsValue({
-        department: TicketDepartment.MAINTENANCE,
-        requestType: TicketRequestType.BROKEN,
-        impact: TicketImpact.LOW,
-      });
+      navigate("/members/profile");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to create ticket.";
       message.error(errorMessage);
@@ -147,6 +152,27 @@ export default function TicketsPage() {
                     showCount
                     maxLength={1500}
                   />
+                </Form.Item>
+
+                <Form.Item
+                  label="Images"
+                  name="images"
+                  valuePropName="fileList"
+                  getValueFromEvent={(event) => event?.fileList ?? []}
+                  extra="Optional. Upload up to 4 images."
+                >
+                  <Upload
+                    accept="image/*"
+                    listType="picture-card"
+                    beforeUpload={() => false}
+                    multiple
+                    maxCount={4}
+                  >
+                    <div>
+                      <PlusOutlined />
+                      <div style={{ marginTop: 8 }}>Upload</div>
+                    </div>
+                  </Upload>
                 </Form.Item>
 
                 <Row gutter={16}>

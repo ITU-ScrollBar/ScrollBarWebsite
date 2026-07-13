@@ -62,6 +62,8 @@ type FirebaseEvent = Event & { deleted: boolean }
 type TicketRequestPayload = {
   title?: string;
   description?: string;
+  imageUrls?: string[];
+  imagePaths?: string[];
   department?: TicketDepartment;
   requestType?: TicketRequestType;
   impact?: TicketImpact;
@@ -83,6 +85,68 @@ type TicketUpdatePayload = {
 const ensureBoardAccess = async (uid: string): Promise<boolean> => {
   const user = (await db.collection('users').doc(uid).get()).data() as Tender | undefined;
   return Boolean(user?.isAdmin || user?.roles?.includes(Role.BOARD));
+};
+
+const resolveStorageBucketName = (): string => {
+  const firebaseConfigRaw = process.env.FIREBASE_CONFIG;
+  if (firebaseConfigRaw) {
+    try {
+      const parsed = JSON.parse(firebaseConfigRaw) as { storageBucket?: string };
+      if (parsed.storageBucket) {
+        return parsed.storageBucket;
+      }
+    } catch {
+      // Ignore malformed FIREBASE_CONFIG and fallback.
+    }
+  }
+
+  if (process.env.FIREBASE_STORAGE_BUCKET) {
+    return process.env.FIREBASE_STORAGE_BUCKET;
+  }
+
+  if (process.env.VITE_APP_FIREBASE_STORAGE_BUCKET) {
+    return process.env.VITE_APP_FIREBASE_STORAGE_BUCKET;
+  }
+
+  return `${process.env.GCLOUD_PROJECT}.appspot.com`;
+};
+
+const extractStoragePathFromUrl = (value: string): string | null => {
+  if (!value) {
+    return null;
+  }
+
+  if (value.startsWith('gs://')) {
+    const gsWithoutPrefix = value.slice('gs://'.length);
+    const slashIndex = gsWithoutPrefix.indexOf('/');
+    if (slashIndex < 0) {
+      return null;
+    }
+    return gsWithoutPrefix.slice(slashIndex + 1) || null;
+  }
+
+  try {
+    const parsed = new URL(value);
+    if (parsed.hostname === 'firebasestorage.googleapis.com') {
+      const marker = '/o/';
+      const markerIndex = parsed.pathname.indexOf(marker);
+      if (markerIndex >= 0) {
+        const encodedPath = parsed.pathname.slice(markerIndex + marker.length);
+        return decodeURIComponent(encodedPath);
+      }
+    }
+
+    if (parsed.hostname === 'storage.googleapis.com') {
+      const parts = parsed.pathname.split('/').filter(Boolean);
+      if (parts.length >= 2) {
+        return parts.slice(1).join('/');
+      }
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
 };
 
 type MapToIcsEventProps = {
@@ -147,9 +211,15 @@ app.post('/tickets', async (req, res) => {
     const decoded = await admin.auth().verifyIdToken(token);
     const uid = decoded.uid;
 
-    const { title, description, department, requestType, impact } = (req.body ?? {}) as TicketRequestPayload;
+    const { title, description, imageUrls, imagePaths, department, requestType, impact } = (req.body ?? {}) as TicketRequestPayload;
     const trimmedTitle = title?.trim() ?? '';
     const trimmedDescription = description?.trim() ?? '';
+    const normalizedImageUrls = Array.isArray(imageUrls)
+      ? imageUrls.filter((url) => typeof url === 'string').slice(0, 4)
+      : [];
+    const normalizedImagePaths = Array.isArray(imagePaths)
+      ? imagePaths.filter((path) => typeof path === 'string').slice(0, 4)
+      : [];
 
     if (!trimmedTitle || trimmedTitle.length > 120) {
       return res.status(400).send('title must be between 1 and 120 characters');
@@ -171,12 +241,22 @@ app.post('/tickets', async (req, res) => {
       return res.status(400).send('impact must be a valid value');
     }
 
+    if (normalizedImageUrls.some((url) => url.length > 2000)) {
+      return res.status(400).send('imageUrls contains an invalid url');
+    }
+
+    if (normalizedImagePaths.some((path) => path.length > 1024)) {
+      return res.status(400).send('imagePaths contains an invalid path');
+    }
+
     const env = process.env.VITE_APP_ENV || 'dev';
     const userRef = db.collection('users').doc(uid);
 
     const ticketPayload = {
       title: trimmedTitle,
       description: trimmedDescription,
+      imageUrls: normalizedImageUrls,
+      imagePaths: normalizedImagePaths,
       department,
       requestType,
       impact,
@@ -220,6 +300,8 @@ app.get('/tickets', async (req, res) => {
         const data = ticketDoc.data() as {
           title?: string;
           description?: string;
+          imageUrls?: string[];
+          imagePaths?: string[];
           department?: TicketDepartment;
           requestType?: TicketRequestType;
           impact?: TicketImpact;
@@ -238,6 +320,8 @@ app.get('/tickets', async (req, res) => {
           id: ticketDoc.id,
           title: data.title ?? '',
           description: data.description ?? '',
+          imageUrls: data.imageUrls ?? [],
+          imagePaths: data.imagePaths ?? [],
           department: data.department ?? TicketDepartment.IT,
           requestType: data.requestType ?? TicketRequestType.BROKEN,
           impact: data.impact ?? TicketImpact.LOW,
@@ -424,13 +508,38 @@ app.delete('/tickets/:id', async (req, res) => {
 
     const env = process.env.VITE_APP_ENV || 'dev';
 
-    await db.collection('env').doc(env).collection('tickets').doc(ticketId).set(
-      {
-        deleted: true,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
+    const ticketDocRef = db.collection('env').doc(env).collection('tickets').doc(ticketId);
+    const ticketSnapshot = await ticketDocRef.get();
+    if (!ticketSnapshot.exists) {
+      return res.status(404).send('Ticket not found');
+    }
+
+    const ticketData = ticketSnapshot.data() as { imagePaths?: string[]; imageUrls?: string[] };
+    const imagePaths = new Set<string>();
+
+    for (const path of ticketData.imagePaths ?? []) {
+      if (typeof path === 'string' && path.trim()) {
+        imagePaths.add(path);
+      }
+    }
+
+    for (const imageUrl of ticketData.imageUrls ?? []) {
+      if (typeof imageUrl === 'string') {
+        const resolvedPath = extractStoragePathFromUrl(imageUrl);
+        if (resolvedPath) {
+          imagePaths.add(resolvedPath);
+        }
+      }
+    }
+
+    const bucketName = resolveStorageBucketName();
+    const bucket = admin.storage().bucket(bucketName);
+
+    for (const path of imagePaths) {
+      await bucket.file(path).delete({ ignoreNotFound: true });
+    }
+
+    await ticketDocRef.delete();
 
     return res.status(200).json({ ok: true });
   } catch (error) {
