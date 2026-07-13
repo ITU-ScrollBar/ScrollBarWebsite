@@ -2,7 +2,14 @@ import express from 'express';
 import * as admin from 'firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 import { createEvents, EventAttributes } from 'ics';
-import { InternalEvent, Tender, Event } from './types/types-file';
+import {
+  Event,
+  InternalEvent,
+  Tender,
+  TicketDepartment,
+  TicketImpact,
+  TicketRequestType,
+} from './types/types-file';
 
 // Safe admin init (prevents multiple inits during local tests)
 if (!admin.apps.length) {
@@ -12,6 +19,17 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 export const app = express();
+app.use(express.json());
+
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  if (req.method === 'OPTIONS') {
+    return res.status(204).send('');
+  }
+  return next();
+});
 
 type Shift = {
   id: string;
@@ -38,6 +56,14 @@ type User = {
 }
 
 type FirebaseEvent = Event & { deleted: boolean }
+
+type TicketRequestPayload = {
+  title?: string;
+  description?: string;
+  department?: TicketDepartment;
+  requestType?: TicketRequestType;
+  impact?: TicketImpact;
+};
 
 type MapToIcsEventProps = {
   shift: Shift;
@@ -88,6 +114,66 @@ function mapDocToIcsEvent({shift, event, shiftMembers}: MapToIcsEventProps): Eve
 
   return calEvent as EventAttributes;
 }
+
+app.post('/tickets', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : '';
+
+    if (!token) {
+      return res.status(401).send('Missing authentication token');
+    }
+
+    const decoded = await admin.auth().verifyIdToken(token);
+    const uid = decoded.uid;
+
+    const { title, description, department, requestType, impact } = (req.body ?? {}) as TicketRequestPayload;
+    const trimmedTitle = title?.trim() ?? '';
+    const trimmedDescription = description?.trim() ?? '';
+
+    if (!trimmedTitle || trimmedTitle.length > 120) {
+      return res.status(400).send('title must be between 1 and 120 characters');
+    }
+
+    if (!trimmedDescription || trimmedDescription.length < 10 || trimmedDescription.length > 1500) {
+      return res.status(400).send('description must be between 10 and 1500 characters');
+    }
+
+    if (!Object.values(TicketDepartment).includes(department as TicketDepartment)) {
+      return res.status(400).send('department must be a valid value');
+    }
+
+    if (!Object.values(TicketRequestType).includes(requestType as TicketRequestType)) {
+      return res.status(400).send('requestType must be a valid value');
+    }
+
+    if (!Object.values(TicketImpact).includes(impact as TicketImpact)) {
+      return res.status(400).send('impact must be a valid value');
+    }
+
+    const env = process.env.VITE_APP_ENV || 'dev';
+    const userRef = db.collection('users').doc(uid);
+
+    const ticketPayload = {
+      title: trimmedTitle,
+      description: trimmedDescription,
+      department,
+      requestType,
+      impact,
+      status: 'open',
+      createdByRef: userRef,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+
+    const ticketRef = await db.collection('env').doc(env).collection('tickets').add(ticketPayload);
+
+    return res.status(201).json({ id: ticketRef.id });
+  } catch (error) {
+    console.error('Ticket creation error', error);
+    return res.status(500).send('Unable to create ticket');
+  }
+});
 
 app.get('/calendar/:uid', async (req, res) => {
   try {
