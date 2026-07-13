@@ -92,6 +92,10 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
     }
     if (currentUser?.isAdmin || currentUser?.roles?.includes(Role.BOARD)) {
       adminItems.push({
+        label: 'Ticket Dashboard',
+        key: 'admin/dashboard',
+      });
+      adminItems.push({
         label: 'Manage Internal Events',
         key: 'admin/internalEvents',
       });

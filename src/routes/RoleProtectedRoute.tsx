@@ -8,12 +8,14 @@ import { Loading } from '../components/Loading';
 interface RoleProtectedRouteProps {
   requiredRole?: string;
   fallbackPath?: string; // Where to redirect if access denied
+  allowAdminBypass?: boolean;
   children?: React.ReactNode;
 }
 
 const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({
   requiredRole,
   fallbackPath = '/members/profile', // Default fallback to main dashboard
+  allowAdminBypass = true,
   children
 }) => {
   const { currentUser, loading } = useAuth();
@@ -27,8 +29,15 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({
     return <Navigate to="/login" replace />;
   }
 
-  // Check admin access
-  if (!currentUser.isAdmin && (!requiredRole || !currentUser.roles?.includes(requiredRole))) {
+  const hasRequiredRole = requiredRole
+    ? Boolean(currentUser.roles?.includes(requiredRole))
+    : false;
+
+  const hasAccess = requiredRole
+    ? hasRequiredRole || (allowAdminBypass && currentUser.isAdmin)
+    : currentUser.isAdmin;
+
+  if (!hasAccess) {
     return (
       <Result
         status="403"

@@ -3,7 +3,7 @@ import calendarApp from './calendar';
 import * as mailservice from './mailservice';
 import { adminChangeUserEmail } from './userManagerService';
 import { generateShiftPlan } from './shiftPlanning';
-import { createTicket } from './tickets';
+import { createTicket, listTickets, setTicketStatus } from './tickets';
 
 // Export the express app as the `calendar` HTTPS function.
 export const calendar = functions.https.onRequest({invoker: "public", region: "europe-west1"}, calendarApp as any);
@@ -18,3 +18,5 @@ export const sendShiftGrabbedConfirmation = mailservice.sendShiftGrabbedConfirma
 export const resetUserMail = adminChangeUserEmail;
 export { generateShiftPlan };
 export { createTicket };
+export { listTickets };
+export { setTicketStatus };

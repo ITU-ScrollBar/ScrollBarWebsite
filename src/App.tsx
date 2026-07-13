@@ -33,6 +33,7 @@ import BoardManagementPage from "./pages/admin/BoardManagement/BoardManagementPa
 import ApplicationsReviewPage from "./pages/admin/ApplicationsReviewPage";
 import DJPage from "./pages/DJPage";
 import TicketsPage from "./pages/members/TicketsPage";
+import TicketDashboardPage from "./pages/admin/TicketDashboardPage";
 
 
 function App() {
@@ -131,6 +132,19 @@ function App() {
                       <Route
                         path="admin/shifts"
                         element={<ShiftManagement />}
+                      />
+                    </Route>
+                    <Route
+                      element={
+                        <RoleProtectedRoute
+                          requiredRole={Role.BOARD}
+                          allowAdminBypass={false}
+                        />
+                      }
+                    >
+                      <Route
+                        path="admin/dashboard"
+                        element={<TicketDashboardPage />}
                       />
                     </Route>
                     <Route
