@@ -196,6 +196,33 @@ export const uploadProfilePicture = async (
   return await getDownloadURL(storageRef);
 };
 
+// The firebase/storage-resize-images extension writes resized copies to
+// <dir>/resized/<basename>_<width>x<height>.<extension> alongside the original.
+const RESIZED_SUFFIX = '_150x200';
+
+const buildResizedPath = (fullPath: string): string => {
+  const lastSlash = fullPath.lastIndexOf('/');
+  const dir = lastSlash >= 0 ? fullPath.slice(0, lastSlash) : '';
+  const filename = lastSlash >= 0 ? fullPath.slice(lastSlash + 1) : fullPath;
+  const dotIndex = filename.lastIndexOf('.');
+  const base = dotIndex >= 0 ? filename.slice(0, dotIndex) : filename;
+  const extension = dotIndex >= 0 ? filename.slice(dotIndex) : '';
+  return `${dir}/resized/${base}${RESIZED_SUFFIX}${extension}`;
+};
+
+// Resolve the resized copy of a profile picture, falling back to the original
+// URL if the resize extension hasn't produced one (or has failed).
+export const getResizedPhotoUrl = async (photoUrl: string): Promise<string> => {
+  if (!photoUrl) return photoUrl;
+  try {
+    const originalRef = ref(storage, photoUrl);
+    const resizedRef = ref(storage, buildResizedPath(originalRef.fullPath));
+    return await getDownloadURL(resizedRef);
+  } catch {
+    return photoUrl;
+  }
+};
+
 // Delete profile picture from storage when new picture is uploaded
 export const deleteFileFromStorage = async (filePath: string): Promise<void> => {
   try {
