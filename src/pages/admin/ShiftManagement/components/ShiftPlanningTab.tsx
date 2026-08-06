@@ -2,6 +2,7 @@ import { RocketOutlined } from "@ant-design/icons";
 import { Alert, Button, Popconfirm, Space } from "antd";
 import Text from "antd/es/typography/Text";
 import ShiftEventInformationSection from "./ShiftEventInformationSection";
+import SeedSurveyResponsesButton from "./SeedSurveyResponsesButton";
 import { Event, ShiftPlanningPeriod } from "../../../../types/types-file";
 
 type ShiftPlanningTabProps = {
@@ -79,6 +80,8 @@ export default function ShiftPlanningTab({
           >
             <Button size="middle">{`Publish shifts for ${selectedPeriod.name}`}</Button>
           </Popconfirm>
+
+          <SeedSurveyResponsesButton period={selectedPeriod} />
 
           {generationSummary && <Alert type="success" showIcon message={generationSummary} />}
           {generationWarnings.length > 0 && (
