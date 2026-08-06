@@ -2,6 +2,7 @@ import { RocketOutlined } from "@ant-design/icons";
 import { Alert, Button, Popconfirm, Space } from "antd";
 import Text from "antd/es/typography/Text";
 import ShiftEventInformationSection from "./ShiftEventInformationSection";
+import ResetPeriodButton from "./ResetPeriodButton";
 import SeedSurveyResponsesButton from "./SeedSurveyResponsesButton";
 import { Event, ShiftPlanningPeriod } from "../../../../types/types-file";
 
@@ -64,15 +65,23 @@ export default function ShiftPlanningTab({
             title="Generate shift plan"
             description={
               (missingSubmissions ?? 0) > 0
-                ? `${missingSubmissions} member(s) have not submitted availability and will be treated as leaving the bar. Generate new engagements for unassigned slots and create a new unpublished plan? Existing engagements are kept.`
-                : "Generate new engagements for unassigned slots in the selected period's shifts and create a new unpublished plan? Existing engagements are kept."
+                ? `${missingSubmissions} member(s) have not submitted availability and will be treated as leaving the bar. Generate engagements for this period's shifts and create a new unpublished plan?`
+                : "Generate engagements for this period's shifts and create a new unpublished plan?"
             }
             onConfirm={onGeneratePlan}
+            disabled={selectedPeriod.status === "generated"}
           >
-            <Button type="primary" icon={<RocketOutlined />} loading={generatingPlan}>
+            <Button
+              type="primary"
+              icon={<RocketOutlined />}
+              loading={generatingPlan}
+              disabled={selectedPeriod.status === "generated"}
+            >
               Generate shift plan
             </Button>
           </Popconfirm>
+
+          <ResetPeriodButton period={selectedPeriod} />
 
           <Popconfirm
             title={`Publish shifts for ${selectedPeriod.name}?`}

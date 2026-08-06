@@ -255,6 +255,12 @@ export type ShiftPlanningSurveyType =
   | "excludeSemesterStatus"
   | "newbieShiftPlanning";
 
+export interface ShiftPlanningPeriodSnapshot {
+  status: ShiftPlanningPeriodStatus;
+  engagementIds: string[];
+  roleSnapshots: Array<{ userId: string; roles: string[] }>;
+}
+
 export interface ShiftPlanningPeriod {
   id: string;
   key?: string;
@@ -280,6 +286,9 @@ export interface ShiftPlanningPeriod {
     unfilledAnchorSlots?: number;
     unfilledTenderSlots?: number;
   };
+  // Captured right before the one-and-only generate run for this period, so "Reset period"
+  // can undo it exactly — see functions/src/shiftPlanning/firebaseData.ts persistPlannerResult.
+  preGenerationSnapshot?: ShiftPlanningPeriodSnapshot;
 }
 
 export interface ShiftPlanningResponse {

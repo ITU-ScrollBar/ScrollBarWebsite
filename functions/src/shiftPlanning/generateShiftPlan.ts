@@ -61,6 +61,17 @@ export const generateShiftPlan = onCall(
       env,
       periodId
     );
+    // Guard: generation only ever runs once per period from a clean state. Reset the period
+    // first if you want to change anything and regenerate — this keeps the pre-generation
+    // snapshot (see persistPlannerResult) meaningful and avoids reasoning about fairness
+    // across multiple partial runs.
+    if (period.status === 'generated') {
+      throw new HttpsError(
+        'failed-precondition',
+        'This period has already been generated. Reset it before generating again.'
+      );
+    }
+
     const surveyType = resolveSurveyType(period);
     const includeShiftStatusQuestions = surveyType === 'regularSemesterSurvey';
 
@@ -167,7 +178,10 @@ export const generateShiftPlan = onCall(
 
     // Compute unified role updates: passive/legacy corrections + new anchor promotions.
     // Applied in one write per user so there are no races between concurrent transforms.
-    const roleUpdates: Array<{ userId: string; roles: string[] }> = [];
+    // previousRoles is carried alongside so persistPlannerResult can snapshot it — "Reset
+    // period" needs to restore exactly this, otherwise a promoted new anchor would read as
+    // an experienced anchor (hasAnchorRole) on a later regenerate for the same period.
+    const roleUpdates: Array<{ userId: string; roles: string[]; previousRoles: string[] }> = [];
     for (const user of userList) {
       if (user.participationStatus === 'leave') continue;
 
@@ -190,7 +204,7 @@ export const generateShiftPlan = onCall(
         newRoles.some((r) => !current.includes(r));
 
       if (changed) {
-        roleUpdates.push({ userId: user.uid, roles: newRoles });
+        roleUpdates.push({ userId: user.uid, roles: newRoles, previousRoles: current });
       }
     }
 
@@ -928,6 +942,7 @@ export const generateShiftPlan = onCall(
       shifts,
       assignments: plannedAssignments,
       roleUpdates,
+      previousStatus: period.status ?? 'open',
       expectedSubmissions: requiredSurveyUsers.length,
       submittedCount: requiredSurveyUsers.length - missingSubmissionUserIdSet.size,
       assignedAnchorCount,
