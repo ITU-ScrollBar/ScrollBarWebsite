@@ -14,6 +14,7 @@ import {
   updateShiftPlanningPeriod,
 } from "../firebase/api/shiftPlanning";
 import {
+  ShiftLoadPreference,
   ShiftPlanningPeriod,
   ShiftPlanningResponse,
   ShiftPlanningSurveyType,
@@ -173,6 +174,7 @@ const useShiftPlanning = (periodId?: string) => {
     availability: Record<string, boolean>;
     anchorOnly: boolean;
     anchorSeminarDays?: string[];
+    shiftLoadPreference?: ShiftLoadPreference;
     comments?: string;
     passiveReason?: string;
     privateEmail?: string;

@@ -243,6 +243,7 @@ export interface BoardRole {
 
 export type ParticipationStatus = "active" | "passive" | "legacy" | "leave";
 export type EventChoice = "can" | "cannot";
+export type ShiftLoadPreference = "regular" | "max";
 
 export type ShiftPlanningPeriodStatus =
   | "draft"
@@ -293,6 +294,7 @@ export interface ShiftPlanningResponse {
   availability?: Record<string, boolean>;
   anchorOnly?: boolean;
   anchorSeminarDays?: string[];
+  shiftLoadPreference?: ShiftLoadPreference;
   comments?: string;
   passiveReason?: string;
   privateEmail?: string;

@@ -1,5 +1,6 @@
 import { Alert, Card, Input, Radio, Space, Typography } from "antd";
 import { ParticipationStatus } from "../../types/types-file";
+import MemberTypeInfoBox from "./MemberTypeInfoBox";
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -24,6 +25,7 @@ export default function SemesterParticipationCard({
   return (
     <Card size="small" title="Semester participation">
       <Space direction="vertical" style={{ width: "100%" }}>
+        <MemberTypeInfoBox />
         <Text>How do you want to participate this semester?</Text>
         {isCurrentlyLegacy ? (
           <Radio.Group

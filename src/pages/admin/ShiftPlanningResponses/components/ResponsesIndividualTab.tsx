@@ -156,6 +156,8 @@ export default function ResponsesIndividualTab() {
     onAnchorOnlyChange: editor.setAnchorOnly,
     anchorSeminarDays: editor.anchorSeminarDays,
     onAnchorSeminarDaysChange: editor.setAnchorSeminarDays,
+    shiftLoadPreference: editor.shiftLoadPreference,
+    onShiftLoadPreferenceChange: editor.setShiftLoadPreference,
     eventChoices: editor.eventChoices,
     onEventChoiceChange: editor.handleEventChoice,
     eventCanShiftIds: editor.eventCanShiftIds,
