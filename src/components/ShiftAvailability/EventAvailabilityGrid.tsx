@@ -50,10 +50,17 @@ export default function EventAvailabilityGrid({
               }
             >
               <Space direction="vertical" style={{ width: "100%" }}>
-                <Text type="secondary">
-                  {group.event?.start ? dayjs(group.event.start).format("DD/MM/YYYY") : "-"} ·{" "}
-                  {group.shifts.length} shift{group.shifts.length === 1 ? "" : "s"}
-                </Text>
+                <div>
+                  <Text type="secondary">
+                    {group.event?.start ? dayjs(group.event.start).format("DD/MM/YYYY") : "-"} ·{" "}
+                    {group.shifts.length} shift{group.shifts.length === 1 ? "" : "s"}
+                  </Text>
+                  {mandatoryEventIds.has(group.eventId) && (
+                    <Text type="secondary" style={{ display: "block" }}>
+                      A shift is mandatory if you plan on attending the party
+                    </Text>
+                  )}
+                </div>
 
                 <Radio.Group
                   value={choice}

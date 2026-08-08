@@ -19,7 +19,12 @@ import {
 } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 import { db, functions } from "..";
-import { ShiftPlanningPeriod, ShiftPlanningPeriodStatus, ShiftPlanningSurveyType } from "../../types/types-file";
+import {
+  ShiftLoadPreference,
+  ShiftPlanningPeriod,
+  ShiftPlanningPeriodStatus,
+  ShiftPlanningSurveyType,
+} from "../../types/types-file";
 
 const env = import.meta.env.VITE_APP_ENV as string;
 
@@ -83,6 +88,7 @@ export type ShiftPlanningResponsePayload = {
   availability: Record<string, boolean>;
   anchorOnly: boolean;
   anchorSeminarDays?: string[];
+  shiftLoadPreference?: ShiftLoadPreference;
   comments?: string;
   passiveReason?: string;
   privateEmail?: string;
@@ -191,6 +197,7 @@ export const submitShiftPlanningResponse = async (
       availability: payload.availability,
       anchorOnly: payload.anchorOnly,
       anchorSeminarDays: payload.anchorSeminarDays ?? [],
+      shiftLoadPreference: payload.shiftLoadPreference ?? "regular",
       comments: payload.comments?.trim() ?? "",
       passiveReason: payload.passiveReason?.trim() ?? "",
       privateEmail: payload.privateEmail?.trim() ?? "",

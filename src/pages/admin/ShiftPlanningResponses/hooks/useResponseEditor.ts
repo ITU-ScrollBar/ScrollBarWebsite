@@ -1,6 +1,10 @@
 import { message, notification } from "antd";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ShiftPlanningPeriod, ShiftPlanningResponse } from "../../../../types/types-file";
+import {
+  ShiftLoadPreference,
+  ShiftPlanningPeriod,
+  ShiftPlanningResponse,
+} from "../../../../types/types-file";
 import { EventChoice, ParticipationStatus, PeriodEventGroup } from "../types";
 
 type SubmitPayload = {
@@ -12,6 +16,7 @@ type SubmitPayload = {
   availability: Record<string, boolean>;
   anchorOnly: boolean;
   anchorSeminarDays?: string[];
+  shiftLoadPreference?: ShiftLoadPreference;
   comments?: string;
   passiveReason?: string;
   privateEmail?: string;
@@ -40,6 +45,7 @@ export const useResponseEditor = ({
   const [wantsAnchor, setWantsAnchor] = useState<boolean | undefined>(undefined);
   const [anchorOnly, setAnchorOnly] = useState(false);
   const [anchorSeminarDays, setAnchorSeminarDays] = useState<string[]>([]);
+  const [shiftLoadPreference, setShiftLoadPreference] = useState<ShiftLoadPreference>("regular");
   const [comments, setComments] = useState("");
   const [passiveReason, setPassiveReason] = useState("");
   const [privateEmail, setPrivateEmail] = useState("");
@@ -70,6 +76,7 @@ export const useResponseEditor = ({
           setWantsAnchor(false);
           setAnchorOnly(false);
           setAnchorSeminarDays([]);
+          setShiftLoadPreference("regular");
           setComments("");
           setPassiveReason("");
           setPrivateEmail("");
@@ -111,6 +118,7 @@ export const useResponseEditor = ({
         setWantsAnchor(loadedWantsAnchor);
         setAnchorOnly(Boolean(response.anchorOnly));
         setAnchorSeminarDays(Array.isArray(response.anchorSeminarDays) ? response.anchorSeminarDays : []);
+        setShiftLoadPreference(response.shiftLoadPreference === "max" ? "max" : "regular");
         setComments(response.comments ?? "");
         setPassiveReason(response.passiveReason ?? "");
         setPrivateEmail(response.privateEmail ?? "");
@@ -153,6 +161,7 @@ export const useResponseEditor = ({
     if (value !== "active") {
       setWantsAnchor(false);
       setAnchorOnly(false);
+      setShiftLoadPreference("regular");
       setEventChoices({});
       setEventCanShiftIds({});
     }
@@ -227,6 +236,7 @@ export const useResponseEditor = ({
         availability: normalizedAvailability,
         anchorOnly: resolvedWantsAnchor && !resolvedIsNewAnchor ? anchorOnly : false,
         anchorSeminarDays: resolvedIsNewAnchor ? anchorSeminarDays : [],
+        shiftLoadPreference: participationStatus === "active" ? shiftLoadPreference : "regular",
         comments,
         passiveReason,
         privateEmail,
@@ -254,6 +264,7 @@ export const useResponseEditor = ({
     privateEmail,
     selectedPeriod,
     selectedUserId,
+    shiftLoadPreference,
     submitResponse,
     userNameById,
     wantsAnchor,
@@ -266,6 +277,8 @@ export const useResponseEditor = ({
     setAnchorOnly,
     anchorSeminarDays,
     setAnchorSeminarDays,
+    shiftLoadPreference,
+    setShiftLoadPreference,
     comments,
     setComments,
     passiveReason,
