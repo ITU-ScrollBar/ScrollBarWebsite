@@ -243,6 +243,7 @@ export interface BoardRole {
 
 export type ParticipationStatus = "active" | "passive" | "legacy" | "leave";
 export type EventChoice = "can" | "cannot";
+export type ShiftLoadPreference = "regular" | "max";
 
 export type ShiftPlanningPeriodStatus =
   | "draft"
@@ -293,6 +294,7 @@ export interface ShiftPlanningResponse {
   availability?: Record<string, boolean>;
   anchorOnly?: boolean;
   anchorSeminarDays?: string[];
+  shiftLoadPreference?: ShiftLoadPreference;
   comments?: string;
   passiveReason?: string;
   privateEmail?: string;
@@ -303,6 +305,50 @@ export interface ShiftPlanningResponse {
 export type ApplicationDecision = "pending" | "maybe" | "accept" | "reject";
 
 export type EmailDeliveryStatus = "pending" | "success" | "failed";
+
+export enum TicketDepartment {
+  MAINTENANCE = "maintenance",
+  IT = "it",
+}
+
+export enum TicketRequestType {
+  NEW_REQUEST = "new_request",
+  BROKEN = "broken",
+}
+
+export enum TicketImpact {
+  LOW = "low",
+  MEDIUM = "medium",
+  HIGH = "high",
+}
+
+export type TicketStatus = "open" | "in_progress" | "resolved";
+
+export interface Ticket {
+  id: string;
+  key?: string;
+  title: string;
+  description: string;
+  imageUrls?: string[];
+  imagePaths?: string[];
+  department: TicketDepartment;
+  requestType: TicketRequestType;
+  impact: TicketImpact;
+  status: TicketStatus;
+  createdByRef: unknown;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface TicketCreateParams {
+  title: string;
+  description: string;
+  imageUrls?: string[];
+  imagePaths?: string[];
+  department: TicketDepartment;
+  requestType: TicketRequestType;
+  impact: TicketImpact;
+}
 
 export interface IntakeApplication {
   id: string;

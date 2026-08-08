@@ -43,6 +43,10 @@ export default function ResponsesOverviewTab({
   );
   const totalNewAnchors = newAnchorResponses.length;
 
+  const maxShiftsRequestedCount = responses.filter(
+    (r) => r.participationStatus === "active" && r.shiftLoadPreference === "max"
+  ).length;
+
   const seminarDayRows = periodAnchorSeminarDays.map((day) => {
     const canCount = newAnchorResponses.filter((r) =>
       Array.isArray(r.anchorSeminarDays) && r.anchorSeminarDays.includes(day)
@@ -78,6 +82,9 @@ export default function ResponsesOverviewTab({
         </Col>
         <Col xs={12} md={6}>
           <Statistic title="Leaving the bar" value={anchorSummary.leavingBar} />
+        </Col>
+        <Col xs={12} md={6}>
+          <Statistic title="Wants max shifts" value={maxShiftsRequestedCount} />
         </Col>
       </Row>
 

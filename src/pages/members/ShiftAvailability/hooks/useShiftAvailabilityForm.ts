@@ -4,7 +4,13 @@ import { useAuth } from "../../../../contexts/AuthContext";
 import { useShiftContext } from "../../../../contexts/ShiftContext";
 import useEvents from "../../../../hooks/useEvents";
 import { useShiftPlanningContext } from "../../../../contexts/ShiftPlanningContext";
-import { EventChoice, ParticipationStatus, Role, Shift } from "../../../../types/types-file";
+import {
+  EventChoice,
+  ParticipationStatus,
+  Role,
+  Shift,
+  ShiftLoadPreference,
+} from "../../../../types/types-file";
 import { filterOpenPeriodsForUser, resolveSurveyType } from "../../../../firebase/api/shiftPlanning";
 
 export const useShiftAvailabilityForm = () => {
@@ -25,6 +31,7 @@ export const useShiftAvailabilityForm = () => {
   const [wantsAnchor, setWantsAnchor] = useState<boolean | undefined>(undefined);
   const [anchorOnly, setAnchorOnly] = useState(false);
   const [anchorSeminarDays, setAnchorSeminarDays] = useState<string[]>([]);
+  const [shiftLoadPreference, setShiftLoadPreference] = useState<ShiftLoadPreference>("regular");
   const [comments, setComments] = useState("");
   const [passiveReason, setPassiveReason] = useState("");
   const [privateEmail, setPrivateEmail] = useState("");
@@ -182,6 +189,7 @@ export const useShiftAvailabilityForm = () => {
     setWantsAnchor(undefined);
     setAnchorOnly(false);
     setAnchorSeminarDays([]);
+    setShiftLoadPreference("regular");
     setComments("");
     setPassiveReason("");
     setPrivateEmail("");
@@ -234,6 +242,7 @@ export const useShiftAvailabilityForm = () => {
         setAnchorSeminarDays(
           Array.isArray(response.anchorSeminarDays) ? response.anchorSeminarDays : []
         );
+        setShiftLoadPreference(response.shiftLoadPreference === "max" ? "max" : "regular");
         setComments(response.comments ?? "");
         setPassiveReason(response.passiveReason ?? "");
         setPrivateEmail(response.privateEmail ?? "");
@@ -278,6 +287,7 @@ export const useShiftAvailabilityForm = () => {
       setWantsAnchor(false);
       setAnchorOnly(false);
       setAnchorSeminarDays([]);
+      setShiftLoadPreference("regular");
       setEventChoices({});
       setEventCanShiftIds({});
     }
@@ -343,6 +353,10 @@ export const useShiftAvailabilityForm = () => {
         availability: normalizedAvailability,
         anchorOnly: anchorEnabled && !isNewAnchor ? anchorOnly : false,
         anchorSeminarDays: isNewAnchor ? anchorSeminarDays : [],
+        shiftLoadPreference:
+          !includesShiftStatusQuestions || participationStatus === "active"
+            ? shiftLoadPreference
+            : "regular",
         comments,
         passiveReason: participationStatus === "passive" ? passiveReason : "",
         privateEmail: participationStatus === "legacy" ? privateEmail : "",
@@ -388,6 +402,8 @@ export const useShiftAvailabilityForm = () => {
     setAnchorOnly,
     anchorSeminarDays,
     setAnchorSeminarDays,
+    shiftLoadPreference,
+    setShiftLoadPreference,
     comments,
     setComments,
     passiveReason,

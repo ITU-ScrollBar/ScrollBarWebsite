@@ -12,16 +12,29 @@ import avatar from "../assets/images/avatar.png";
 import newbiehat from "../assets/images/newbiehat.svg";
 import {
   deleteFileFromStorage,
+  getResizedPhotoUrl,
   uploadProfilePicture,
 } from "../firebase/api/authentication";
 import useTenders from "../hooks/useTenders";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type UserAvatarProps = {
   user: UserProfile | Tender;
   size?: number;
   showHats?: boolean;
   backgroundColor?: string;
+};
+
+// Shared across all avatar instances so the same photoUrl is only resolved once.
+const resizedPhotoUrlCache = new Map<string, Promise<string>>();
+
+const resolveAvatarSrc = (photoUrl: string): Promise<string> => {
+  let cached = resizedPhotoUrlCache.get(photoUrl);
+  if (!cached) {
+    cached = getResizedPhotoUrl(photoUrl);
+    resizedPhotoUrlCache.set(photoUrl, cached);
+  }
+  return cached;
 };
 
 type UserAvatarWithUploadProps = UserAvatarProps & {
@@ -36,6 +49,25 @@ export const UserAvatar = ({
   ...divProps
 }: UserAvatarProps & Record<string, unknown>) => {
   const showNewbieHat = showHats && (user.roles?.includes(Role.NEWBIE) ?? false);
+
+  const [resolvedPhotoUrl, setResolvedPhotoUrl] = useState(user.photoUrl);
+
+  useEffect(() => {
+    if (!user.photoUrl) {
+      setResolvedPhotoUrl(user.photoUrl);
+      return;
+    }
+
+    let cancelled = false;
+    setResolvedPhotoUrl(user.photoUrl);
+    resolveAvatarSrc(user.photoUrl).then((url) => {
+      if (!cancelled) setResolvedPhotoUrl(url);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user.photoUrl]);
 
   const passedStyle = divProps.style || {};
   const combinedStyle: React.CSSProperties = {
@@ -54,7 +86,7 @@ export const UserAvatar = ({
   return (
     <div {...restProps} style={combinedStyle}>
       <Avatar
-        src={user.photoUrl || avatar}
+        src={resolvedPhotoUrl || avatar}
         size={size}
         style={{ display: "block", left: 1.5, top: 1.5, zIndex: 9 }}
       />

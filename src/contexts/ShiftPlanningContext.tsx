@@ -3,7 +3,12 @@
 import { createContext, useContext, useMemo, useState, ReactNode, Dispatch, SetStateAction } from "react";
 import useShiftPlanning from "../hooks/useShiftPlanning";
 import { CreateShiftPlanningPeriodPayload, GenerateShiftPlanResult } from "../firebase/api/shiftPlanning";
-import { ShiftPlanningPeriod, ShiftPlanningResponse, ShiftPlanningSurveyType } from "../types/types-file";
+import {
+  ShiftLoadPreference,
+  ShiftPlanningPeriod,
+  ShiftPlanningResponse,
+  ShiftPlanningSurveyType,
+} from "../types/types-file";
 
 type ShiftPlanningState = {
   loading: boolean;
@@ -46,6 +51,7 @@ interface ShiftPlanningContextType {
     availability: Record<string, boolean>;
     anchorOnly: boolean;
     anchorSeminarDays?: string[];
+    shiftLoadPreference?: ShiftLoadPreference;
     comments?: string;
     passiveReason?: string;
     privateEmail?: string;

@@ -1,8 +1,14 @@
 import { Button, Card, Input, Popconfirm, Space, Typography } from "antd";
-import { EventChoice, ParticipationStatus, Shift } from "../../types/types-file";
+import {
+  EventChoice,
+  ParticipationStatus,
+  Shift,
+  ShiftLoadPreference,
+} from "../../types/types-file";
 import AnchorPreferenceCard from "./AnchorPreferenceCard";
 import EventAvailabilityGrid from "./EventAvailabilityGrid";
 import SemesterParticipationCard from "./SemesterParticipationCard";
+import ShiftLoadPreferenceCard from "./ShiftLoadPreferenceCard";
 
 const { TextArea } = Input;
 
@@ -21,6 +27,8 @@ export type FormEditorState = {
   onAnchorOnlyChange: (value: boolean) => void;
   anchorSeminarDays: string[];
   onAnchorSeminarDaysChange: (value: string[]) => void;
+  shiftLoadPreference: ShiftLoadPreference;
+  onShiftLoadPreferenceChange: (value: ShiftLoadPreference) => void;
   eventChoices: Partial<Record<string, EventChoice>>;
   onEventChoiceChange: (eventId: string, value: EventChoice) => void;
   eventCanShiftIds: Record<string, string[]>;
@@ -103,6 +111,13 @@ export default function ShiftAvailabilityForm({
           onWantsAnchorChange={editor.onWantsAnchorChange}
           onAnchorOnlyChange={editor.onAnchorOnlyChange}
           onAnchorSeminarDaysChange={editor.onAnchorSeminarDaysChange}
+        />
+      )}
+
+      {includesShiftStatusQuestions && editor.participationStatus === "active" && (
+        <ShiftLoadPreferenceCard
+          shiftLoadPreference={editor.shiftLoadPreference}
+          onChange={editor.onShiftLoadPreferenceChange}
         />
       )}
 
