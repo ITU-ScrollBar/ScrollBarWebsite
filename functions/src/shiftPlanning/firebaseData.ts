@@ -1,6 +1,13 @@
 import * as admin from 'firebase-admin';
 import { HttpsError } from 'firebase-functions/v2/https';
-import { engagementType, Role, Shift, ShiftPlanningSurveyType, Tender } from '../types/types-file';
+import {
+  engagementType,
+  Role,
+  Shift,
+  ShiftPlanningPeriodStatus,
+  ShiftPlanningSurveyType,
+  Tender,
+} from '../types/types-file';
 import {
   PlanningPeriodDoc,
   ShiftPlanningResponseDoc,
@@ -44,7 +51,8 @@ export type PersistPlannerResultParams = {
   eventIds: string[];
   shifts: Shift[];
   assignments: ShiftAssignmentRecord[];
-  roleUpdates: Array<{ userId: string; roles: string[] }>;
+  roleUpdates: Array<{ userId: string; roles: string[]; previousRoles: string[] }>;
+  previousStatus: ShiftPlanningPeriodStatus;
   expectedSubmissions: number;
   submittedCount: number;
   assignedAnchorCount: number;
@@ -245,6 +253,7 @@ export const persistPlannerResult = async (
     shifts,
     assignments,
     roleUpdates,
+    previousStatus,
     expectedSubmissions,
     submittedCount,
     assignedAnchorCount,
@@ -269,6 +278,16 @@ export const persistPlannerResult = async (
       )
     );
   }
+
+  // Pre-generation snapshot — engagement ids that existed before this run, the period's
+  // previous status, and the roles every affected user had before promotion/passive/legacy
+  // sync. "Reset period" restores exactly this. Captured from data already loaded above, so
+  // no extra reads.
+  const preGenerationSnapshot = {
+    status: previousStatus,
+    engagementIds: existingEngagementDocs.map((doc) => doc.id),
+    roleSnapshots: roleUpdates.map(({ userId, previousRoles }) => ({ userId, roles: previousRoles })),
+  };
 
   const writer = db.bulkWriter();
 
@@ -332,6 +351,7 @@ export const persistPlannerResult = async (
         unfilledAnchorSlots,
         unfilledTenderSlots,
       },
+      preGenerationSnapshot,
     },
     { merge: true }
   );
