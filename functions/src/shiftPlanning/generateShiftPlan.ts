@@ -490,7 +490,12 @@ export const generateShiftPlan = onCall(
             if (openingCandidates.length > 0 && closingCandidates.length > 0) {
               const openingCount = totalOpeningCountByUser.get(user.uid) ?? 0;
               const closingCount = totalClosingCountByUser.get(user.uid) ?? 0;
-              categoryPool = openingCount <= closingCount ? openingCandidates : closingCandidates;
+              categoryPool =
+                openingCount === closingCount
+                  ? (Math.random() < 0.5 ? openingCandidates : closingCandidates)
+                  : openingCount < closingCount
+                  ? openingCandidates
+                  : closingCandidates;
             } else if (openingCandidates.length > 0) {
               categoryPool = openingCandidates;
             } else if (closingCandidates.length > 0) {
@@ -857,7 +862,12 @@ export const generateShiftPlan = onCall(
           if (openingCandidates.length > 0 && closingCandidates.length > 0) {
             const openingCount = assignedOpeningCountByUser.get(user.uid) ?? 0;
             const closingCount = assignedClosingCountByUser.get(user.uid) ?? 0;
-            categoryPool = openingCount <= closingCount ? openingCandidates : closingCandidates;
+            categoryPool =
+              openingCount === closingCount
+                ? (Math.random() < 0.5 ? openingCandidates : closingCandidates)
+                : openingCount < closingCount
+                ? openingCandidates
+                : closingCandidates;
           } else if (openingCandidates.length > 0) {
             categoryPool = openingCandidates;
           } else if (closingCandidates.length > 0) {
@@ -913,72 +923,60 @@ export const generateShiftPlan = onCall(
     fillAnchorSlotsFairly(remainingMandatoryAnchorSlots, experiencedAnchorOnly, experiencedAnchorMixed, false);
 
     // Phase 5: mandatory-event tenders. Everyone eligible and available is guaranteed a shift
-    // regardless of load (no total-shift cap applies) — the only real decision is which of the
-    // event's own shifts they land on. Steered toward whichever category (opening/closing) a
-    // person is currently lower on overall (true-total counters, which include mandatory +
-    // anchor exposure), and spread across the event's own shifts by current fill level so one
-    // shift doesn't get overloaded while a sibling shift sits empty.
+    // regardless of load (no total-shift cap applies). Three ordered passes, each need-sorted:
+    //   1. Middle shifts (the desirable ones) go first, to whoever already has the MOST
+    //      opening+closing shifts so far — middle is the reward for people who've already
+    //      shouldered the less desirable categories, not a leftover dumping ground.
+    //   2. Opening and closing are then filled together, alternating one pick at a time between
+    //      the "fewest openings so far" list and the "fewest closings so far" list, so neither
+    //      list gets a first-mover advantage over the other.
+    //   3. Anyone still unplaced (availability gaps meant a target above couldn't be reached)
+    //      goes to whatever eligible shift is least loaded, any category.
+    // Every pass spreads across a category's own shifts (main bar + satellite alike) by current
+    // fill level, so no single shift gets overloaded while a sibling sits empty.
+    const isEligibleForMandatoryShift = (user: User, shift: Shift): boolean =>
+      anchorShiftIdsByUser.get(user.uid)?.has(shift.id) !== true &&
+      assignedUserIdsByShiftId.get(shift.id)?.has(user.uid) !== true &&
+      !hasAvoidConflictOnShift(user.uid, shift.id) &&
+      effectiveAvailability(user.uid, shift.id);
+
     for (const mandatoryEventId of mandatoryEventIds) {
       const eventShifts = shifts.filter((shift) => shift.eventId === mandatoryEventId);
       if (eventShifts.length === 0) {
         continue;
       }
 
+      const participants = regularUsers.filter(
+        (user) => assignedEventsByUser.get(user.uid)?.has(mandatoryEventId) !== true
+      );
+      if (participants.length === 0) {
+        continue;
+      }
+
+      const middleShifts = eventShifts.filter((shift) => categoryByShiftId.get(shift.id) === 'middle');
+      const openingShifts = eventShifts.filter((shift) => categoryByShiftId.get(shift.id) === 'opening');
+      const closingShifts = eventShifts.filter((shift) => categoryByShiftId.get(shift.id) === 'closing');
+
+      const perShiftTarget = Math.max(1, Math.ceil(participants.length / eventShifts.length));
+      const middleTarget = perShiftTarget * middleShifts.length;
+      const openingTarget = perShiftTarget * openingShifts.length;
+      const closingTarget = perShiftTarget * closingShifts.length;
+
       const assignedCountByShiftId = new Map<string, number>();
+      for (const shift of eventShifts) {
+        assignedCountByShiftId.set(shift.id, assignedUserIdsByShiftId.get(shift.id)?.size ?? 0);
+      }
 
-      for (const user of shuffle(regularUsers)) {
-        if (assignedEventsByUser.get(user.uid)?.has(mandatoryEventId) === true) {
-          continue;
-        }
-
-        const candidateShifts = eventShifts.filter(
-          (shift) =>
-            anchorShiftIdsByUser.get(user.uid)?.has(shift.id) !== true &&
-            assignedUserIdsByShiftId.get(shift.id)?.has(user.uid) !== true &&
-            !hasAvoidConflictOnShift(user.uid, shift.id) &&
-            effectiveAvailability(user.uid, shift.id)
-        );
-
-        if (candidateShifts.length === 0) {
-          // Only flag as unmet if the user had availability for at least one shift in this event
-          const couldWork = eventShifts.some((shift) => effectiveAvailability(user.uid, shift.id));
-          if (couldWork) {
-            unmetMandatoryWarnings.push({ eventId: mandatoryEventId, userId: user.uid });
-          }
-          continue;
-        }
-
-        const openingCandidates = candidateShifts.filter((shift) => categoryByShiftId.get(shift.id) === 'opening');
-        const closingCandidates = candidateShifts.filter((shift) => categoryByShiftId.get(shift.id) === 'closing');
-
-        let categoryPool: Shift[];
-        if (openingCandidates.length > 0 && closingCandidates.length > 0) {
-          const openingCount = totalOpeningCountByUser.get(user.uid) ?? 0;
-          const closingCount = totalClosingCountByUser.get(user.uid) ?? 0;
-          categoryPool = openingCount <= closingCount ? openingCandidates : closingCandidates;
-        } else if (openingCandidates.length > 0) {
-          categoryPool = openingCandidates;
-        } else if (closingCandidates.length > 0) {
-          categoryPool = closingCandidates;
-        } else {
-          categoryPool = candidateShifts;
-        }
-
-        const [chosenShift] = shuffle(categoryPool).sort((a, b) => {
-          const aLoad = (assignedCountByShiftId.get(a.id) ?? 0) / Math.max(1, Number.isFinite(a.tenders) ? a.tenders : 1);
-          const bLoad = (assignedCountByShiftId.get(b.id) ?? 0) / Math.max(1, Number.isFinite(b.tenders) ? b.tenders : 1);
-          return aLoad - bLoad;
-        });
-
-        assignedCountByShiftId.set(chosenShift.id, (assignedCountByShiftId.get(chosenShift.id) ?? 0) + 1);
-        markAssignedToShift(user.uid, chosenShift.id);
+      const assignMandatoryTender = (user: User, shift: Shift): void => {
+        assignedCountByShiftId.set(shift.id, (assignedCountByShiftId.get(shift.id) ?? 0) + 1);
+        markAssignedToShift(user.uid, shift.id);
         totalAssignedCountByUser.set(user.uid, (totalAssignedCountByUser.get(user.uid) ?? 0) + 1);
         assignedTenderCountByUser.set(user.uid, (assignedTenderCountByUser.get(user.uid) ?? 0) + 1);
 
-        const chosenCategory = categoryByShiftId.get(chosenShift.id);
-        if (chosenCategory === 'opening') {
+        const category = categoryByShiftId.get(shift.id);
+        if (category === 'opening') {
           totalOpeningCountByUser.set(user.uid, (totalOpeningCountByUser.get(user.uid) ?? 0) + 1);
-        } else if (chosenCategory === 'closing') {
+        } else if (category === 'closing') {
           totalClosingCountByUser.set(user.uid, (totalClosingCountByUser.get(user.uid) ?? 0) + 1);
         }
 
@@ -986,8 +984,131 @@ export const generateShiftPlan = onCall(
         userEvents.add(mandatoryEventId);
         assignedEventsByUser.set(user.uid, userEvents);
 
-        allAssignments.push({ userId: user.uid, shiftId: chosenShift.id, eventId: mandatoryEventId, type: engagementType.TENDER });
-        plannedAssignments.push({ userId: user.uid, shiftId: chosenShift.id, eventId: mandatoryEventId, type: engagementType.TENDER });
+        allAssignments.push({ userId: user.uid, shiftId: shift.id, eventId: mandatoryEventId, type: engagementType.TENDER });
+        plannedAssignments.push({ userId: user.uid, shiftId: shift.id, eventId: mandatoryEventId, type: engagementType.TENDER });
+      };
+
+      const pickLeastLoaded = (candidateShifts: Shift[]): Shift => {
+        const [chosen] = shuffle(candidateShifts).sort(
+          (a, b) => (assignedCountByShiftId.get(a.id) ?? 0) - (assignedCountByShiftId.get(b.id) ?? 0)
+        );
+        return chosen;
+      };
+
+      const isPlaced = (user: User): boolean => assignedEventsByUser.get(user.uid)?.has(mandatoryEventId) === true;
+
+      // Pass 1: middle, to whoever has the most opening+closing shifts so far.
+      const middleSorted = shuffle(participants).sort(
+        (a, b) =>
+          (totalOpeningCountByUser.get(b.uid) ?? 0) +
+          (totalClosingCountByUser.get(b.uid) ?? 0) -
+          ((totalOpeningCountByUser.get(a.uid) ?? 0) + (totalClosingCountByUser.get(a.uid) ?? 0))
+      );
+      let middleFilled = 0;
+      for (const user of middleSorted) {
+        if (middleFilled >= middleTarget) {
+          break;
+        }
+        if (isPlaced(user)) {
+          continue;
+        }
+        const eligible = middleShifts.filter((shift) => isEligibleForMandatoryShift(user, shift));
+        if (eligible.length === 0) {
+          continue;
+        }
+        assignMandatoryTender(user, pickLeastLoaded(eligible));
+        middleFilled += 1;
+      }
+
+      // Pass 2: opening and closing, alternating one pick at a time between the two need-sorted
+      // lists so neither category gets a first-mover advantage over the other.
+      const openingSorted = shuffle(participants).sort(
+        (a, b) => (totalOpeningCountByUser.get(a.uid) ?? 0) - (totalOpeningCountByUser.get(b.uid) ?? 0)
+      );
+      const closingSorted = shuffle(participants).sort(
+        (a, b) => (totalClosingCountByUser.get(a.uid) ?? 0) - (totalClosingCountByUser.get(b.uid) ?? 0)
+      );
+      let openingIdx = 0;
+      let closingIdx = 0;
+      let openingFilled = 0;
+      let closingFilled = 0;
+
+      const tryFillNext = (
+        sorted: User[],
+        idx: number,
+        target: number,
+        filled: number,
+        candidateShifts: Shift[]
+      ): { idx: number; filled: number; placed: boolean } => {
+        let cursor = idx;
+        if (filled >= target) {
+          return { idx: cursor, filled, placed: false };
+        }
+        while (cursor < sorted.length) {
+          const user = sorted[cursor];
+          cursor += 1;
+          if (isPlaced(user)) {
+            continue;
+          }
+          const eligible = candidateShifts.filter((shift) => isEligibleForMandatoryShift(user, shift));
+          if (eligible.length === 0) {
+            continue;
+          }
+          assignMandatoryTender(user, pickLeastLoaded(eligible));
+          return { idx: cursor, filled: filled + 1, placed: true };
+        }
+        return { idx: cursor, filled, placed: false };
+      };
+
+      // Which side goes first is decided once per event (not per round) so opening doesn't get a
+      // systematic head start over closing across every mandatory event.
+      const openingFirst = Math.random() < 0.5;
+
+      let progress = true;
+      while (progress && (openingFilled < openingTarget || closingFilled < closingTarget)) {
+        progress = false;
+
+        const runOpening = (): void => {
+          const openingResult = tryFillNext(openingSorted, openingIdx, openingTarget, openingFilled, openingShifts);
+          openingIdx = openingResult.idx;
+          if (openingResult.placed) {
+            openingFilled = openingResult.filled;
+            progress = true;
+          }
+        };
+        const runClosing = (): void => {
+          const closingResult = tryFillNext(closingSorted, closingIdx, closingTarget, closingFilled, closingShifts);
+          closingIdx = closingResult.idx;
+          if (closingResult.placed) {
+            closingFilled = closingResult.filled;
+            progress = true;
+          }
+        };
+
+        if (openingFirst) {
+          runOpening();
+          runClosing();
+        } else {
+          runClosing();
+          runOpening();
+        }
+      }
+
+      // Pass 3: leftover fallback — anyone still unplaced goes to whatever eligible shift is
+      // least loaded, any category. Only warn if they genuinely had no eligible shift at all.
+      for (const user of shuffle(participants)) {
+        if (isPlaced(user)) {
+          continue;
+        }
+        const eligible = eventShifts.filter((shift) => isEligibleForMandatoryShift(user, shift));
+        if (eligible.length === 0) {
+          const couldWork = eventShifts.some((shift) => effectiveAvailability(user.uid, shift.id));
+          if (couldWork) {
+            unmetMandatoryWarnings.push({ eventId: mandatoryEventId, userId: user.uid });
+          }
+          continue;
+        }
+        assignMandatoryTender(user, pickLeastLoaded(eligible));
       }
     }
 

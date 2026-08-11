@@ -56,9 +56,10 @@ flowchart TD
     subgraph P5["Phase 5 — Mandatory tenders"]
         direction TB
         P5a["Everyone eligible + available<br/>GUARANTEED a shift — no cap applies"]
-        P5b["Only real decision: WHICH of the<br/>event's own shifts they land on"]
-        P5c["Steered by true-total opening/closing<br/>counters (incl. anchor + mandatory<br/>exposure), spread by current fill<br/>level so one shift isn't overloaded"]
-        P5a --> P5b --> P5c
+        P5b["Pass 1: middle shifts go to<br/>whoever has the MOST opening+closing<br/>so far — the reward, not a leftover"]
+        P5c["Pass 2: opening + closing filled<br/>together, alternating one pick between<br/>fewest-openings / fewest-closings lists"]
+        P5d["Pass 3: anyone still unplaced takes<br/>whatever eligible shift is least loaded"]
+        P5a --> P5b --> P5c --> P5d
     end
 
     P5 --> Persist[Persist engagements,<br/>period stats, role updates,<br/>pre-generation snapshot]
@@ -127,6 +128,59 @@ round only offers slots to whoever currently has the fewest shifts among people 
 eligible slot at all. That's what stops one person ending up at 7 shifts while someone equally
 available sits at 3 — nobody gets a *second* shift while someone eligible is still at zero.
 
+## Phase 5's three passes, in detail
+
+Mandatory tender placement isn't a single greedy pass — it's three ordered, need-sorted passes
+per mandatory event, because middle shifts are more desirable than opening/closing ones, so *who*
+gets a middle shift matters as much as *how many* people end up on each individual shift.
+
+Target headcount per shift is computed once per event:
+
+```
+perShiftTarget = ceil(participants / eventShifts.length)   // satellites count as their own shift
+middleTarget   = perShiftTarget × number of middle shifts
+openingTarget  = perShiftTarget × number of opening shifts
+closingTarget  = perShiftTarget × number of closing shifts
+```
+
+1. **Middle, first** — sort participants by `totalOpeningCountByUser + totalClosingCountByUser`,
+   **descending**. Whoever's already carrying the most opening+closing burden gets first claim on
+   a middle shift, up to `middleTarget`. This is deliberately a reward, not a leftover dump —
+   filling middle last would hand the good shift to whoever the harder categories happened not to
+   need, which has nothing to do with who's earned a break.
+2. **Opening and closing, together** — two separately-sorted lists (fewest openings so far;
+   fewest closings so far), consumed by **alternating one pick at a time** between them until both
+   targets are met or both lists are exhausted. Alternating is required — draining one list fully
+   before starting the other would just move the same first-mover bias up a level (whichever list
+   goes first claims people before the second list gets a turn). Which list goes first is decided
+   once per event with a coin flip, so opening doesn't keep a systematic head start over closing
+   across every mandatory event.
+3. **Leftover fallback** — anyone still unplaced (a target above couldn't be reached because of
+   availability gaps) takes whatever eligible shift is least loaded, any category. Only genuinely
+   warns (`mandatory_assignment_not_met`) if someone had zero eligible shifts at all.
+
+"Least loaded" and the per-shift targets above are both measured against a shift's **actual total
+headcount** — seeded from whatever anchors (Phase 4) or pre-existing manual assignments already sit
+on that shift — not just what Phase 5 itself has added. Without this, a shift whose anchor slot went
+unfilled would look artificially "light" and get over-filled by Phase 5 to compensate, defeating the
+equal-fill guarantee in requirement #11.
+
+Within every pass, a person skipped because a category's target is already met (not because
+they're ineligible) simply falls through to the next pass — Pass 3 always catches them as long as
+they have at least one eligible shift.
+
+### The tie-break bug this replaced
+
+The very first version of the category-steering logic used `openingCount <= closingCount` to
+decide which category to prefer. Since most people start at `0 === 0`, `<=` silently means
+"always prefer opening on a tie" — not a rare edge case, the single most common state. It was
+mostly invisible in Phase 3 (non-mandatory tenders) because `perUserOpeningCap` eventually cuts
+off anyone taking too many openings, masking the bias — but Phase 5 has no cap at all by design,
+so the bias ran unchecked and funneled nearly everyone into the opening shifts, evenly spread
+between the main bar and satellite only because the per-shift load-balancing within a category
+was (and still is) working correctly. Fixed by making ties an explicit coin flip instead of a
+silent default, everywhere this pattern occurs (Phases 1, 3, 4, and 5).
+
 ## Requirements checklist
 
 Verified against the actual code, not just the design intent. Status as of the last review:
@@ -137,13 +191,13 @@ Verified against the actual code, not just the design intent. Status as of the l
 | 2 | At most one shift per event per user (anchor + tender combined) | ✅ fixed | Phase 3/5's tender checks already enforced this via `assignedEventsByUser`. Phase 1/4's anchor check (`canTakeAnchorSlot`) did **not** until this review — found and fixed: without it, one experienced anchor could be matched to two different shifts of the same event (e.g. its opening and closing shift both needing an anchor). |
 | 3 | `anchorOnly` users never get a tender shift | ✅ holds | Doubly enforced: `regularUsers` (used by Phases 3 and 5) excludes `anchorOnly` entirely, and `canTakeTenderSlot` also explicitly returns `false` for them. |
 | 4 | Tenders only assigned shifts they can actually be part of | ✅ holds | Every phase's eligibility check ends with `effectiveAvailability(...)`, plus same-shift and avoid-conflict checks. |
-| 5 | Users get approximately equal opening-shift counts | ✅ holds (capped non-mandatory, steered mandatory) | Non-mandatory (Phases 1 and 3): hard-capped at `perUserOpeningCap`, for both anchors (`canTakeAnchorSlot`) and tenders (`canTakeTenderSlot`) — closes the gap found in the previous review. Mandatory (Phases 4 and 5): never capped — mandatory is an add-on, guaranteed regardless of load — but still steered toward whichever category someone's currently lower on, using the true-total counters. |
+| 5 | Users get approximately equal opening-shift counts | ✅ holds (capped non-mandatory, steered mandatory) | Non-mandatory (Phases 1 and 3): hard-capped at `perUserOpeningCap`, for both anchors (`canTakeAnchorSlot`) and tenders (`canTakeTenderSlot`) — closes the gap found in the previous review. Mandatory (Phases 4 and 5): never capped — mandatory is an add-on, guaranteed regardless of load — but still steered toward whichever category someone's currently lower on, using the true-total counters, with the tie-break bug fixed (see below). |
 | 6 | Users get approximately equal closing-shift counts | ✅ holds (capped non-mandatory, steered mandatory) | Same mechanism as #5, mirrored for `perUserClosingCap`. |
 | 7 | Tenders capped at `ceil(shifts per member)` | ✅ holds | `perUserTotalCap` bounds each person's *total* (anchor+tender combined); tender-count is always ≤ total, so it's always within the cap. Denominator is `activeUsers.length` (all active members, matching the existing admin UI "shifts per member" stat) rather than tender-eligible members only — a deliberate choice for consistency, not a bug. |
-| 8 | If a user can join any shift in a mandatory event, they get one that day | ✅ holds | Phase 5 always assigns when `candidateShifts` is non-empty — no cap check can block it, by design. |
-| 9 | If a user can't join any shift in a mandatory event, they get nothing that day | ✅ holds | Phase 5 never assigns when `candidateShifts` is empty; only logs a warning if they had availability that went unmatched for another reason. |
-| 10 | Users on each other's avoid-list never share a shift | ✅ holds | Checked via `hasAvoidConflictOnShift` in every phase — Phase 1/4 (`canTakeAnchorSlot` + level-fill filtering), Phase 2 (`hasConflict` passed to the matcher), Phase 3 (`canTakeTenderSlot` + level-fill filtering), Phase 5 (candidate-shift filter). |
+| 8 | If a user can join any shift in a mandatory event, they get one that day | ✅ holds | Phase 5's Pass 3 always assigns anyone still unplaced who has at least one eligible shift — no cap or target can block it, by design. |
+| 9 | If a user can't join any shift in a mandatory event, they get nothing that day | ✅ holds | Phase 5 only ever pushes `mandatory_assignment_not_met` in Pass 3, and only when zero eligible shifts exist for that person. |
+| 10 | Users on each other's avoid-list never share a shift | ✅ holds | Checked via `hasAvoidConflictOnShift` in every phase — Phase 1/4 (`canTakeAnchorSlot` + level-fill filtering), Phase 2 (`hasConflict` passed to the matcher), Phase 3 (`canTakeTenderSlot` + level-fill filtering), Phase 5 (`isEligibleForMandatoryShift`, all three passes). |
+| 11 | Mandatory event shifts filled as equally as possible | ✅ holds | Each mandatory event computes an explicit `perShiftTarget = ceil(participants / eventShifts.length)` and fills toward it directly (see "Phase 5's three passes" above), rather than relying on emergent convergence from greedy ordering. Bounded by availability, same caveat as everywhere else — can't force someone onto a shift they didn't mark themselves available for. |
 
-**Open gap**: rows 5/6. If anchor-duty opening/closing balance matters as much as tender-duty
-balance, Phase 1/4's slot choice would need the same category-steering treatment Phase 3/5
-already have — currently out of scope, not yet implemented.
+**No open gaps as of this review** — the anchor-duty opening/closing balance gap noted previously
+was closed when the tie-break fix and the shared `canTakeAnchorSlot` hard cap were added.
