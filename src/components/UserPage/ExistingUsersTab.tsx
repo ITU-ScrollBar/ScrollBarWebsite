@@ -22,13 +22,13 @@ import StudyLinePicker from "../../pages/members/StudyLinePicker";
 import { UserAvatarWithUpload } from "../UserAvatar";
 import { useWindowSize } from "../../hooks/useWindowSize";
 import RoleTag from "../RoleTag";
-import useTeams from "../../hooks/useTeams";
+import { useTeamContext } from "../../contexts/TeamContext";
 import { Loading } from "../Loading";
 import { getFunctions, httpsCallable } from "firebase/functions";
 
 export const ExistingUsersTab = () => {
   const { tenderState, updateTender, deleteTender } = useTenderContext();
-  const { teamState } = useTeams();
+  const { teamState } = useTeamContext();
   const [studylines, setStudylines] = useState<StudyLine[]>([]);
   const [api] = notification.useNotification();
   const [isModalOpen, setIsModalOpen] = useState(false);

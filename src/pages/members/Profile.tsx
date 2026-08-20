@@ -14,7 +14,7 @@ import Shifts from "./Shifts";
 import { useEngagementContext } from "../../contexts/EngagementContext";
 import { useEffect, useMemo, useState } from "react";
 import RoleTag from "../../components/RoleTag";
-import useTeams from "../../hooks/useTeams";
+import { useTeamContext } from "../../contexts/TeamContext";
 import { useShiftPlanningContext } from "../../contexts/ShiftPlanningContext";
 import { filterOpenPeriodsForUser } from "../../firebase/api/shiftPlanning";
 
@@ -28,7 +28,7 @@ export default function Profile() {
     shiftCount: number | null;
   } | null>(null);
   const [hasPendingPlanningSubmission, setHasPendingPlanningSubmission] = useState(false);
-  const { teamState } = useTeams();
+  const { teamState } = useTeamContext();
 
   const isNewbie = currentUser?.roles?.includes(Role.NEWBIE) ?? false;
   const activeOpenPeriod = useMemo(

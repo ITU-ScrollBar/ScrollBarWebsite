@@ -27,7 +27,7 @@ import {
   updateInternalEvent,
 } from "../../firebase/api/internalEvents";
 import { useWindowSize } from "../../hooks/useWindowSize";
-import useTeams from "../../hooks/useTeams";
+import { useTeamContext } from "../../contexts/TeamContext";
 
 export const InternalEventsPage = () => {
   const { internalEventState, addInternalEvent } = useInternalEventContext();
@@ -35,7 +35,7 @@ export const InternalEventsPage = () => {
   const [editingEvent, setEditingEvent] = useState<InternalEvent | null>(null);
   const [internalEvents, setInternalEvents] = useState<InternalEvent[]>([]);
   const { isMobile } = useWindowSize();
-  const { teamState } = useTeams();
+  const { teamState } = useTeamContext();
 
   useEffect(() => {
     setInternalEvents(
@@ -230,7 +230,7 @@ const CreateOrEditModal = ({
   initialValues?: InternalEventFormValues;
 }) => {
   const [form] = Form.useForm<InternalEventFormValues>();
-  const { teamState } = useTeams();
+  const { teamState } = useTeamContext();
   const [availableScopes, setAvailableScopes] = useState<
     (Team | (typeof scopeOptions)[number])[]
       >([]);

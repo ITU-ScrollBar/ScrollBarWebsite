@@ -8,6 +8,7 @@ import { useShiftPlanningContext } from "../../../contexts/ShiftPlanningContext"
 import { useTenderContext } from "../../../contexts/TenderContext";
 import { ShiftCategory, ShiftPlanningSurveyType } from "../../../types/types-file";
 import { resolveSurveyType } from "../../../firebase/api/shiftPlanning";
+import { LIVE_DATA_WINDOW_MONTHS } from "../../../firebase/api/dataWindow";
 import ShiftPlanningResponsesPage from "../ShiftPlanningResponsesPage";
 import CustomShiftModal from "./components/CustomShiftModal";
 import ShiftPeriodModals from "./components/ShiftPeriodModals";
@@ -75,6 +76,13 @@ export default function ShiftManagement() {
       .filter((event) => selectedEventIds.has(event.id))
       .sort((a, b) => a.start.getTime() - b.start.getTime());
   }, [allEvents, selectedPeriod]);
+
+  // Events and shifts are streamed within a rolling window, so a period old
+  // enough to fall outside it resolves fewer events than it references. Surface
+  // that explicitly instead of silently rendering an incomplete period.
+  const eventsOutsideWindowCount = selectedPeriod
+    ? selectedPeriod.eventIds.length - selectedPeriodEvents.length
+    : 0;
 
   const currentEvent = selectedEventId
     ? (selectedPeriodEvents.find((event) => event.id === selectedEventId) ?? null)
@@ -425,6 +433,15 @@ export default function ShiftManagement() {
               onEditPeriod={periodForm.openEdit}
               hasSelectedPeriod={Boolean(selectedPeriod)}
             />
+
+            {eventsOutsideWindowCount > 0 && (
+              <Alert
+                type="warning"
+                showIcon
+                message="This period is partly outside the loaded date range"
+                description={`${eventsOutsideWindowCount} of this period's ${selectedPeriod?.eventIds.length} events are older than ${LIVE_DATA_WINDOW_MONTHS} months and are not loaded, so their shifts are not shown here. Recent periods are unaffected.`}
+              />
+            )}
 
             {selectedPeriod ? (
               <Tabs

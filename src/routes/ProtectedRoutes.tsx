@@ -6,6 +6,7 @@ import { EngagementProvider } from '../contexts/EngagementContext';
 import { ShiftProvider } from '../contexts/ShiftContext';
 import { ShiftPlanningProvider } from '../contexts/ShiftPlanningContext';
 import { InternalEventProvider } from '../contexts/InternalEventContext';
+import { TeamProvider } from '../contexts/TeamContext';
 import { Loading } from '../components/Loading';
 
 const ProtectedRoutes: React.FC = () => {
@@ -30,7 +31,9 @@ const ProtectedRoutes: React.FC = () => {
     <ShiftProvider>
       <ShiftPlanningProvider>
         <InternalEventProvider>
-          <Outlet />
+          <TeamProvider>
+            <Outlet />
+          </TeamProvider>
         </InternalEventProvider>
       </ShiftPlanningProvider>
     </ShiftProvider>

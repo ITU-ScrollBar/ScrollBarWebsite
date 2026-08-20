@@ -15,6 +15,7 @@ import {
 } from 'firebase/firestore';
 import { db, storage } from '..';
 import { EventCreateParams } from '../../types/types-file'; // Assuming you define your Event type here
+import { getLiveDataWindowStart } from './dataWindow';
 import { getExtension } from './common';
 import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 
@@ -62,11 +63,19 @@ export const updateEvent = ({
  * Streams events ordered by start date.
  */
 
+// Bounded to the rolling live-data window so this listener's cost tracks recent
+// activity instead of every event ever created.
+//
+// `deleted` is filtered client-side (in useEvents) rather than here: combining
+// it with the window would mean two inequality filters on different fields,
+// which needs a composite index this project doesn't declare in source. As a
+// bonus, the client-side check also matches legacy events that predate the
+// `deleted` field, which a server-side `!=` filter silently excluded.
 export const streamEvents = (observer: { next: (snapshot: QuerySnapshot<DocumentData>) => void; error: (error: Error) => void }): Unsubscribe => {
   const eventsRef = collection(db, 'env', env, 'events');
   const q = query(
     eventsRef,
-    where('deleted', '!=', true)
+    where('end', '>=', getLiveDataWindowStart())
   );
 
   // Return the unsubscribe function from onSnapshot
