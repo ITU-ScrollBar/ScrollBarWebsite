@@ -17,7 +17,7 @@ import {
   ShiftPlanningResponse,
 } from "../../../../types/types-file";
 import { useEngagementContext } from "../../../../contexts/EngagementContext";
-import useTenders from "../../../../hooks/useTenders";
+import { useTenderContext } from "../../../../contexts/TenderContext";
 import { UserAvatar } from "../../../../components/UserAvatar";
 
 const { Text } = Typography;
@@ -31,7 +31,7 @@ interface ShiftInfoProps {
 export default function ShiftInfo({ shift, periodResponses, eventTitle }: ShiftInfoProps) {
   const { engagementState, addEngagement, removeEngagement } =
     useEngagementContext();
-  const { tenderState } = useTenders();
+  const { tenderState } = useTenderContext();
   const [anchorSelection, setAnchorSelection] = useState<string | undefined>(undefined);
   const [tenderSelection, setTenderSelection] = useState<string | undefined>(undefined);
 

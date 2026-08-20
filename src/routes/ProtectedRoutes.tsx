@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'; // Adjust path
 import { EngagementProvider } from '../contexts/EngagementContext';
 import { ShiftProvider } from '../contexts/ShiftContext';
 import { ShiftPlanningProvider } from '../contexts/ShiftPlanningContext';
+import { InternalEventProvider } from '../contexts/InternalEventContext';
 import { Loading } from '../components/Loading';
 
 const ProtectedRoutes: React.FC = () => {
@@ -28,7 +29,9 @@ const ProtectedRoutes: React.FC = () => {
   return <EngagementProvider>
     <ShiftProvider>
       <ShiftPlanningProvider>
-        <Outlet />
+        <InternalEventProvider>
+          <Outlet />
+        </InternalEventProvider>
       </ShiftPlanningProvider>
     </ShiftProvider>
   </EngagementProvider>;

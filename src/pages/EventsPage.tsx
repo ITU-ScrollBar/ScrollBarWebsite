@@ -5,12 +5,12 @@ import Paragraph from 'antd/es/typography/Paragraph';
 import { useWindowSize } from "../hooks/useWindowSize";
 import HeaderBar from '../components/HomePage/HeaderBar';
 import CountDown from '../components/EventPage/EventCountDown';
-import useEvents from '../hooks/useEvents';
+import { useEventContext } from '../contexts/EventContext';
 import DEFAULT_EVENT_IMAGE from '../assets/images/background.png';
 import { EventCard } from '../components/EventPage/EventCard';
 
 export default function EventsPage() {
-  const { eventState } = useEvents();
+  const { eventState } = useEventContext();
   const { isMobile } = useWindowSize();
   const events = eventState.isLoaded ? eventState.events
     .filter(event => event.published && !event.internal)

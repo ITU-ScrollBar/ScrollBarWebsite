@@ -11,9 +11,9 @@ import {
   deleteFileFromStorage
 } from "../firebase/api/authentication";
 import { queueApplicationInviteEmails } from "../firebase/api/applications";
+import { countFutureEngagementsForUser } from "../firebase/api/engagements";
 import { Tender, Invite, StudyLine } from "../types/types-file"; // Ensure the correct import path
 import { DocumentData } from "firebase/firestore";
-import useEngagements from "./useEngagements";
 
 type TenderState = {
   loading: boolean;
@@ -34,8 +34,6 @@ const useTenders = () => {
     tenders: [],
     studylines: [], // Initialize with an empty array or fetch from API if needed
   });
-
-  const { engagementState } = useEngagements();
 
   const [invitedTenders, setInvitedTenders] = useState<Invite[]>([]);
 
@@ -198,7 +196,7 @@ const useTenders = () => {
 
   // Soft-deletes a tender
   // Only succeeds if the tender exists and has no future shifts/engagements
-  const deleteTender = (id: string) => {
+  const deleteTender = async (id: string) => {
     const tender = tenderState.tenders.find(tender => tender.uid === id);
     if (!tender) {
       message.error("Tender not found.");
@@ -206,10 +204,16 @@ const useTenders = () => {
     }
 
     // Check for future shifts or engagements before deleting
-    const tenderShifts = engagementState.engagements.filter(engagement => engagement.userId === id && engagement.shiftEnd > new Date());
+    let futureEngagementCount: number;
+    try {
+      futureEngagementCount = await countFutureEngagementsForUser(id);
+    } catch (error) {
+      message.error(`Failed to check upcoming shifts for ${tender.displayName}: ${(error as Error).message}`);
+      return;
+    }
 
-    if (tenderShifts.length > 0) {
-      message.error(`Cannot delete ${tender.displayName}. Remove them from ${tenderShifts.length} upcoming shifts first.`);
+    if (futureEngagementCount > 0) {
+      message.error(`Cannot delete ${tender.displayName}. Remove them from ${futureEngagementCount} upcoming shifts first.`);
       return;
     }
 

@@ -1,6 +1,6 @@
 import { Content } from "antd/es/layout/layout";
 import Loading from "../../components/Loading";
-import useInternalEvents from "../../hooks/useInternalEvents";
+import { useInternalEventContext } from "../../contexts/InternalEventContext";
 import {
   Button,
   Card,
@@ -30,7 +30,7 @@ import { useWindowSize } from "../../hooks/useWindowSize";
 import useTeams from "../../hooks/useTeams";
 
 export const InternalEventsPage = () => {
-  const { internalEventState, addInternalEvent } = useInternalEvents();
+  const { internalEventState, addInternalEvent } = useInternalEventContext();
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [editingEvent, setEditingEvent] = useState<InternalEvent | null>(null);
   const [internalEvents, setInternalEvents] = useState<InternalEvent[]>([]);

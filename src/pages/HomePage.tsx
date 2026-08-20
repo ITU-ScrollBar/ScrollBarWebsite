@@ -5,7 +5,7 @@ import Paragraph from 'antd/es/typography/Paragraph'
 import HeaderBar from '../components/HomePage/HeaderBar'
 import useSettings from '../hooks/useSettings'
 import MDEditor from '@uiw/react-md-editor'
-import useTenders from '../hooks/useTenders'
+import { useTenderContext } from '../contexts/TenderContext'
 import useBoardRoles from '../hooks/useBoardRoles'
 import { Loading } from '../components/Loading'
 import CountDown from '../components/EventPage/EventCountDown'
@@ -17,7 +17,7 @@ import { getSignupWindowState } from '../utils/signupWindow'
 
 export default function HomePage() {
   const { settingsState } = useSettings();
-  const { tenderState } = useTenders();
+  const { tenderState } = useTenderContext();
   const { boardRolesState } = useBoardRoles();
   const { nextEvent, loading: eventLoading } = useNextEvent();
   const { isMobile } = useWindowSize();

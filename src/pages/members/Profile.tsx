@@ -11,18 +11,18 @@ import { Role, ShiftFiltering } from "../../types/types-file";
 import { CalendarSection } from "../../components/CalendarComponent";
 import { Loading } from "../../components/Loading";
 import Shifts from "./Shifts";
-import useEngagements from "../../hooks/useEngagements";
+import { useEngagementContext } from "../../contexts/EngagementContext";
 import { useEffect, useMemo, useState } from "react";
 import RoleTag from "../../components/RoleTag";
 import useTeams from "../../hooks/useTeams";
-import useShiftPlanning from "../../hooks/useShiftPlanning";
+import { useShiftPlanningContext } from "../../contexts/ShiftPlanningContext";
 import { filterOpenPeriodsForUser } from "../../firebase/api/shiftPlanning";
 
 export default function Profile() {
   const navigate = useNavigate();
   const { loading, currentUser } = useAuth();
-  const { engagementState, getProfileData } = useEngagements();
-  const { periodState, loadUserResponse } = useShiftPlanning();
+  const { engagementState, getProfileData } = useEngagementContext();
+  const { periodState, loadUserResponse } = useShiftPlanningContext();
   const [userData, setUserData] = useState<{
     firstShift: Date | null;
     shiftCount: number | null;

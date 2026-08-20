@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Event } from "../../../types/types-file";
 import Title from "antd/es/typography/Title";
 import Text from "antd/es/typography/Text";
-import useEvents from "../../../hooks/useEvents";
+import { useEventContext } from "../../../contexts/EventContext";
 import {
   Button,
   DatePicker,
@@ -19,7 +19,7 @@ import remarkGfm from "remark-gfm";
 import { deleteFileFromStorage, uploadEventPicture } from "../../../firebase/api/events";
 
 export default function EventInfo(props: { event: Event }) {
-  const { updateEvent, removeEvent } = useEvents();
+  const { updateEvent, removeEvent } = useEventContext();
   const [activeTab, setActiveTab] = useState("edit");
 
   const handleDescriptionChange = (
