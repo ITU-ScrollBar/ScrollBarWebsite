@@ -14,7 +14,7 @@ import {
   Tooltip,
 } from "antd";
 import { Role, StudyLine, Team, Tender } from "../../types/types-file";
-import useTenders from "../../hooks/useTenders";
+import { useTenderContext } from "../../contexts/TenderContext";
 import { Key, useEffect, useState } from "react";
 import { getStudyLines } from "../../firebase/api/authentication";
 import { EditOutlined } from "@ant-design/icons";
@@ -27,7 +27,7 @@ import { Loading } from "../Loading";
 import { getFunctions, httpsCallable } from "firebase/functions";
 
 export const ExistingUsersTab = () => {
-  const { tenderState, updateTender, deleteTender } = useTenders();
+  const { tenderState, updateTender, deleteTender } = useTenderContext();
   const { teamState } = useTeams();
   const [studylines, setStudylines] = useState<StudyLine[]>([]);
   const [api] = notification.useNotification();

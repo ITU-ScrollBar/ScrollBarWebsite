@@ -3,9 +3,9 @@ import { Alert, Empty, Layout, Space, Tabs, notification } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useShiftContext } from "../../../contexts/ShiftContext";
-import useEvents from "../../../hooks/useEvents";
+import { useEventContext } from "../../../contexts/EventContext";
 import { useShiftPlanningContext } from "../../../contexts/ShiftPlanningContext";
-import useTenders from "../../../hooks/useTenders";
+import { useTenderContext } from "../../../contexts/TenderContext";
 import { ShiftCategory, ShiftPlanningSurveyType } from "../../../types/types-file";
 import { resolveSurveyType } from "../../../firebase/api/shiftPlanning";
 import ShiftPlanningResponsesPage from "../ShiftPlanningResponsesPage";
@@ -22,12 +22,12 @@ type ShiftManagementTabKey = "planning" | "survey-overview" | "survey-individual
 
 export default function ShiftManagement() {
   const { currentUser } = useAuth();
-  const { eventState, updateEvent } = useEvents();
+  const { eventState, updateEvent } = useEventContext();
   const { shiftState, addShift } = useShiftContext();
   const [activeTab, setActiveTab] = useState<ShiftManagementTabKey>("planning");
   const { periodState, responseState, createPeriod, updatePeriod, triggerGeneratePlan, selectedPeriodId, setSelectedPeriodId } =
     useShiftPlanningContext();
-  const { tenderState, deleteTender } = useTenders();
+  const { tenderState, deleteTender } = useTenderContext();
 
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [generatingPlan, setGeneratingPlan] = useState(false);

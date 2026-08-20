@@ -3,13 +3,13 @@ import { useState } from "react";
 import { Button, Tabs, Layout, Space, Segmented, Popconfirm, notification } from "antd";
 import { PlusOutlined, UploadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
-import useEvents from "../../../hooks/useEvents";
+import { useEventContext } from "../../../contexts/EventContext";
 import EventInfo from "./EventInfo";
 import { useWindowSize } from "../../../hooks/useWindowSize";
 const { Content } = Layout;
 
 export default function EventManagement() {
-  const { addEvent, eventState, updateEvent } = useEvents();
+  const { addEvent, eventState, updateEvent } = useEventContext();
   const [showPreviousEvents, setShowPreviousEvents] = useState<boolean>(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const { isMobile } = useWindowSize();

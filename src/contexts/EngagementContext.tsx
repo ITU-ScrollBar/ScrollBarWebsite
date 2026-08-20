@@ -12,6 +12,7 @@ export interface EngagementContextType {
   removeEngagement: (engagement: Engagement) => Promise<void>;
   takeShift: (id: string, userId: string) => Promise<void>;
   setUpForGrabs: (id: string, status: boolean) => Promise<void>;
+  getProfileData: (uid: string) => Promise<{ firstShift: Date; shiftCount: number } | null>;
 }
 
 // Create the context
@@ -27,6 +28,7 @@ export const EngagementProvider = ({ children }: { children: ReactNode }) => {
     removeEngagement,
     takeShift,
     setUpForGrabs,
+    getProfileData,
   } = useEngagements();
 
   // Memoize context value to prevent unnecessary re-renders
@@ -37,8 +39,9 @@ export const EngagementProvider = ({ children }: { children: ReactNode }) => {
       removeEngagement,
       takeShift,
       setUpForGrabs,
+      getProfileData,
     }),
-    [engagementState, addEngagement, removeEngagement, takeShift, setUpForGrabs]
+    [engagementState, addEngagement, removeEngagement, takeShift, setUpForGrabs, getProfileData]
   );
 
   return (

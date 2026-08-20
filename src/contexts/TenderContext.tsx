@@ -12,8 +12,16 @@ export interface TenderContextType {
   };
   invitedTenders: (Invite & { key: string })[];
   addInvite: (email: string) => Promise<void>;
+  addInvites: (
+    recipients: Array<{ id: string; email: string; fullName?: string; studyline?: string }>,
+    bodyText?: string
+  ) => Promise<{
+    successful: string[];
+    failed: Array<{ id: string; email: string; error: unknown }>;
+  }>;
   removeInvite: (invite: string) => Promise<void>;
   updateTender: (id: string, field: string, value: any) => Promise<void>;
+  deleteTender: (id: string) => void;
 }
 
 const TenderContext = createContext<TenderContextType | undefined>(undefined);
@@ -23,8 +31,10 @@ export const TenderProvider = ({ children }: { children: ReactNode }) => {
     tenderState,
     invitedTenders,
     addInvite,
+    addInvites,
     removeInvite,
     updateTender,
+    deleteTender,
   } = useTenders(); // Hook that manages tender data
 
   const value = useMemo(
@@ -32,10 +42,12 @@ export const TenderProvider = ({ children }: { children: ReactNode }) => {
       tenderState,
       invitedTenders,
       addInvite,
+      addInvites,
       removeInvite,
       updateTender,
+      deleteTender,
     }),
-    [tenderState, invitedTenders, addInvite, removeInvite, updateTender]
+    [tenderState, invitedTenders, addInvite, addInvites, removeInvite, updateTender, deleteTender]
   );
 
   return <TenderContext.Provider value={value}>{children}</TenderContext.Provider>;

@@ -3,7 +3,7 @@ import { Col, Divider, Empty, Layout, Row, Typography } from "antd";
 import MDEditor from "@uiw/react-md-editor";
 import useBoardRoles from "../../hooks/useBoardRoles";
 import useSettings from "../../hooks/useSettings";
-import useTenders from "../../hooks/useTenders";
+import { useTenderContext } from "../../contexts/TenderContext";
 import { Loading } from "../../components/Loading";
 import { getTenderDisplayName } from "./helpers";
 import { BoardRole, Role, Tender } from "../../types/types-file";
@@ -16,7 +16,7 @@ const { Title } = Typography;
 export default function GetHelpPage() {
   const { settingsState } = useSettings();
   const { boardRolesState } = useBoardRoles();
-  const { tenderState } = useTenders();
+  const { tenderState } = useTenderContext();
   const { isMobile } = useWindowSize();
 
   const boardMembers = useMemo<TenderWithRole[]>(() => {

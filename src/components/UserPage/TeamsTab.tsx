@@ -3,14 +3,14 @@ import useTeams from "../../hooks/useTeams";
 import { Team } from "../../types/types-file";
 import { useCallback, useEffect, useState } from "react";
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import useTenders from "../../hooks/useTenders";
+import { useTenderContext } from "../../contexts/TenderContext";
 
 export const TeamsTab = () => {
   const { teamState, addTeam, updateTeam, removeTeam } = useTeams();
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm<Team & { members: string[] }>();
-  const { tenderState, updateTender } = useTenders();
+  const { tenderState, updateTender } = useTenderContext();
 
   const teamWithTenders = useCallback((team: Team) => {
     return tenderState.tenders.filter(tender => tender.teamIds?.includes(team.id));

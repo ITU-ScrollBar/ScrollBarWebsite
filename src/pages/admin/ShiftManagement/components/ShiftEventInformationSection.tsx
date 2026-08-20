@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 import { useMemo } from "react";
 import { useShiftContext } from "../../../../contexts/ShiftContext";
 import { useShiftPlanningContext } from "../../../../contexts/ShiftPlanningContext";
-import useEvents from "../../../../hooks/useEvents";
+import { useEventContext } from "../../../../contexts/EventContext";
 import { Event, Shift } from "../../../../types/types-file";
 import ShiftAssignmentInfo from "./ShiftAssignmentInfo";
 import ShiftInfo from "./ShiftInfo";
@@ -29,7 +29,7 @@ export default function ShiftEventInformationSection({
 }: ShiftEventInformationSectionProps) {
   const { shiftState, addShift, updateShift, removeShift } = useShiftContext();
   const { periodState, selectedPeriodId, responseState } = useShiftPlanningContext();
-  const { eventState } = useEvents();
+  const { eventState } = useEventContext();
 
   const selectedPeriod = useMemo(
     () => periodState.periods.find((p) => p.id === selectedPeriodId) ?? null,

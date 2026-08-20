@@ -15,7 +15,7 @@ import {
   getResizedPhotoUrl,
   uploadProfilePicture,
 } from "../firebase/api/authentication";
-import useTenders from "../hooks/useTenders";
+import { useTenderContext } from "../contexts/TenderContext";
 import { useEffect, useState } from "react";
 
 type UserAvatarProps = {
@@ -114,7 +114,7 @@ export const UserAvatarWithUpload = ({
   user,
   onChange,
 }: UserAvatarWithUploadProps) => {
-  const { updateTender } = useTenders();
+  const { updateTender } = useTenderContext();
   const [api] = notification.useNotification();
   const [cropModalOpen, setCropModalOpen] = useState(false);
   const [imageSrc, setImageSrc] = useState<string>("");

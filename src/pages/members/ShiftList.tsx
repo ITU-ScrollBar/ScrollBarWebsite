@@ -14,11 +14,11 @@ import {
 } from "../../types/types-file";
 import { useAuth } from "../../contexts/AuthContext";
 import { useEffect, useState, useMemo } from "react";
-import useEvents from "../../hooks/useEvents";
+import { useEventContext } from "../../contexts/EventContext";
 import { useEngagementContext } from "../../contexts/EngagementContext";
 import { UserAvatar } from "../../components/UserAvatar";
 import { UpForGrabsBadge } from "../../badges/UpForGrabsBadge";
-import useInternalEvents from "../../hooks/useInternalEvents";
+import { useInternalEventContext } from "../../contexts/InternalEventContext";
 import useTeams from "../../hooks/useTeams";
 import { useWindowSize } from "../../hooks/useWindowSize";
 import Loading from "../../components/Loading";
@@ -51,10 +51,10 @@ export function ShiftList({
   shiftFiltering = ShiftFiltering.ALL_SHIFTS,
 }: ShiftListProps) {
   const { currentUser } = useAuth();
-  const { eventState } = useEvents();
+  const { eventState } = useEventContext();
   const [filteredShifts, setFilteredShifts] = useState<Shift[]>([]);
   const { setUpForGrabs, takeShift } = useEngagementContext();
-  const internalEventsState = useInternalEvents();
+  const internalEventsState = useInternalEventContext();
   const internalState = internalEventsState.internalEventState;
   const { teamState } = useTeams();
   const { isMobile } = useWindowSize();

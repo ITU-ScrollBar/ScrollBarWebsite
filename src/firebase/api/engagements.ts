@@ -48,6 +48,17 @@ export const getUserEngagementsData = async (
   }
 };
 
+/**
+ * Counts a user's future engagements with a single server-side aggregation
+ * (no document transfer), used to block deletion of tenders with upcoming shifts.
+ */
+export const countFutureEngagementsForUser = async (uid: string): Promise<number> => {
+  const engagementsRef = collection(doc(collection(db, 'env'), env), 'engagements');
+  const q = query(engagementsRef, where('userId', '==', uid), where('shiftEnd', '>=', new Date()));
+  const count = await getCountFromServer(q);
+  return count.data().count;
+};
+
 
 /**
  * Assigns a shift to a user.

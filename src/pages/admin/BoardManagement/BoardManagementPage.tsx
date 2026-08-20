@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import useTenders from "../../../hooks/useTenders";
+import { useTenderContext } from "../../../contexts/TenderContext";
 import { Tender, Role, BoardRole } from "../../../types/types-file";
 import { Layout, message, Input, Button, Table, Select, Popconfirm, Typography } from "antd";
 import useBoardRoles from "../../../hooks/useBoardRoles";
@@ -10,7 +10,7 @@ import { Content, Header } from "antd/es/layout/layout";
 export default function BoardManagementPage() {
   const [newRole, setNewRole] = useState("");
   const [boardMembers, setBoardMembers] = useState<Tender[]>([]);
-  const { tenderState } = useTenders();
+  const { tenderState } = useTenderContext();
   const { boardRolesState, updateBoardRole, addBoardRole, deleteBoardRole } = useBoardRoles();
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
   const [editingRoleValue, setEditingRoleValue] = useState<string>("");

@@ -22,7 +22,7 @@ import {
 import { Content } from "antd/es/layout/layout";
 import { useEffect, useMemo, useRef, useState } from "react";
 import useApplications from "../../hooks/useApplications";
-import useTenders from "../../hooks/useTenders";
+import { useTenderContext } from "../../contexts/TenderContext";
 import useSettings from "../../hooks/useSettings";
 import { IntakeApplication, StudyLine } from "../../types/types-file";
 import { useAuth } from "../../contexts/AuthContext";
@@ -46,7 +46,7 @@ export default function ApplicationsReviewPage() {
     sendTemplateTestEmail,
     setEmailDeliveryStatuses,
   } = useApplications();
-  const { addInvites } = useTenders();
+  const { addInvites } = useTenderContext();
   const { settingsState } = useSettings();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [submittingRound, setSubmittingRound] = useState(false);

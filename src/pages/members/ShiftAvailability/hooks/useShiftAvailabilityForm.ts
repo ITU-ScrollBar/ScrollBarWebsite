@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { message } from "antd";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useShiftContext } from "../../../../contexts/ShiftContext";
-import useEvents from "../../../../hooks/useEvents";
+import { useEventContext } from "../../../../contexts/EventContext";
 import { useShiftPlanningContext } from "../../../../contexts/ShiftPlanningContext";
 import {
   EventChoice,
@@ -16,7 +16,7 @@ import { filterOpenPeriodsForUser, resolveSurveyType } from "../../../../firebas
 export const useShiftAvailabilityForm = () => {
   const { currentUser } = useAuth();
   const { shiftState } = useShiftContext();
-  const { eventState } = useEvents();
+  const { eventState } = useEventContext();
   const {
     periodState,
     loadUserResponse,

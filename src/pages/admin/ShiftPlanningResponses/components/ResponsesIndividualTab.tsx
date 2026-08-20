@@ -5,8 +5,8 @@ import ShiftAvailabilityForm, { FormEditorState } from "../../../../components/S
 import { useShiftPlanningContext } from "../../../../contexts/ShiftPlanningContext";
 import { useShiftContext } from "../../../../contexts/ShiftContext";
 import { updateMutualAvoidShiftPair, resolveSurveyType } from "../../../../firebase/api/shiftPlanning";
-import useEvents from "../../../../hooks/useEvents";
-import useTenders from "../../../../hooks/useTenders";
+import { useEventContext } from "../../../../contexts/EventContext";
+import { useTenderContext } from "../../../../contexts/TenderContext";
 import { Role, Shift } from "../../../../types/types-file";
 import { useResponseEditor } from "../hooks/useResponseEditor";
 import UserSelectionColumn from "./UserSelectionColumn";
@@ -17,8 +17,8 @@ export default function ResponsesIndividualTab() {
   const { periodState, selectedPeriodId, loadUserResponse, submitResponse } =
     useShiftPlanningContext();
   const { shiftState } = useShiftContext();
-  const { eventState } = useEvents();
-  const { tenderState } = useTenders();
+  const { eventState } = useEventContext();
+  const { tenderState } = useTenderContext();
 
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>(undefined);
   const [avoidSaving, setAvoidSaving] = useState(false);

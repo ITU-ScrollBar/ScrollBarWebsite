@@ -5,8 +5,8 @@ import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useShiftContext } from "../../contexts/ShiftContext";
 import { useShiftPlanningContext } from "../../contexts/ShiftPlanningContext";
-import useEvents from "../../hooks/useEvents";
-import useTenders from "../../hooks/useTenders";
+import { useEventContext } from "../../contexts/EventContext";
+import { useTenderContext } from "../../contexts/TenderContext";
 import { Role, Shift, ShiftPlanningSurveyType } from "../../types/types-file";
 import ResponsesIndividualTab from "./ShiftPlanningResponses/components/ResponsesIndividualTab";
 import ResponsesOverviewTab from "./ShiftPlanningResponses/components/ResponsesOverviewTab";
@@ -25,8 +25,8 @@ export default function ShiftPlanningResponsesPage(props: ShiftPlanningResponses
   const { embedded = false, embeddedSection } = props;
   const navigate = useNavigate();
   const { shiftState } = useShiftContext();
-  const { eventState } = useEvents();
-  const { tenderState } = useTenders();
+  const { eventState } = useEventContext();
+  const { tenderState } = useTenderContext();
   const { periodState, responseState, selectedPeriodId, setSelectedPeriodId } =
     useShiftPlanningContext();
 

@@ -1,7 +1,7 @@
 import { Card, Input, Select, Space, Table, Tag } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { useShiftPlanningContext } from "../../../../contexts/ShiftPlanningContext";
-import useTenders from "../../../../hooks/useTenders";
+import { useTenderContext } from "../../../../contexts/TenderContext";
 import { Role } from "../../../../types/types-file";
 import { ResponseFilter } from "../types";
 import { resolveSurveyType } from "../../../../firebase/api/shiftPlanning";
@@ -13,7 +13,7 @@ type UserSelectionColumnProps = {
 
 export default function UserSelectionColumn({ selectedUserId, onSelectedUserIdChange }: UserSelectionColumnProps) {
   const { periodState, responseState, selectedPeriodId } = useShiftPlanningContext();
-  const { tenderState } = useTenders();
+  const { tenderState } = useTenderContext();
 
   const [userSearch, setUserSearch] = useState("");
   const [responseFilter, setResponseFilter] = useState<ResponseFilter>("all");

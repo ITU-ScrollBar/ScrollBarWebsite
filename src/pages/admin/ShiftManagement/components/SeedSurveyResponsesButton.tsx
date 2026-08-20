@@ -8,7 +8,7 @@ import { useMemo } from "react";
 import { useShiftContext } from "../../../../contexts/ShiftContext";
 import { isShiftSurveySeedingEnabled } from "../../../../firebase/api/shiftSurveySeed";
 import useShiftSurveySeed from "../../../../hooks/useShiftSurveySeed";
-import useTenders from "../../../../hooks/useTenders";
+import { useTenderContext } from "../../../../contexts/TenderContext";
 import { ShiftPlanningPeriod } from "../../../../types/types-file";
 
 type SeedSurveyResponsesButtonProps = {
@@ -17,7 +17,7 @@ type SeedSurveyResponsesButtonProps = {
 
 export default function SeedSurveyResponsesButton({ period }: SeedSurveyResponsesButtonProps) {
   const { shiftState } = useShiftContext();
-  const { tenderState } = useTenders();
+  const { tenderState } = useTenderContext();
   const { seeding, seedSurveyResponses } = useShiftSurveySeed();
 
   const periodShifts = useMemo(() => {
