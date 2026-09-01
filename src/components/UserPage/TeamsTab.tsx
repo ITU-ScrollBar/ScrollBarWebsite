@@ -1,12 +1,12 @@
 import { Tooltip, Button, TableColumnType, Table, Modal, Form, Input, Popconfirm, Select } from "antd";
-import useTeams from "../../hooks/useTeams";
+import { useTeamContext } from "../../contexts/TeamContext";
 import { Team } from "../../types/types-file";
 import { useCallback, useEffect, useState } from "react";
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useTenderContext } from "../../contexts/TenderContext";
 
 export const TeamsTab = () => {
-  const { teamState, addTeam, updateTeam, removeTeam } = useTeams();
+  const { teamState, addTeam, updateTeam, removeTeam } = useTeamContext();
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm<Team & { members: string[] }>();

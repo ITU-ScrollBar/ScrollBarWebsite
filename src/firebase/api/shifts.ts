@@ -15,6 +15,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '..';
 import { Shift } from '../../types/types-file';
+import { getLiveDataWindowStart } from './dataWindow';
 
 const env = import.meta.env.VITE_APP_ENV as string;
 
@@ -63,8 +64,14 @@ export const updateShift = ({
   return updateDoc(docRef, { [field]: value });
 };
 
-// ✅ Fixed: pass next and error separately
+// Bounded to the rolling live-data window: every consumer of this stream
+// filters down to a specific event or planning period, so streaming the full
+// shift history only ever added reads and latency.
 export const streamShifts = ({ next, error }: Observer): Unsubscribe => {
-  const q = query(getShiftsCollection(), orderBy('start', 'asc'));
+  const q = query(
+    getShiftsCollection(),
+    where('start', '>=', getLiveDataWindowStart()),
+    orderBy('start', 'asc')
+  );
   return onSnapshot(q, next, error);
 };

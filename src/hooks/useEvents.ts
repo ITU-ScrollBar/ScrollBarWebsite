@@ -27,6 +27,7 @@ type EventFirebase = {
   published: boolean;
   shiftsPublished: boolean;
   internal: boolean;
+  deleted?: boolean;
 };
 
 
@@ -44,18 +45,22 @@ const useEvents = () => {
 
     const unsubscribe = streamEvents({
       next: (snapshot) => {
-        const updatedEvents = snapshot.docs.map((doc) => {
-          const data = doc.data() as EventFirebase; // Assuming Event is the correct type of data
-          const id = doc.id;
+        const updatedEvents = snapshot.docs
+          .map((doc) => {
+            const data = doc.data() as EventFirebase; // Assuming Event is the correct type of data
+            const id = doc.id;
 
-          return {
-            ...data,
-            id,
-            key: id, // `key` is guaranteed to be a string
-            start: data.start?.toDate(), // Convert Timestamp to Date
-            end: data.end?.toDate(), // Convert Timestamp to Date
-          };
-        });
+            return {
+              ...data,
+              id,
+              key: id, // `key` is guaranteed to be a string
+              start: data.start?.toDate(), // Convert Timestamp to Date
+              end: data.end?.toDate(), // Convert Timestamp to Date
+            };
+          })
+          // Soft-deleted events are filtered here rather than in the query so
+          // the stream can keep a single inequality filter for its date window.
+          .filter((event) => !event.deleted);
 
         const now = new Date(Date.now());
 

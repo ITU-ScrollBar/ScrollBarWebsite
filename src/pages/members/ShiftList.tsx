@@ -19,7 +19,7 @@ import { useEngagementContext } from "../../contexts/EngagementContext";
 import { UserAvatar } from "../../components/UserAvatar";
 import { UpForGrabsBadge } from "../../badges/UpForGrabsBadge";
 import { useInternalEventContext } from "../../contexts/InternalEventContext";
-import useTeams from "../../hooks/useTeams";
+import { useTeamContext } from "../../contexts/TeamContext";
 import { useWindowSize } from "../../hooks/useWindowSize";
 import Loading from "../../components/Loading";
 import { renderInternalEvent } from "../admin/InternalEventsPage";
@@ -56,7 +56,7 @@ export function ShiftList({
   const { setUpForGrabs, takeShift } = useEngagementContext();
   const internalEventsState = useInternalEventContext();
   const internalState = internalEventsState.internalEventState;
-  const { teamState } = useTeams();
+  const { teamState } = useTeamContext();
   const { isMobile } = useWindowSize();
 
   useEffect(() => {
