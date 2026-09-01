@@ -344,7 +344,9 @@ export interface Ticket {
   requestType: TicketRequestType;
   impact: TicketImpact;
   status: TicketStatus;
-  createdByRef: unknown;
+  // Firestore stores a DocumentReference to the creator; the list endpoint flattens it to
+  // the user's uid, which is what reaches the client.
+  createdByUid?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }

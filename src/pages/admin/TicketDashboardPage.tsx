@@ -19,6 +19,7 @@ import {
 } from "antd";
 import { Content } from "antd/es/layout/layout";
 import { Loading } from "../../components/Loading";
+import { useTenderContext } from "../../contexts/TenderContext";
 import useTickets from "../../hooks/useTickets";
 import {
   Ticket,
@@ -89,6 +90,7 @@ const formatDate = (value?: Date) => {
 export default function TicketDashboardPage() {
   const { message } = AntdApp.useApp();
   const { ticketState, deleteTicket, updateTicket, updateTicketStatus } = useTickets();
+  const { tenderState } = useTenderContext();
   const [selectedDepartment, setSelectedDepartment] =
     useState<DepartmentFilter>("all");
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
@@ -131,6 +133,20 @@ export default function TicketDashboardPage() {
       resolved: filteredTickets.filter((ticket) => ticket.status === "resolved"),
     };
   }, [filteredTickets]);
+
+  const tenderByUid = useMemo(() => {
+    return new Map(tenderState.tenders.map((tender) => [tender.uid, tender]));
+  }, [tenderState.tenders]);
+
+  // Tickets only carry the creator's uid, so the display name and email are resolved from
+  // the users already streamed by TenderProvider rather than fetched per ticket.
+  const ticketCreator = useMemo(() => {
+    if (!selectedTicket?.createdByUid) {
+      return null;
+    }
+
+    return tenderByUid.get(selectedTicket.createdByUid) ?? null;
+  }, [selectedTicket, tenderByUid]);
 
   useEffect(() => {
     if (!selectedTicket) {
@@ -477,6 +493,26 @@ export default function TicketDashboardPage() {
                       })
                     }
                   />
+                </Descriptions.Item>
+                <Descriptions.Item label="Submitted by">
+                  {ticketCreator?.displayName ? (
+                    ticketCreator.displayName
+                  ) : (
+                    <Text type="secondary">
+                      {tenderState.isLoaded ? "Unknown user" : "Loading…"}
+                    </Text>
+                  )}
+                </Descriptions.Item>
+                <Descriptions.Item label="Email">
+                  {ticketCreator?.email ? (
+                    <Typography.Link href={`mailto:${ticketCreator.email}`}>
+                      {ticketCreator.email}
+                    </Typography.Link>
+                  ) : (
+                    <Text type="secondary">
+                      {tenderState.isLoaded ? "-" : "Loading…"}
+                    </Text>
+                  )}
                 </Descriptions.Item>
                 <Descriptions.Item label="Created">
                   {formatDate(selectedTicket.createdAt)}
