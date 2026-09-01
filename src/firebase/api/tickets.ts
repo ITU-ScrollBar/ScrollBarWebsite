@@ -144,7 +144,7 @@ export const listTickets = async (): Promise<(Ticket & { key: string })[]> => {
     requestType: ticket.requestType,
     impact: ticket.impact,
     status: ticket.status,
-    createdByRef: ticket.createdByUid ?? null,
+    createdByUid: ticket.createdByUid,
     createdAt: ticket.createdAtMs ? new Date(ticket.createdAtMs) : undefined,
     updatedAt: ticket.updatedAtMs ? new Date(ticket.updatedAtMs) : undefined,
   }));
