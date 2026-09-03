@@ -7,12 +7,14 @@
     "watch": "tsc -w",
     "start": "npm run build && npx firebase emulators:start --only functions,firestore",
     "emulate": "firebase emulators:start --only functions,firestore",
-    "deploy": "firebase deploy --only functions"
+    "deploy": "firebase deploy --only functions",
+    "upload-template": "node scripts/upload-email-template.js"
   },
   "dependencies": {
     "express": "^5.1.0",
     "firebase-admin": "^13.5.0",
     "firebase-functions": "^7.0.0",
+    "form-data": "^4.0.0",
     "ics": "^3.8.1",
     "mailgun.js": "^13.0.0",
     "marked": "^18.0.0"

@@ -15,6 +15,7 @@ export const sendRejectedApplicationEmail = mailservice.sendRejectedApplicationE
 export const sendTemplateTestEmail = mailservice.sendTemplateTestEmail;
 export const sendApplicationSubmittedEmail = mailservice.sendApplicationSubmittedEmail;
 export const sendShiftGrabbedConfirmation = mailservice.sendShiftGrabbedConfirmation;
+export const sendTicketCreatedEmail = mailservice.sendTicketCreatedEmail;
 export const resetUserMail = adminChangeUserEmail;
 export { generateShiftPlan };
 export { createTicket };
