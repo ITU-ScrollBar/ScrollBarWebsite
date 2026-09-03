@@ -39,3 +39,22 @@ Once the setup guide is followed, you can test the function locally by accessing
 2. Set up `MAILGUN_DOMAIN`
 
 3. Run pre-build script `yarn run prebuild` to ensure types are available in this project.
+
+## Email templates
+
+Template HTML lives in `functions/templates/`. That directory is the source of truth; edit the
+file there and push it to Mailgun rather than editing in the Mailgun visual editor:
+
+```bash
+npm run upload-template                      # uploads ticket_created_template
+npm run upload-template -- --dry-run         # show what would happen, send nothing
+npm run upload-template -- --name other_tpl  # a different template in functions/templates
+```
+
+The first run creates the template; later runs add a new active version.
+
+Uploading needs an **Account API key**, not the sending key from step 1 above — a domain sending
+key is only permitted to `POST /messages`, so it cannot manage templates. Create one under
+Account Settings -> API keys in the Mailgun dashboard and pass it as `MAILGUN_ADMIN_API_KEY` for
+the upload only. Leave the deployed `MAILGUN_API_KEY` as a sending key so the functions do not run
+with full account access.

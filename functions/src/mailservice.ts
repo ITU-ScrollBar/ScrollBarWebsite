@@ -3,7 +3,7 @@ import Mailgun from 'mailgun.js';
 import { marked } from 'marked';
 import * as admin from 'firebase-admin';
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
-import { Tender } from '../src/types/types-file';
+import { Tender, TicketDepartment } from '../src/types/types-file';
 
 // Initialize admin only if not already initialized by another module (prevents "already exists" errors)
 if (!admin.apps.length) {
@@ -287,6 +287,151 @@ export const sendApplicationSubmittedEmail = onDocumentCreated(
             return;
         } catch (err) {
             console.error('sendApplicationSubmittedEmail error', err);
+        }
+    }
+);
+
+const ticketCreatedTemplateName = 'ticket_created_template';
+
+// Readable cap on the description, applied in code points so an emoji is never bisected.
+const ticketDescriptionMaxLength = 500;
+
+// Mailgun folds the template variables into a single header, so the encoded payload has to
+// stay under the SMTP header line limit even when the description is quote or emoji heavy.
+const ticketVariablesMaxBytes = 900;
+
+// Each ticket department maps to a board role. The role's contactEmail is maintained from
+// Board Management, so it stays the source of truth; the fallback keeps mail flowing if the
+// role was renamed or its contact email was never filled in.
+const ticketDepartmentRecipients: Record<TicketDepartment, { roleName: string; fallbackEmail: string }> = {
+    [TicketDepartment.IT]: { roleName: 'it', fallbackEmail: 'it@scrollbar.dk' },
+    [TicketDepartment.MAINTENANCE]: { roleName: 'maintenance', fallbackEmail: 'maintenance@scrollbar.dk' },
+};
+
+const resolveTicketDepartmentEmail = async (
+    envName: string | undefined,
+    department: string | undefined
+): Promise<string | undefined> => {
+    const recipient = ticketDepartmentRecipients[(department ?? '') as TicketDepartment];
+    if (!recipient?.roleName) {
+        return undefined;
+    }
+
+    if (envName) {
+        try {
+            const snapshot = await db.collection(`env/${envName}/boardRoles`).get();
+            const match = snapshot.docs.find(
+                (roleDoc) => (roleDoc.data()?.name ?? '').trim().toLowerCase() === recipient.roleName
+            );
+            const contactEmail = match?.data()?.contactEmail;
+            if (typeof contactEmail === 'string' && contactEmail.trim().length > 0) {
+                return contactEmail.trim();
+            }
+        } catch (error) {
+            console.error('resolveTicketDepartmentEmail lookup error', error);
+        }
+    }
+
+    console.info('resolveTicketDepartmentEmail: falling back to hardcoded address', {
+        envName,
+        department,
+        roleName: recipient.roleName,
+    });
+
+    return recipient.fallbackEmail;
+};
+
+const humanizeTicketValue = (value: unknown): string => {
+    const raw = typeof value === 'string' ? value.trim() : '';
+    if (!raw) {
+        return 'Unknown';
+    }
+    const spaced = raw.replace(/_/g, ' ');
+    return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+};
+
+const formatTicketDepartment = (department: unknown): string =>
+    department === TicketDepartment.IT ? 'IT' : humanizeTicketValue(department);
+
+const truncateTicketDescription = (characters: string[], maxLength: number): string => {
+    if (characters.length <= maxLength) {
+        return characters.join('');
+    }
+    if (maxLength <= 0) {
+        return '';
+    }
+    return `${characters.slice(0, maxLength).join('').trimEnd()}...`;
+};
+
+const toTicketDescription = (value: unknown): string => {
+    const raw = typeof value === 'string' ? value.trim() : '';
+    return truncateTicketDescription(Array.from(raw), ticketDescriptionMaxLength);
+};
+
+// The character cap covers the realistic case; this shrinks further when JSON escaping pushes
+// the encoded header over the limit anyway.
+const buildTicketVariables = (
+    variables: Record<string, string>,
+    description: string
+): string => {
+    const characters = Array.from(description);
+    let maxLength = characters.length;
+    let payload = JSON.stringify({ ...variables, description });
+
+    while (Buffer.byteLength(payload, 'utf8') > ticketVariablesMaxBytes && maxLength > 0) {
+        maxLength = Math.floor(maxLength * 0.8);
+        payload = JSON.stringify({
+            ...variables,
+            description: truncateTicketDescription(characters, maxLength),
+        });
+    }
+
+    return payload;
+};
+
+export const sendTicketCreatedEmail = onDocumentCreated(
+    { document: 'env/{_env}/tickets/{ticketId}', region: 'europe-west1' },
+    async (event: any) => {
+        const envName = event.params?._env;
+        const ticketId = event.params?.ticketId;
+        const data = event.data?.data ? event.data.data() : {};
+        const title = typeof data?.title === 'string' ? data.title.trim() : '';
+        const department = data?.department;
+
+        if (!title) {
+            console.warn('sendTicketCreatedEmail: missing ticket title', { envName, ticketId });
+            return;
+        }
+
+        const to = await resolveTicketDepartmentEmail(envName, department);
+
+        if (!to) {
+            console.warn('sendTicketCreatedEmail: no recipient for department', { envName, ticketId, department });
+            return;
+        }
+
+        try {
+            await mailgun.messages.create(mailgunDomain, {
+                to,
+                from: `ScrollBar Web <no-reply@${mailgunDomain}>`,
+                // Titles are user supplied, so keep line breaks out of the header.
+                subject: `New ticket created: ${title.replace(/[\r\n]+/g, ' ')}`,
+                template: ticketCreatedTemplateName,
+                'h:Reply-To': 'no-reply@scrollbar.dk',
+                'h:X-Mailgun-Variables': buildTicketVariables(
+                    {
+                        title,
+                        department: formatTicketDepartment(department),
+                        requestType: humanizeTicketValue(data?.requestType),
+                        impact: humanizeTicketValue(data?.impact),
+                        ticketId: ticketId ?? '',
+                    },
+                    toTicketDescription(data?.description)
+                ),
+            });
+            return;
+        } catch (err) {
+            console.error('sendTicketCreatedEmail error', err);
         }
     }
 );
