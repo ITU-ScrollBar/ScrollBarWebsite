@@ -3,7 +3,7 @@ import Mailgun from 'mailgun.js';
 import { marked } from 'marked';
 import * as admin from 'firebase-admin';
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
-import { Tender, TicketDepartment } from '../src/types/types-file';
+import { Tender, TicketDepartment } from './types/types-file';
 
 // Initialize admin only if not already initialized by another module (prevents "already exists" errors)
 if (!admin.apps.length) {
