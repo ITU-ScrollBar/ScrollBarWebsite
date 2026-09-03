@@ -3,7 +3,7 @@ import Mailgun from 'mailgun.js';
 import { marked } from 'marked';
 import * as admin from 'firebase-admin';
 import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
-import { Tender, TicketDepartment } from './types/types-file';
+import { LendingEquipment, Tender, TicketDepartment } from './types/types-file';
 
 // Initialize admin only if not already initialized by another module (prevents "already exists" errors)
 if (!admin.apps.length) {
@@ -308,6 +308,36 @@ const ticketDepartmentRecipients: Record<TicketDepartment, { roleName: string; f
     [TicketDepartment.MAINTENANCE]: { roleName: 'maintenance', fallbackEmail: 'maintenance@scrollbar.dk' },
 };
 
+// Looks up the contact address configured for a board role, so the board can redirect these
+// notifications from Board Management without a deploy.
+const resolveBoardRoleEmail = async (
+    envName: string | undefined,
+    roleName: string,
+    fallbackEmail: string
+): Promise<string> => {
+    if (envName) {
+        try {
+            const snapshot = await db.collection(`env/${envName}/boardRoles`).get();
+            const match = snapshot.docs.find(
+                (roleDoc) => (roleDoc.data()?.name ?? '').trim().toLowerCase() === roleName
+            );
+            const contactEmail = match?.data()?.contactEmail;
+            if (typeof contactEmail === 'string' && contactEmail.trim().length > 0) {
+                return contactEmail.trim();
+            }
+        } catch (error) {
+            console.error('resolveBoardRoleEmail lookup error', error, { roleName });
+        }
+    }
+
+    console.info('resolveBoardRoleEmail: falling back to hardcoded address', {
+        envName,
+        roleName,
+    });
+
+    return fallbackEmail;
+};
+
 const resolveTicketDepartmentEmail = async (
     envName: string | undefined,
     department: string | undefined
@@ -317,28 +347,7 @@ const resolveTicketDepartmentEmail = async (
         return undefined;
     }
 
-    if (envName) {
-        try {
-            const snapshot = await db.collection(`env/${envName}/boardRoles`).get();
-            const match = snapshot.docs.find(
-                (roleDoc) => (roleDoc.data()?.name ?? '').trim().toLowerCase() === recipient.roleName
-            );
-            const contactEmail = match?.data()?.contactEmail;
-            if (typeof contactEmail === 'string' && contactEmail.trim().length > 0) {
-                return contactEmail.trim();
-            }
-        } catch (error) {
-            console.error('resolveTicketDepartmentEmail lookup error', error);
-        }
-    }
-
-    console.info('resolveTicketDepartmentEmail: falling back to hardcoded address', {
-        envName,
-        department,
-        roleName: recipient.roleName,
-    });
-
-    return recipient.fallbackEmail;
+    return resolveBoardRoleEmail(envName, recipient.roleName, recipient.fallbackEmail);
 };
 
 const humanizeTicketValue = (value: unknown): string => {
@@ -353,7 +362,7 @@ const humanizeTicketValue = (value: unknown): string => {
 const formatTicketDepartment = (department: unknown): string =>
     department === TicketDepartment.IT ? 'IT' : humanizeTicketValue(department);
 
-const truncateTicketDescription = (characters: string[], maxLength: number): string => {
+const truncateFreeText = (characters: string[], maxLength: number): string => {
     if (characters.length <= maxLength) {
         return characters.join('');
     }
@@ -365,24 +374,25 @@ const truncateTicketDescription = (characters: string[], maxLength: number): str
 
 const toTicketDescription = (value: unknown): string => {
     const raw = typeof value === 'string' ? value.trim() : '';
-    return truncateTicketDescription(Array.from(raw), ticketDescriptionMaxLength);
+    return truncateFreeText(Array.from(raw), ticketDescriptionMaxLength);
 };
 
 // The character cap covers the realistic case; this shrinks further when JSON escaping pushes
 // the encoded header over the limit anyway.
-const buildTicketVariables = (
-    variables: Record<string, string>,
-    description: string
+const buildVariables = (
+    variables: Record<string, unknown>,
+    freeTextKey: string,
+    freeText: string
 ): string => {
-    const characters = Array.from(description);
+    const characters = Array.from(freeText);
     let maxLength = characters.length;
-    let payload = JSON.stringify({ ...variables, description });
+    let payload = JSON.stringify({ ...variables, [freeTextKey]: freeText });
 
     while (Buffer.byteLength(payload, 'utf8') > ticketVariablesMaxBytes && maxLength > 0) {
         maxLength = Math.floor(maxLength * 0.8);
         payload = JSON.stringify({
             ...variables,
-            description: truncateTicketDescription(characters, maxLength),
+            [freeTextKey]: truncateFreeText(characters, maxLength),
         });
     }
 
@@ -418,7 +428,7 @@ export const sendTicketCreatedEmail = onDocumentCreated(
                 subject: `New ticket created: ${title.replace(/[\r\n]+/g, ' ')}`,
                 template: ticketCreatedTemplateName,
                 'h:Reply-To': 'no-reply@scrollbar.dk',
-                'h:X-Mailgun-Variables': buildTicketVariables(
+                'h:X-Mailgun-Variables': buildVariables(
                     {
                         title,
                         department: formatTicketDepartment(department),
@@ -426,12 +436,169 @@ export const sendTicketCreatedEmail = onDocumentCreated(
                         impact: humanizeTicketValue(data?.impact),
                         ticketId: ticketId ?? '',
                     },
+                    'description',
                     toTicketDescription(data?.description)
                 ),
             });
             return;
         } catch (err) {
             console.error('sendTicketCreatedEmail error', err);
+        }
+    }
+);
+
+const formSubmissionTemplateName = 'form_submission_template';
+const formResponsesUrl = 'https://scrollbar.dk/admin/forms';
+
+// Equipment lending and anonymous feedback both notify the board; the address is configurable
+// through the board role of the same name.
+const formsRecipient = { roleName: 'board', fallbackEmail: 'board@scrollbar.dk' };
+
+const lendingEquipmentLabels: Record<LendingEquipment, string> = {
+    [LendingEquipment.SOUNDBOKS]: 'Soundboks',
+    [LendingEquipment.SPEAKER_STAND]: 'Speaker stand',
+    [LendingEquipment.ICE_BUCKET]: 'Ice bucket(s)',
+    [LendingEquipment.IPAD]: 'iPad(s)',
+    [LendingEquipment.OTHER]: 'Other',
+};
+
+const formDateFormatter = new Intl.DateTimeFormat('en-GB', {
+    dateStyle: 'medium',
+    timeZone: 'Europe/Copenhagen',
+});
+
+const formatFormDate = (value: any): string => {
+    const date = typeof value?.toDate === 'function' ? value.toDate() : value instanceof Date ? value : null;
+    if (!date || Number.isNaN(date.getTime())) {
+        return 'Unknown';
+    }
+    return formDateFormatter.format(date);
+};
+
+// buildVariables can only shrink the one free-text field, so every other member-supplied value
+// gets a hard cap first; otherwise a long occasion or name pushes the header over the byte budget
+// and Mailgun rejects the whole message.
+const fixedVariableMaxLength = 80;
+
+const capFixedVariable = (value: string): string =>
+    truncateFreeText(Array.from(value), fixedVariableMaxLength);
+
+const buildLendingBody = (occasion: string, additionalInfo: unknown): string => {
+    const extra = typeof additionalInfo === 'string' ? additionalInfo.trim() : '';
+    return extra ? `${occasion}\n\nAnything else we should know?\n${extra}` : occasion;
+};
+
+const resolveRequesterLabel = async (createdByRef: any): Promise<string> => {
+    if (!createdByRef?.get) {
+        return 'Unknown member';
+    }
+
+    try {
+        const snapshot = await createdByRef.get();
+        const requester = snapshot.data() as Tender | undefined;
+        const name = requester?.displayName?.trim();
+        const email = requester?.email?.trim();
+
+        if (name && email) return `${name} (${email})`;
+        return name || email || 'Unknown member';
+    } catch (error) {
+        console.error('resolveRequesterLabel error', error);
+        return 'Unknown member';
+    }
+};
+
+export const sendLendingRequestCreatedEmail = onDocumentCreated(
+    { document: 'env/{_env}/lendingRequests/{requestId}', region: 'europe-west1' },
+    async (event: any) => {
+        const envName = event.params?._env;
+        const requestId = event.params?.requestId;
+        const data = event.data?.data ? event.data.data() : {};
+        const occasion = typeof data?.occasion === 'string' ? data.occasion.trim() : '';
+
+        if (!occasion) {
+            console.warn('sendLendingRequestCreatedEmail: missing occasion', { envName, requestId });
+            return;
+        }
+
+        const equipment = lendingEquipmentLabels[data?.equipment as LendingEquipment] ?? 'Other';
+        const equipmentDetails = typeof data?.equipmentDetails === 'string' ? data.equipmentDetails.trim() : '';
+
+        try {
+            await mailgun.messages.create(mailgunDomain, {
+                to: await resolveBoardRoleEmail(envName, formsRecipient.roleName, formsRecipient.fallbackEmail),
+                from: `ScrollBar Web <no-reply@${mailgunDomain}>`,
+                // The label comes from a fixed map, so no member text can reach the header.
+                subject: `New equipment booking request: ${equipment}`,
+                template: formSubmissionTemplateName,
+                'h:Reply-To': 'no-reply@scrollbar.dk',
+                // Only the fields the loop can shrink may carry unbounded member text, so the
+                // occasion and the extra info go into the body rather than into `details`.
+                'h:X-Mailgun-Variables': buildVariables(
+                    {
+                        heading: 'A new equipment booking request',
+                        title: capFixedVariable(
+                            equipmentDetails ? `${equipment} - ${equipmentDetails}` : equipment
+                        ),
+                        details: [
+                            {
+                                label: 'Requested by',
+                                value: capFixedVariable(await resolveRequesterLabel(data?.createdByRef)),
+                            },
+                            { label: 'Pick-up', value: formatFormDate(data?.pickupAt) },
+                            { label: 'Return', value: formatFormDate(data?.returnAt) },
+                        ],
+                        bodyLabel: 'Occasion',
+                        linkLabel: 'Open form responses',
+                        linkUrl: formResponsesUrl,
+                    },
+                    'body',
+                    buildLendingBody(occasion, data?.additionalInfo)
+                ),
+            });
+            return;
+        } catch (err) {
+            console.error('sendLendingRequestCreatedEmail error', err);
+        }
+    }
+);
+
+export const sendAnonymousFeedbackCreatedEmail = onDocumentCreated(
+    { document: 'env/{_env}/anonymousFeedback/{feedbackId}', region: 'europe-west1' },
+    async (event: any) => {
+        const envName = event.params?._env;
+        const feedbackId = event.params?.feedbackId;
+        const data = event.data?.data ? event.data.data() : {};
+        const feedback = typeof data?.feedback === 'string' ? data.feedback.trim() : '';
+
+        if (!feedback) {
+            console.warn('sendAnonymousFeedbackCreatedEmail: missing feedback', { envName, feedbackId });
+            return;
+        }
+
+        try {
+            await mailgun.messages.create(mailgunDomain, {
+                to: await resolveBoardRoleEmail(envName, formsRecipient.roleName, formsRecipient.fallbackEmail),
+                from: `ScrollBar Web <no-reply@${mailgunDomain}>`,
+                // The submission carries no identity, and neither does this mail.
+                subject: 'New anonymous feedback',
+                template: formSubmissionTemplateName,
+                'h:Reply-To': 'no-reply@scrollbar.dk',
+                'h:X-Mailgun-Variables': buildVariables(
+                    {
+                        heading: 'New anonymous feedback',
+                        title: '',
+                        details: [],
+                        bodyLabel: 'Feedback',
+                        linkLabel: 'Open form responses',
+                        linkUrl: formResponsesUrl,
+                    },
+                    'body',
+                    feedback
+                ),
+            });
+            return;
+        } catch (err) {
+            console.error('sendAnonymousFeedbackCreatedEmail error', err);
         }
     }
 );

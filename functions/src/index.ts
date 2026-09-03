@@ -16,6 +16,8 @@ export const sendTemplateTestEmail = mailservice.sendTemplateTestEmail;
 export const sendApplicationSubmittedEmail = mailservice.sendApplicationSubmittedEmail;
 export const sendShiftGrabbedConfirmation = mailservice.sendShiftGrabbedConfirmation;
 export const sendTicketCreatedEmail = mailservice.sendTicketCreatedEmail;
+export const sendLendingRequestCreatedEmail = mailservice.sendLendingRequestCreatedEmail;
+export const sendAnonymousFeedbackCreatedEmail = mailservice.sendAnonymousFeedbackCreatedEmail;
 export const resetUserMail = adminChangeUserEmail;
 export { generateShiftPlan };
 export { createTicket };

@@ -48,8 +48,8 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
       key: 'tenders/gethelp',
     },
     {
-      label: 'Create Ticket',
-      key: 'tenders/tickets',
+      label: 'Forms',
+      key: 'tenders/forms',
     }
   ];
 
@@ -104,6 +104,12 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
         key: 'admin/applications',
       });
     }
+    if (currentUser?.roles?.includes(Role.BOARD)) {
+      adminItems.push({
+        label: 'Form Responses',
+        key: 'admin/forms',
+      });
+    }
     if (currentUser?.isAdmin) {
       adminItems.push({
         label: 'System Settings',
@@ -138,7 +144,13 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
     navigate(`/${e.key}`);
   }
 
-  const currentPage = items.find((item) => item?.key?.toString() && pathname.endsWith(item?.key?.toString()));
+  // Sub-pages such as /tenders/forms/lending keep their parent entry highlighted. Submenu
+  // headings (Admin) are skipped: they have children rather than a route of their own.
+  const currentPage = items.find((item) => {
+    const key = item?.key?.toString();
+    if (!key || (item && 'children' in item)) return false;
+    return pathname === `/${key}` || pathname.startsWith(`/${key}/`);
+  });
 
   return (
     <div>
