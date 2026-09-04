@@ -448,6 +448,7 @@ export const sendTicketCreatedEmail = onDocumentCreated(
 );
 
 const formSubmissionTemplateName = 'form_submission_template';
+const lendingApprovedTemplateName = 'lending_approved_template';
 const formResponsesUrl = 'https://scrollbar.dk/admin/forms';
 
 // Equipment lending and anonymous feedback both notify the board; the address is configurable
@@ -486,6 +487,29 @@ const capFixedVariable = (value: string): string =>
 const buildLendingBody = (occasion: string, additionalInfo: unknown): string => {
     const extra = typeof additionalInfo === 'string' ? additionalInfo.trim() : '';
     return extra ? `${occasion}\n\nAnything else we should know?\n${extra}` : occasion;
+};
+
+// Resolves the lender's own contact details from the stored user reference, so the approval mail
+// can reach them directly.
+const resolveTenderContact = async (
+    createdByRef: any
+): Promise<{ email?: string; displayName?: string } | null> => {
+    if (!createdByRef?.get) {
+        return null;
+    }
+
+    try {
+        const snapshot = await createdByRef.get();
+        const tender = snapshot.data() as Tender | undefined;
+        if (!tender) {
+            return null;
+        }
+
+        return { email: tender.email?.trim(), displayName: tender.displayName?.trim() };
+    } catch (error) {
+        console.error('resolveTenderContact error', error);
+        return null;
+    }
 };
 
 const resolveRequesterLabel = async (createdByRef: any): Promise<string> => {
@@ -599,6 +623,64 @@ export const sendAnonymousFeedbackCreatedEmail = onDocumentCreated(
             return;
         } catch (err) {
             console.error('sendAnonymousFeedbackCreatedEmail error', err);
+        }
+    }
+);
+
+// When a lending request collects its second board approval, deriveLendingStatus flips the stored
+// status to "approved". This fires on that transition and tells the lender their request went
+// through. Guarding on the status change (not merely the "approved" state) keeps a later comment
+// edit — which also updates the document — from resending the mail.
+export const sendLendingRequestApprovedEmail = onDocumentUpdated(
+    { document: 'env/{_env}/lendingRequests/{requestId}', region: 'europe-west1' },
+    async (event: any) => {
+        const requestId = event.params?.requestId;
+        const before = event.data?.before?.data ? event.data.before.data() : undefined;
+        const after = event.data?.after?.data ? event.data.after.data() : undefined;
+
+        if (!before || !after) {
+            return;
+        }
+
+        if (before.status === 'approved' || after.status !== 'approved') {
+            return;
+        }
+
+        const contact = await resolveTenderContact(after.createdByRef);
+        if (!contact?.email) {
+            console.warn('sendLendingRequestApprovedEmail: no lender email', { requestId });
+            return;
+        }
+
+        const equipment = lendingEquipmentLabels[after.equipment as LendingEquipment] ?? 'Other';
+        const equipmentDetails = typeof after.equipmentDetails === 'string' ? after.equipmentDetails.trim() : '';
+        const occasion = typeof after.occasion === 'string' ? after.occasion.trim() : '';
+
+        try {
+            await mailgun.messages.create(mailgunDomain, {
+                to: contact.email,
+                from: `ScrollBar Web <no-reply@${mailgunDomain}>`,
+                // The label comes from a fixed map, so no member text can reach the header.
+                subject: `Your equipment booking is approved: ${equipment}`,
+                template: lendingApprovedTemplateName,
+                // A member may want to reply to the board about the approved booking.
+                'h:Reply-To': 'board@scrollbar.dk',
+                'h:X-Mailgun-Variables': buildVariables(
+                    {
+                        name: capFixedVariable(contact.displayName || 'there'),
+                        equipment: capFixedVariable(
+                            equipmentDetails ? `${equipment} - ${equipmentDetails}` : equipment
+                        ),
+                        pickup: formatFormDate(after.pickupAt),
+                        returnDate: formatFormDate(after.returnAt),
+                    },
+                    'occasion',
+                    occasion
+                ),
+            });
+            return;
+        } catch (err) {
+            console.error('sendLendingRequestApprovedEmail error', err);
         }
     }
 );
