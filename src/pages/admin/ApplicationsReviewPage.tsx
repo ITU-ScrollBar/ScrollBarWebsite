@@ -20,17 +20,17 @@ import {
   Typography,
 } from "antd";
 import { Content } from "antd/es/layout/layout";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useApplications from "../../hooks/useApplications";
 import { useTenderContext } from "../../contexts/TenderContext";
 import useSettings from "../../hooks/useSettings";
 import { IntakeApplication, StudyLine } from "../../types/types-file";
 import { useAuth } from "../../contexts/AuthContext";
 import Loading from "../../components/Loading";
-import { getDownloadURL, ref } from "firebase/storage";
-import { storage } from "../../firebase";
 import { getStudyLines } from "../../firebase/api/authentication";
 import avatarPlaceholder from "../../assets/images/avatar.png";
+import ApplicationFileLink from "./ApplicationsReview/components/ApplicationFileLink";
+import useStorageDownloadUrls from "./ApplicationsReview/hooks/useStorageDownloadUrls";
 
 const { Title, Paragraph } = Typography;
 
@@ -55,8 +55,6 @@ export default function ApplicationsReviewPage() {
   const [sendingInviteTest, setSendingInviteTest] = useState(false);
   const [sendingRejectionTest, setSendingRejectionTest] = useState(false);
   const [studyLines, setStudyLines] = useState<StudyLine[]>([]);
-  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
-  const requestedPhotoIdsRef = useRef<Set<string>>(new Set());
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
 
@@ -109,24 +107,22 @@ export default function ApplicationsReviewPage() {
       });
   }, []);
 
-  useEffect(() => {
-    const missing = applicationsState.applications.filter((application) => {
-      return !!application.photoPath && !requestedPhotoIdsRef.current.has(application.id);
-    });
+  const photoFileRefs = useMemo(
+    () => applicationsState.applications.map((application) => ({ id: application.id, path: application.photoPath })),
+    [applicationsState.applications]
+  );
 
-    if (!missing.length) return;
+  const applicationFileRefs = useMemo(
+    () =>
+      applicationsState.applications.map((application) => ({
+        id: application.id,
+        path: application.applicationFilePath,
+      })),
+    [applicationsState.applications]
+  );
 
-    missing.forEach((application) => {
-      requestedPhotoIdsRef.current.add(application.id);
-      getDownloadURL(ref(storage, application.photoPath))
-        .then((url) => {
-          setPhotoUrls((prev) => ({ ...prev, [application.id]: url }));
-        })
-        .catch((error: any) => {
-          message.error(`Failed to load picture: ${error.message}`);
-        });
-    });
-  }, [applicationsState.applications]);
+  const photoUrls = useStorageDownloadUrls(photoFileRefs, "picture");
+  const applicationFileUrls = useStorageDownloadUrls(applicationFileRefs, "application file");
 
   const columns = [
     {
@@ -166,21 +162,8 @@ export default function ApplicationsReviewPage() {
       title: "Application",
       dataIndex: "applicationFilePath",
       key: "applicationFilePath",
-      render: (value: string) => (
-        <Button
-          type="link"
-          style={{ padding: 0 }}
-          onClick={async () => {
-            try {
-              const url = await getDownloadURL(ref(storage, value));
-              window.open(url, "_blank", "noopener,noreferrer");
-            } catch (error: any) {
-              message.error(`Failed to open application file: ${error.message}`);
-            }
-          }}
-        >
-          Open application
-        </Button>
+      render: (value: string, record: IntakeApplication) => (
+        <ApplicationFileLink filePath={value} url={applicationFileUrls[record.id]} />
       ),
     },
     {
