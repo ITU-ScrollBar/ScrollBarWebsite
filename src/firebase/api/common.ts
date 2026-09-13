@@ -6,7 +6,8 @@ import {
   CollectionReference,
   DocumentReference,
 } from 'firebase/firestore';
-import { db } from '../index';
+import { getDownloadURL, ref } from 'firebase/storage';
+import { db, storage } from '../index';
 import { DocumentData } from './../../types/types-file';
 
 export const getCollection = async (
@@ -46,3 +47,6 @@ export const getExtension = (path: string): string => {
   if (basename === '' || pos < 1) return '';
   return basename.slice(pos + 1);
 };
+
+export const getStorageDownloadUrl = (path: string): Promise<string> =>
+  getDownloadURL(ref(storage, path));

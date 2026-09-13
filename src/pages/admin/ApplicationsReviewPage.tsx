@@ -121,8 +121,11 @@ export default function ApplicationsReviewPage() {
     [applicationsState.applications]
   );
 
-  const photoUrls = useStorageDownloadUrls(photoFileRefs, "picture");
-  const applicationFileUrls = useStorageDownloadUrls(applicationFileRefs, "application file");
+  const { entries: photoEntries } = useStorageDownloadUrls(photoFileRefs, "picture");
+  const { entries: applicationFileEntries, retry: retryApplicationFile } = useStorageDownloadUrls(
+    applicationFileRefs,
+    "application file"
+  );
 
   const columns = [
     {
@@ -163,7 +166,11 @@ export default function ApplicationsReviewPage() {
       dataIndex: "applicationFilePath",
       key: "applicationFilePath",
       render: (value: string, record: IntakeApplication) => (
-        <ApplicationFileLink filePath={value} url={applicationFileUrls[record.id]} />
+        <ApplicationFileLink
+          filePath={value}
+          entry={applicationFileEntries[record.id]}
+          onRetry={() => retryApplicationFile(record.id)}
+        />
       ),
     },
     {
@@ -172,7 +179,7 @@ export default function ApplicationsReviewPage() {
       key: "photoPath",
       render: (_value: string, record: IntakeApplication) => (
         <Image
-          src={photoUrls[record.id] || avatarPlaceholder}
+          src={photoEntries[record.id]?.url || avatarPlaceholder}
           alt={`${record.fullName} photo`}
           width={64}
           height={64}
