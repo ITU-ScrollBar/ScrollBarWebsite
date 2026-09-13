@@ -6,7 +6,7 @@ import {
   CollectionReference,
   DocumentReference,
 } from 'firebase/firestore';
-import { getDownloadURL, ref } from 'firebase/storage';
+import { getDownloadURL, ref as storageRef } from 'firebase/storage';
 import { db, storage } from '../index';
 import { DocumentData } from './../../types/types-file';
 
@@ -48,5 +48,7 @@ export const getExtension = (path: string): string => {
   return basename.slice(pos + 1);
 };
 
-export const getStorageDownloadUrl = (path: string): Promise<string> =>
-  getDownloadURL(ref(storage, path));
+// async so that a synchronous throw from storageRef (missing bucket, legacy
+// full-URL path) surfaces as a rejection instead of escaping the caller.
+export const getStorageDownloadUrl = async (path: string): Promise<string> =>
+  getDownloadURL(storageRef(storage, path));

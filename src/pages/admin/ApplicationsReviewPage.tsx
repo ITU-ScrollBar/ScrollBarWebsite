@@ -169,7 +169,7 @@ export default function ApplicationsReviewPage() {
         <ApplicationFileLink
           filePath={value}
           entry={applicationFileEntries[record.id]}
-          onRetry={() => retryApplicationFile(record.id)}
+          onRetry={() => retryApplicationFile({ id: record.id, path: value })}
         />
       ),
     },

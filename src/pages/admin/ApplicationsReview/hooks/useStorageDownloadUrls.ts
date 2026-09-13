@@ -26,9 +26,6 @@ const toReason = (error: unknown) => (error instanceof Error ? error.message : S
 export default function useStorageDownloadUrls(files: StorageFileRef[], errorLabel: string) {
   const [entries, setEntries] = useState<Record<string, StorageDownloadEntry>>({});
   const requestedKeysRef = useRef<Set<string>>(new Set());
-  const filesRef = useRef<StorageFileRef[]>(files);
-
-  filesRef.current = files;
 
   const resolve = useCallback(
     (targets: StorageFileRef[]) => {
@@ -43,23 +40,20 @@ export default function useStorageDownloadUrls(files: StorageFileRef[], errorLab
       });
 
       Promise.allSettled(targets.map((file) => getStorageDownloadUrl(file.path as string))).then((results) => {
+        const resolved: Record<string, StorageDownloadEntry> = {};
         const reasons: string[] = [];
 
-        setEntries((prev) => {
-          const next = { ...prev };
-          results.forEach((result, index) => {
-            const file = targets[index];
-            if (result.status === "fulfilled") {
-              next[file.id] = { status: "ready", url: result.value };
-              return;
-            }
-            // Drop the key so a retry can request this file again.
-            requestedKeysRef.current.delete(entryKey(file));
-            next[file.id] = { status: "error" };
-            reasons.push(toReason(result.reason));
-          });
-          return next;
+        results.forEach((result, index) => {
+          const file = targets[index];
+          if (result.status === "fulfilled") {
+            resolved[file.id] = { status: "ready", url: result.value };
+            return;
+          }
+          resolved[file.id] = { status: "error" };
+          reasons.push(toReason(result.reason));
         });
+
+        setEntries((prev) => ({ ...prev, ...resolved }));
 
         if (!reasons.length) return;
         message.error(
@@ -73,6 +67,8 @@ export default function useStorageDownloadUrls(files: StorageFileRef[], errorLab
   );
 
   useEffect(() => {
+    // Requested keys are kept even when a request fails, so a failure is never
+    // retried automatically. Retrying is an explicit user action instead.
     const missing = files.filter((file) => !!file.path && !requestedKeysRef.current.has(entryKey(file)));
 
     if (!missing.length) return;
@@ -82,9 +78,8 @@ export default function useStorageDownloadUrls(files: StorageFileRef[], errorLab
   }, [files, resolve]);
 
   const retry = useCallback(
-    (id: string) => {
-      const file = filesRef.current.find((candidate) => candidate.id === id);
-      if (!file?.path) return;
+    (file: StorageFileRef) => {
+      if (!file.path) return;
 
       requestedKeysRef.current.add(entryKey(file));
       resolve([file]);
