@@ -12,8 +12,8 @@ const fromHeic = async (buffer: Buffer) => {
   return sharp(data, { raw: { width, height, channels: 4 } });
 };
 
-// users and profile_pictures/ are global, so the first env to run this does
-// the work and later runs skip pictures that are already small WebP files.
+// Re-runs skip pictures that are already small WebP files, so running it more
+// than once per Firebase project is harmless.
 // Originals are left in place unless one already lives at the target path.
 export default async function ({ db }: { db: Firebase.Firestore }) {
   const snapshot = await db.collection('users').get();
