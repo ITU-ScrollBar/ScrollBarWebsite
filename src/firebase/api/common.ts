@@ -6,7 +6,8 @@ import {
   CollectionReference,
   DocumentReference,
 } from 'firebase/firestore';
-import { auth, db } from '../index';
+import { getDownloadURL, ref as storageRef } from 'firebase/storage';
+import { auth, db, storage } from '../index';
 import { DocumentData } from './../../types/types-file';
 
 export const getCollection = async (
@@ -46,6 +47,11 @@ export const getExtension = (path: string): string => {
   if (basename === '' || pos < 1) return '';
   return basename.slice(pos + 1);
 };
+// async so that a synchronous throw from storageRef (missing bucket, legacy
+// full-URL path) surfaces as a rejection instead of escaping the caller.
+export const getStorageDownloadUrl = async (path: string): Promise<string> =>
+  getDownloadURL(storageRef(storage, path));
+
 const projectId = import.meta.env.VITE_APP_FIREBASE_PROJECT_ID as string;
 
 // Every express route (tickets, equipment lending, anonymous feedback) is served by the single

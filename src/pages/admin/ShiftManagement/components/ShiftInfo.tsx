@@ -85,7 +85,10 @@ export default function ShiftInfo(props: {
           showTime
           allowClear={false}
           value={dayjs(shift.start)}
-          onChange={(value) => updateShift(shift.id, "start", value?.toDate())}
+          onChange={(value) => {
+            updateShift(shift.id, "start", value?.toDate());
+            if (satelliteShift) onUpdateSatellite("start", value?.toDate());
+          }}
         />
         <DatePicker
           size="small"
@@ -93,7 +96,10 @@ export default function ShiftInfo(props: {
           allowClear={false}
           showTime
           value={dayjs(shift.end)}
-          onChange={(value) => updateShift(shift.id, "end", value?.toDate())}
+          onChange={(value) => {
+            updateShift(shift.id, "end", value?.toDate());
+            if (satelliteShift) onUpdateSatellite("end", value?.toDate());
+          }}
         />
       </Space>
 
