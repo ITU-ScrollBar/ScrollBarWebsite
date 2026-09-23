@@ -1,5 +1,5 @@
 // src/App.tsx
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import HomePage from "./pages/HomePage";
 import ApplyPage from "./pages/ApplyPage";
@@ -34,6 +34,10 @@ import ApplicationsReviewPage from "./pages/admin/ApplicationsReviewPage";
 import DJPage from "./pages/DJPage";
 import TicketsPage from "./pages/members/TicketsPage";
 import TicketDashboardPage from "./pages/admin/TicketDashboardPage";
+import FormsPage from "./pages/members/FormsPage";
+import LendingRequestPage from "./pages/members/LendingRequestPage";
+import AnonymousFeedbackPage from "./pages/members/AnonymousFeedbackPage";
+import FormResponsesPage from "./pages/admin/FormResponsesPage";
 
 
 function App() {
@@ -88,7 +92,15 @@ function App() {
                       }
                     />
                     <Route path="/tenders/gethelp" element={<GetHelpPage />} />
-                    <Route path="/tenders/tickets" element={<TicketsPage />} />
+                    <Route path="/tenders/forms" element={<FormsPage />} />
+                    <Route path="/tenders/forms/ticket" element={<TicketsPage />} />
+                    <Route path="/tenders/forms/lending" element={<LendingRequestPage />} />
+                    <Route path="/tenders/forms/feedback" element={<AnonymousFeedbackPage />} />
+                    {/* The ticket form moved under /tenders/forms; keep old links working. */}
+                    <Route
+                      path="/tenders/tickets"
+                      element={<Navigate to="/tenders/forms/ticket" replace />}
+                    />
                     <Route path="/members/profile" element={<Profile />} />
                     <Route path="/members/availability" element={<ShiftAvailabilityPage />} />
                     {/* --- Admin Routes --- */}
@@ -156,6 +168,16 @@ function App() {
                         path="admin/applications"
                         element={<ApplicationsReviewPage />}
                       />
+                    </Route>
+                    <Route
+                      element={
+                        <RoleProtectedRoute
+                          requiredRole={Role.BOARD}
+                          allowAdminBypass={false}
+                        />
+                      }
+                    >
+                      <Route path="admin/forms" element={<FormResponsesPage />} />
                     </Route>
                     <Route
                       element={
