@@ -66,7 +66,7 @@ type QueueTemplateTestEmailPayload = {
   studyline?: string;
 };
 
-const MAX_APPLICATION_FILE_BYTES = 2 * 1024 * 1024 * 1024;
+const MAX_APPLICATION_FILE_BYTES = 1024 * 1024 * 1024;
 const MAX_PHOTO_BYTES = 25 * 1024 * 1024;
 
 type StartApplicationResult = {
@@ -117,7 +117,7 @@ export const submitApplication = async (
     throw new Error("The photo upload must be an image file.");
   }
   if (payload.file.size > MAX_APPLICATION_FILE_BYTES) {
-    throw new Error("The application file must be 2 GB or smaller.");
+    throw new Error("The application file must be 1 GB or smaller.");
   }
   if (payload.photoFile.size > MAX_PHOTO_BYTES) {
     throw new Error("The photo must be 25 MB or smaller.");

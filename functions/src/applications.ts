@@ -52,7 +52,7 @@ type PendingApplicationUpload = {
 };
 
 const ALLOWED_ENVS = ["dev", "prod"];
-const MAX_APPLICATION_FILE_BYTES = 2 * 1024 * 1024 * 1024;
+const MAX_APPLICATION_FILE_BYTES = 1024 * 1024 * 1024;
 const MAX_PHOTO_BYTES = 25 * 1024 * 1024;
 // Upload sessions and pending records older than this can no longer be completed.
 const UPLOAD_WINDOW_MS = 24 * 60 * 60 * 1000;
