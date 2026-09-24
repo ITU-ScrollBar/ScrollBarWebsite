@@ -2,7 +2,6 @@ import { message } from "antd";
 import { useEffect, useState } from "react";
 import {
   deleteInvite,
-  getStudyLines,
   inviteUser,
   streamInvitedUsers,
   streamUsers,
@@ -12,14 +11,12 @@ import {
 } from "../firebase/api/authentication";
 import { queueApplicationInviteEmails } from "../firebase/api/applications";
 import { countFutureEngagementsForUser } from "../firebase/api/engagements";
-import { Tender, Invite, StudyLine } from "../types/types-file"; // Ensure the correct import path
-import { DocumentData } from "firebase/firestore";
+import { Tender, Invite } from "../types/types-file"; // Ensure the correct import path
 
 type TenderState = {
   loading: boolean;
   isLoaded: boolean;
   tenders: Tender[];
-  studylines?: StudyLine[]; // Optional property for study lines
 };
 
 type AddInvitesResult = {
@@ -32,36 +29,12 @@ const useTenders = () => {
     loading: false,
     isLoaded: false,
     tenders: [],
-    studylines: [], // Initialize with an empty array or fetch from API if needed
   });
 
   const [invitedTenders, setInvitedTenders] = useState<Invite[]>([]);
 
   useEffect(() => {
     setTenderState((prevState) => ({ ...prevState, loading: true }));
-
-    // Fetch study lines
-    getStudyLines()
-      .then((response) => {
-        const studylines: StudyLine[] = response.map((doc: DocumentData) => {
-          return doc as StudyLine; // Type the document data as StudyLine
-        });
-
-        setTenderState((prevState) => ({
-          ...prevState,
-          loading: false,
-          isLoaded: true,
-          studylines: studylines,
-        }));
-      })
-      .catch((error) => {
-        message.error(`Failed to fetch study lines: ${error.message}`);
-        setTenderState((prevState) => ({
-          ...prevState,
-          loading: false,
-          isLoaded: false,
-        }));
-      });
 
     // Stream tenders data
     const unsubscribeTenders = streamUsers({

@@ -7,6 +7,7 @@ import { ShiftProvider } from '../contexts/ShiftContext';
 import { ShiftPlanningProvider } from '../contexts/ShiftPlanningContext';
 import { InternalEventProvider } from '../contexts/InternalEventContext';
 import { TeamProvider } from '../contexts/TeamContext';
+import { EventProvider } from '../contexts/EventContext';
 import { Loading } from '../components/Loading';
 
 const ProtectedRoutes: React.FC = () => {
@@ -27,17 +28,19 @@ const ProtectedRoutes: React.FC = () => {
   }
 
   // If user is logged in, render the child route components
-  return <EngagementProvider>
-    <ShiftProvider>
-      <ShiftPlanningProvider>
-        <InternalEventProvider>
-          <TeamProvider>
-            <Outlet />
-          </TeamProvider>
-        </InternalEventProvider>
-      </ShiftPlanningProvider>
-    </ShiftProvider>
-  </EngagementProvider>;
+  return <EventProvider>
+    <EngagementProvider>
+      <ShiftProvider>
+        <ShiftPlanningProvider>
+          <InternalEventProvider>
+            <TeamProvider>
+              <Outlet />
+            </TeamProvider>
+          </InternalEventProvider>
+        </ShiftPlanningProvider>
+      </ShiftProvider>
+    </EngagementProvider>
+  </EventProvider>;
 };
 
 export default ProtectedRoutes;
