@@ -8,7 +8,7 @@ import {
   streamUsers,
   updateUser,
   deleteUser,
-  deleteFileFromStorage
+  deleteProfilePicture
 } from "../firebase/api/authentication";
 import { queueApplicationInviteEmails } from "../firebase/api/applications";
 import { countFutureEngagementsForUser } from "../firebase/api/engagements";
@@ -218,7 +218,7 @@ const useTenders = () => {
     }
 
     if (tender.photoUrl) {
-      deleteFileFromStorage(tender.photoUrl).catch((error) => {
+      deleteProfilePicture(tender.photoUrl).catch((error) => {
         message.error(`Failed to delete tender photo: ${error.message}`);
       });
     }
