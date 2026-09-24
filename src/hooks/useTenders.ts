@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import {
   deleteInvite,
   inviteUser,
-  streamInvitedUsers,
   streamUsers,
   updateUser,
   deleteUser,
@@ -11,7 +10,7 @@ import {
 } from "../firebase/api/authentication";
 import { queueApplicationInviteEmails } from "../firebase/api/applications";
 import { countFutureEngagementsForUser } from "../firebase/api/engagements";
-import { Tender, Invite } from "../types/types-file"; // Ensure the correct import path
+import { Tender } from "../types/types-file"; // Ensure the correct import path
 
 type TenderState = {
   loading: boolean;
@@ -30,8 +29,6 @@ const useTenders = () => {
     isLoaded: false,
     tenders: [],
   });
-
-  const [invitedTenders, setInvitedTenders] = useState<Invite[]>([]);
 
   useEffect(() => {
     setTenderState((prevState) => ({ ...prevState, loading: true }));
@@ -62,25 +59,8 @@ const useTenders = () => {
       },
     });
 
-    // Stream invited tenders data
-    const unsubscribeInvitedTenders = streamInvitedUsers({
-      next: (snapshot) => {
-        const updatedInvites: Invite[] = snapshot.docs.map((doc) => {
-          const data = doc.data() as Invite; // Typing the data as Invite
-          return { ...data, id: doc.id, key: doc.id };
-        });
-        setInvitedTenders(updatedInvites);
-      },
-      error: (error) => {
-        message.error(
-          `An error occurred while streaming invited tenders: ${error.message}`
-        );
-      },
-    });
-
     // Cleanup streams on component unmount
     return () => {
-      unsubscribeInvitedTenders();
       unsubscribeTenders();
     };
   }, []);
@@ -208,7 +188,6 @@ const useTenders = () => {
 
   return {
     tenderState,
-    invitedTenders,
     addInvite,
     addInvites,
     removeInvite,
