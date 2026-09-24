@@ -66,55 +66,100 @@ type QueueTemplateTestEmailPayload = {
   studyline?: string;
 };
 
-const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+const MAX_APPLICATION_FILE_BYTES = 2 * 1024 * 1024 * 1024;
+const MAX_PHOTO_BYTES = 25 * 1024 * 1024;
 
-const toApplicationFilePayload = async (file: File, label: string) => {
-  if (file.size > MAX_UPLOAD_BYTES) {
-    throw new Error(`The ${label} must be 10 MB or smaller.`);
-  }
-
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  let binary = "";
-  const chunkSize = 0x8000;
-  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
-    binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize));
-  }
-
-  return {
-    name: file.name,
-    contentType: file.type,
-    base64: btoa(binary),
-  };
+type StartApplicationResult = {
+  uploadId: string;
+  applicationFileUploadUrl: string;
+  photoUploadUrl: string;
 };
 
-// Applicants are not signed in, so the upload goes through a Cloud Function
-// instead of writing to Storage from the browser.
-export const submitApplication = async (payload: SubmitApplicationPayload) => {
+const getContentType = (file: File) => file.type || "application/octet-stream";
+
+const toFileInfo = (file: File) => ({
+  name: file.name,
+  contentType: getContentType(file),
+  size: file.size,
+});
+
+// XMLHttpRequest rather than fetch, because fetch cannot report upload progress.
+const uploadToSession = (
+  uploadUrl: string,
+  file: File,
+  onProgress: (loadedBytes: number) => void
+) =>
+  new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", uploadUrl);
+    xhr.setRequestHeader("Content-Type", getContentType(file));
+    xhr.upload.onprogress = (event) => onProgress(event.loaded);
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        onProgress(file.size);
+        resolve();
+      } else {
+        reject(new Error(`Uploading ${file.name} failed (${xhr.status}). Please try again.`));
+      }
+    };
+    xhr.onerror = () =>
+      reject(new Error(`Uploading ${file.name} failed. Check your connection and try again.`));
+    xhr.send(file);
+  });
+
+// Applicants are not signed in, so a Cloud Function opens upload sessions for the
+// files, the browser uploads straight to them, and a second call files the application.
+export const submitApplication = async (
+  payload: SubmitApplicationPayload,
+  onProgress?: (percent: number) => void
+) => {
   if (!payload.photoFile.type.startsWith("image/")) {
     throw new Error("The photo upload must be an image file.");
   }
+  if (payload.file.size > MAX_APPLICATION_FILE_BYTES) {
+    throw new Error("The application file must be 2 GB or smaller.");
+  }
+  if (payload.photoFile.size > MAX_PHOTO_BYTES) {
+    throw new Error("The photo must be 25 MB or smaller.");
+  }
 
-  const [file, photoFile] = await Promise.all([
-    toApplicationFilePayload(payload.file, "application file"),
-    toApplicationFilePayload(payload.photoFile, "photo"),
-  ]);
-
-  const callable = httpsCallable<Record<string, unknown>, { id: string }>(
+  const startApplication = httpsCallable<Record<string, unknown>, StartApplicationResult>(
     functions,
-    "submitApplication"
+    "startApplication"
+  );
+  const completeApplication = httpsCallable<{ env: string; uploadId: string }, { id: string }>(
+    functions,
+    "completeApplication"
   );
 
-  const result = await callable({
+  const { data: session } = await startApplication({
     env,
     fullName: payload.fullName,
     email: payload.email,
     studyline: payload.studyline,
     comment: payload.comment ?? "",
-    file,
-    photoFile,
+    file: toFileInfo(payload.file),
+    photoFile: toFileInfo(payload.photoFile),
   });
 
-  return result.data;
+  const totalBytes = payload.file.size + payload.photoFile.size;
+  const loaded = { file: 0, photo: 0 };
+  const reportProgress = () =>
+    onProgress?.(Math.min(100, Math.round(((loaded.file + loaded.photo) / totalBytes) * 100)));
+
+  await Promise.all([
+    uploadToSession(session.applicationFileUploadUrl, payload.file, (bytes) => {
+      loaded.file = bytes;
+      reportProgress();
+    }),
+    uploadToSession(session.photoUploadUrl, payload.photoFile, (bytes) => {
+      loaded.photo = bytes;
+      reportProgress();
+    }),
+  ]);
+
+  const { data } = await completeApplication({ env, uploadId: session.uploadId });
+  return data;
 };
 
 export const streamApplications = (
