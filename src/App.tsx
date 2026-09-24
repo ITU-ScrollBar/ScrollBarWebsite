@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import HomePage from "./pages/HomePage";
 import { Loading } from "./components/Loading";
+import { EventProvider } from "./contexts/EventContext";
 import { Layout } from "antd";
 import { Content, Footer } from "antd/es/layout/layout";
 
@@ -71,7 +72,7 @@ function App() {
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/apply" element={<ApplyPage />} />
-                  <Route path="/events" element={<EventsPage />} /> 
+                  <Route path="/events" element={<EventProvider><EventsPage /></EventProvider>} /> 
                   <Route path="/deletedUser" element={<InactiveUserPage />} /> 
                   <Route path="/dj" element={<DJPage />} /> 
 
