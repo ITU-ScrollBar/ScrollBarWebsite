@@ -2,10 +2,11 @@ import express from 'express';
 import * as admin from 'firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 import { createEvents, EventAttributes } from 'ics';
+import formsRouter from './forms';
+import { ensureBoardAccess } from './httpAuth';
 import {
   Event,
   InternalEvent,
-  Role,
   Tender,
   TicketDepartment,
   TicketImpact,
@@ -32,6 +33,8 @@ app.use((req, res, next) => {
   }
   return next();
 });
+
+app.use(formsRouter);
 
 type Shift = {
   id: string;
@@ -80,11 +83,6 @@ type TicketUpdatePayload = {
   requestType?: TicketRequestType;
   impact?: TicketImpact;
   status?: TicketStatus;
-};
-
-const ensureBoardAccess = async (uid: string): Promise<boolean> => {
-  const user = (await db.collection('users').doc(uid).get()).data() as Tender | undefined;
-  return Boolean(user?.isAdmin || user?.roles?.includes(Role.BOARD));
 };
 
 const resolveStorageBucketName = (): string => {

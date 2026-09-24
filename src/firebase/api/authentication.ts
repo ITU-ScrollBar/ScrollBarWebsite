@@ -196,15 +196,51 @@ export const uploadProfilePicture = async (
   return await getDownloadURL(storageRef);
 };
 
-// Delete profile picture from storage when new picture is uploaded
-export const deleteFileFromStorage = async (filePath: string): Promise<void> => {
+// The firebase/storage-resize-images extension writes resized copies to
+// <dir>/resized/<basename>_<width>x<height>.<extension> alongside the original.
+// Avatars no longer read those copies, but old ones still have to be cleaned up.
+const RESIZED_SUFFIX = '_150x200';
+
+const buildResizedPath = (fullPath: string): string => {
+  const lastSlash = fullPath.lastIndexOf('/');
+  const dir = lastSlash >= 0 ? fullPath.slice(0, lastSlash) : '';
+  const filename = lastSlash >= 0 ? fullPath.slice(lastSlash + 1) : fullPath;
+  const dotIndex = filename.lastIndexOf('.');
+  const base = dotIndex >= 0 ? filename.slice(0, dotIndex) : filename;
+  const extension = dotIndex >= 0 ? filename.slice(dotIndex) : '';
+  return `${dir}/resized/${base}${RESIZED_SUFFIX}${extension}`;
+};
+
+const deleteIfExists = async (path: string): Promise<void> => {
   try {
-    const storageRef = ref(storage, filePath);
-    await deleteObject(storageRef);
+    await deleteObject(ref(storage, path));
   } catch (error) {
-    console.error('Error deleting file from storage:', error);
+    if ((error as { code?: string }).code === 'storage/object-not-found') return;
     throw error;
   }
+};
+
+// Delete the resized copy of a profile picture. This must happen before a new
+// picture is uploaded to the same path: otherwise the stale resized copy keeps
+// being served until the resize extension overwrites it.
+export const deleteResizedProfilePicture = async (photoUrl: string): Promise<void> => {
+  if (!photoUrl) return;
+  await deleteIfExists(buildResizedPath(ref(storage, photoUrl).fullPath));
+};
+
+// Delete a profile picture and its resized copy from storage
+export const deleteProfilePicture = async (photoUrl: string): Promise<void> => {
+  if (!photoUrl) return;
+  const { fullPath } = ref(storage, photoUrl);
+  await Promise.all([
+    deleteIfExists(fullPath),
+    deleteIfExists(buildResizedPath(fullPath)),
+  ]);
+};
+
+// Check whether two download URLs point at the same storage object
+export const isSameStorageObject = (urlA: string, urlB: string): boolean => {
+  return ref(storage, urlA).fullPath === ref(storage, urlB).fullPath;
 };
 
 // Save user data to Firestore
