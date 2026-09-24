@@ -11,8 +11,10 @@ import { Role, Tender, UserProfile } from "../types/types-file";
 import avatar from "../assets/images/avatar.png";
 import newbiehat from "../assets/images/newbiehat.svg";
 import {
-  deleteFileFromStorage,
+  deleteProfilePicture,
+  deleteResizedProfilePicture,
   getResizedPhotoUrl,
+  isSameStorageObject,
   uploadProfilePicture,
 } from "../firebase/api/authentication";
 import { useTenderContext } from "../contexts/TenderContext";
@@ -115,13 +117,12 @@ export const UserAvatarWithUpload = ({
   onChange,
 }: UserAvatarWithUploadProps) => {
   const { updateTender } = useTenderContext();
-  const [api] = notification.useNotification();
+  const [api, contextHolder] = notification.useNotification();
   const [cropModalOpen, setCropModalOpen] = useState(false);
   const [imageSrc, setImageSrc] = useState<string>("");
   const [cropPosition, setCropPosition] = useState(0);
   const [cropPositionY, setCropPositionY] = useState(0);
   const [zoom, setZoom] = useState(0.4);
-  const tokenRegex = /(\?alt=media&token=[\w-]+)$/;
 
   const resetModal = () => {
     setCropModalOpen(false);
@@ -129,6 +130,33 @@ export const UserAvatarWithUpload = ({
     setCropPosition(0);
     setCropPositionY(0);
     setZoom(0.4);
+  };
+
+  const replaceProfilePicture = async (file: File) => {
+    const previousUrl = user.photoUrl;
+
+    // The new picture usually lands on the same path as the old one, so the
+    // old resized copy has to go first or it keeps being shown.
+    if (previousUrl) await deleteResizedProfilePicture(previousUrl);
+
+    const url = await uploadProfilePicture(file, user.email);
+    onChange(url);
+    updateTender(user.uid, "photoUrl", url);
+    resetModal();
+
+    // If the old picture lived at a different path (other extension or an
+    // old email), it wasn't overwritten, so delete it explicitly.
+    if (previousUrl && !isSameStorageObject(previousUrl, url)) {
+      await deleteProfilePicture(previousUrl).catch((error) => {
+        api.error({
+          message: "Error",
+          description:
+            "Picture updated, but the old one could not be deleted: " +
+            error.message,
+          placement: "top",
+        });
+      });
+    }
   };
 
   const handleBeforeUpload = (file: File) => {
@@ -183,30 +211,14 @@ export const UserAvatarWithUpload = ({
       canvas.toBlob((blob) => {
         if (blob) {
           const file = new File([blob], "avatar.png", { type: "image/png" });
-          uploadProfilePicture(file, user.email)
-            .then((url) => {
-              onChange(url);
-              const previousUrl = user.photoUrl;
-              updateTender(user.uid, "photoUrl", url);
-
-              if (
-                previousUrl &&
-                previousUrl.replace(tokenRegex, "") !==
-                  url.replace(tokenRegex, "")
-              ) {
-                deleteFileFromStorage(previousUrl);
-              }
-
-              resetModal();
-            })
-            .catch((error) => {
-              api.error({
-                message: "Error",
-                description:
-                  "Failed to upload profile picture: " + error.message,
-                placement: "top",
-              });
+          replaceProfilePicture(file).catch((error) => {
+            api.error({
+              message: "Error",
+              description:
+                "Failed to upload profile picture: " + error.message,
+              placement: "top",
             });
+          });
         }
       });
     };
@@ -215,6 +227,7 @@ export const UserAvatarWithUpload = ({
 
   return (
     <>
+      {contextHolder}
       <Upload
         customRequest={({ file }: { file: unknown }) => {
           handleBeforeUpload(file as File);
