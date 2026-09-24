@@ -17,10 +17,9 @@ import {
 import {
   deleteObject,
   ref,
-  uploadBytes,
 } from "firebase/storage";
-import { db, storage } from "../index";
-import { getExtension } from "./common";
+import { httpsCallable } from "firebase/functions";
+import { db, functions, storage } from "../index";
 
 const env = import.meta.env.VITE_APP_ENV as string;
 
@@ -67,62 +66,55 @@ type QueueTemplateTestEmailPayload = {
   studyline?: string;
 };
 
-const uploadApplicationFile = async (file: File, applicantEmail: string, fileTag: string) => {
-  const extension = getExtension(file.name);
-  const extensionSuffix = extension ? `.${extension}` : "";
-  const safeEmail = applicantEmail.replace(/[^a-zA-Z0-9._-]/g, "_").toLowerCase();
-  const path = `applications/${env}/${Date.now()}-${safeEmail}-${fileTag}${extensionSuffix}`;
-  const storageRef = ref(storage, path);
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
-  await uploadBytes(storageRef, file, {
+const toApplicationFilePayload = async (file: File, label: string) => {
+  if (file.size > MAX_UPLOAD_BYTES) {
+    throw new Error(`The ${label} must be 10 MB or smaller.`);
+  }
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize));
+  }
+
+  return {
+    name: file.name,
     contentType: file.type,
+    base64: btoa(binary),
+  };
+};
+
+// Applicants are not signed in, so the upload goes through a Cloud Function
+// instead of writing to Storage from the browser.
+export const submitApplication = async (payload: SubmitApplicationPayload) => {
+  if (!payload.photoFile.type.startsWith("image/")) {
+    throw new Error("The photo upload must be an image file.");
+  }
+
+  const [file, photoFile] = await Promise.all([
+    toApplicationFilePayload(payload.file, "application file"),
+    toApplicationFilePayload(payload.photoFile, "photo"),
+  ]);
+
+  const callable = httpsCallable<Record<string, unknown>, { id: string }>(
+    functions,
+    "submitApplication"
+  );
+
+  const result = await callable({
+    env,
+    fullName: payload.fullName,
+    email: payload.email,
+    studyline: payload.studyline,
+    comment: payload.comment ?? "",
+    file,
+    photoFile,
   });
 
-  return { path };
-};
-
-const safeDeleteStoragePath = async (path?: string) => {
-  if (!path) return;
-  try {
-    await deleteObject(ref(storage, path));
-  } catch (error) {
-    console.error("Failed deleting partially uploaded file", error);
-  }
-};
-
-export const submitApplication = async (payload: SubmitApplicationPayload) => {
-  let uploadedApplicationPath: string | undefined;
-  let uploadedPhotoPath: string | undefined;
-
-  try {
-    if (!payload.photoFile.type.startsWith("image/")) {
-      throw new Error("The photo upload must be an image file.");
-    }
-
-    const uploaded = await uploadApplicationFile(payload.file, payload.email, "application");
-    uploadedApplicationPath = uploaded.path;
-
-    const uploadedPhoto = await uploadApplicationFile(payload.photoFile, payload.email, "photo");
-    uploadedPhotoPath = uploadedPhoto.path;
-
-    return await addDoc(getApplicationsCollection(), {
-      fullName: payload.fullName,
-      email: payload.email,
-      studyline: payload.studyline,
-      comment: payload.comment ?? "",
-      applicationFilePath: uploadedApplicationPath,
-      photoPath: uploadedPhotoPath,
-      decision: "pending",
-      emailDeliveryStatus: "pending",
-      createdAt: serverTimestamp(),
-    });
-  } catch (error) {
-    await Promise.all([
-      safeDeleteStoragePath(uploadedApplicationPath),
-      safeDeleteStoragePath(uploadedPhotoPath),
-    ]);
-    throw error;
-  }
+  return result.data;
 };
 
 export const streamApplications = (
