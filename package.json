@@ -10,8 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "lint:fix": "eslint \"src/**/*.{js,jsx,ts,tsx}\" --fix",
-    "migrate": "node ./migrations/migration-runner.ts",
-    "cleanup-profile-pictures": "node ./scripts/cleanup-orphaned-profile-pictures.ts"
+    "migrate": "node ./migrations/migration-runner.ts"
   },
   "dependencies": {
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
