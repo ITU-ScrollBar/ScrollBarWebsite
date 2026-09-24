@@ -198,6 +198,7 @@ export const uploadProfilePicture = async (
 
 // The firebase/storage-resize-images extension writes resized copies to
 // <dir>/resized/<basename>_<width>x<height>.<extension> alongside the original.
+// Avatars no longer read those copies, but old ones still have to be cleaned up.
 const RESIZED_SUFFIX = '_150x200';
 
 const buildResizedPath = (fullPath: string): string => {
@@ -208,19 +209,6 @@ const buildResizedPath = (fullPath: string): string => {
   const base = dotIndex >= 0 ? filename.slice(0, dotIndex) : filename;
   const extension = dotIndex >= 0 ? filename.slice(dotIndex) : '';
   return `${dir}/resized/${base}${RESIZED_SUFFIX}${extension}`;
-};
-
-// Resolve the resized copy of a profile picture, falling back to the original
-// URL if the resize extension hasn't produced one (or has failed).
-export const getResizedPhotoUrl = async (photoUrl: string): Promise<string> => {
-  if (!photoUrl) return photoUrl;
-  try {
-    const originalRef = ref(storage, photoUrl);
-    const resizedRef = ref(storage, buildResizedPath(originalRef.fullPath));
-    return await getDownloadURL(resizedRef);
-  } catch {
-    return photoUrl;
-  }
 };
 
 const deleteIfExists = async (path: string): Promise<void> => {

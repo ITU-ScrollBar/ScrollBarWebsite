@@ -13,12 +13,11 @@ import newbiehat from "../assets/images/newbiehat.svg";
 import {
   deleteProfilePicture,
   deleteResizedProfilePicture,
-  getResizedPhotoUrl,
   isSameStorageObject,
   uploadProfilePicture,
 } from "../firebase/api/authentication";
 import { useTenderContext } from "../contexts/TenderContext";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type UserAvatarProps = {
   user: UserProfile | Tender;
@@ -27,17 +26,9 @@ type UserAvatarProps = {
   backgroundColor?: string;
 };
 
-// Shared across all avatar instances so the same photoUrl is only resolved once.
-const resizedPhotoUrlCache = new Map<string, Promise<string>>();
-
-const resolveAvatarSrc = (photoUrl: string): Promise<string> => {
-  let cached = resizedPhotoUrlCache.get(photoUrl);
-  if (!cached) {
-    cached = getResizedPhotoUrl(photoUrl);
-    resizedPhotoUrlCache.set(photoUrl, cached);
-  }
-  return cached;
-};
+// Formats every browser can decode into the crop canvas. Leaving out image/heic
+// also makes iPhones convert their photos to JPEG when picking.
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 type UserAvatarWithUploadProps = UserAvatarProps & {
   onChange: (url: string) => void;
@@ -51,25 +42,6 @@ export const UserAvatar = ({
   ...divProps
 }: UserAvatarProps & Record<string, unknown>) => {
   const showNewbieHat = showHats && (user.roles?.includes(Role.NEWBIE) ?? false);
-
-  const [resolvedPhotoUrl, setResolvedPhotoUrl] = useState(user.photoUrl);
-
-  useEffect(() => {
-    if (!user.photoUrl) {
-      setResolvedPhotoUrl(user.photoUrl);
-      return;
-    }
-
-    let cancelled = false;
-    setResolvedPhotoUrl(user.photoUrl);
-    resolveAvatarSrc(user.photoUrl).then((url) => {
-      if (!cancelled) setResolvedPhotoUrl(url);
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user.photoUrl]);
 
   const passedStyle = divProps.style || {};
   const combinedStyle: React.CSSProperties = {
@@ -88,7 +60,7 @@ export const UserAvatar = ({
   return (
     <div {...restProps} style={combinedStyle}>
       <Avatar
-        src={resolvedPhotoUrl || avatar}
+        src={user.photoUrl || avatar}
         size={size}
         style={{ display: "block", left: 1.5, top: 1.5, zIndex: 9 }}
       />
@@ -132,6 +104,13 @@ export const UserAvatarWithUpload = ({
     setZoom(0.4);
   };
 
+  const showUnsupported = () =>
+    api.error({
+      message: "Unsupported file",
+      description: "Please choose a JPEG, PNG or WebP image.",
+      placement: "top",
+    });
+
   const replaceProfilePicture = async (file: File) => {
     const previousUrl = user.photoUrl;
 
@@ -160,6 +139,11 @@ export const UserAvatarWithUpload = ({
   };
 
   const handleBeforeUpload = (file: File) => {
+    // `accept` only filters the file picker; "All files" and drag-and-drop bypass it.
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      showUnsupported();
+      return false;
+    }
     const reader = new FileReader();
     reader.onload = (e) => {
       setImageSrc(e.target?.result as string);
@@ -176,7 +160,8 @@ export const UserAvatarWithUpload = ({
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      // Set canvas to circle dimensions (256x256)
+      // 256x256: the largest avatar is 128 CSS px, so this stays sharp on 2x screens.
+      // Keep in sync with SIZE in migrations/006-downscale-profile-pictures.ts.
       canvas.width = 256;
       canvas.height = 256;
 
@@ -208,9 +193,10 @@ export const UserAvatarWithUpload = ({
       );
 
       // Convert to blob and upload
+      // Browsers that can't encode WebP fall back to PNG, so name the file from blob.type.
       canvas.toBlob((blob) => {
         if (blob) {
-          const file = new File([blob], "avatar.png", { type: "image/png" });
+          const file = new File([blob], `avatar.${blob.type.split("/")[1]}`, { type: blob.type });
           replaceProfilePicture(file).catch((error) => {
             api.error({
               message: "Error",
@@ -220,7 +206,7 @@ export const UserAvatarWithUpload = ({
             });
           });
         }
-      });
+      }, "image/webp", 0.8);
     };
     img.src = imageSrc;
   };
@@ -233,7 +219,7 @@ export const UserAvatarWithUpload = ({
           handleBeforeUpload(file as File);
         }}
         showUploadList={false}
-        accept="image/*"
+        accept={ACCEPTED_TYPES.join(",")}
       >
         <UserAvatar user={user} />
       </Upload>
@@ -269,6 +255,11 @@ export const UserAvatarWithUpload = ({
                 <img
                   src={imageSrc}
                   alt="Preview"
+                  // Renamed or corrupt files pass the type check but don't decode.
+                  onError={() => {
+                    showUnsupported();
+                    resetModal();
+                  }}
                   style={{
                     position: "absolute",
                     top: "50%",
