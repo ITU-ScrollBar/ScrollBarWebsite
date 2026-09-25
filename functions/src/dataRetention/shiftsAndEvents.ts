@@ -175,12 +175,13 @@ const cleanupEvents = async (env: RetentionEnv, cutoff: Date): Promise<number> =
 };
 
 /**
- * Daily: deletes shifts, their engagements and events that ended more than
+ * Weekly: deletes shifts, their engagements and events that ended more than
  * SHIFT_RETENTION_MONTHS ago. Engagements are counted into the user's archivedShiftStats
  * first so the profile's total shift counter keeps them.
  */
 export const cleanupOldShiftsAndEvents = onSchedule(
-  { ...SCHEDULE_OPTIONS, schedule: "every day 03:00" },
+  // Mondays at 03:00
+  { ...SCHEDULE_OPTIONS, schedule: "0 3 * * 1" },
   async () => {
     const cutoff = monthsAgo(SHIFT_RETENTION_MONTHS);
 
