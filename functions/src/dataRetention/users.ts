@@ -1,14 +1,23 @@
 import { getAuth, UserRecord } from "firebase-admin/auth";
+import { getStorage } from "firebase-admin/storage";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import {
+  IS_PROD_BUILD,
   RETENTION_ENVS,
   SCHEDULE_OPTIONS,
   USER_INACTIVITY_MONTHS,
   db,
-  deleteStorageFileByUrl,
+  deleteFileIfExists,
   envCollection,
   monthsAgo,
+  parseStorageUrl,
 } from "./common";
+
+const PROFILE_PICTURE_DIR = "profile_pictures/";
+const RESIZED_DIR = `${PROFILE_PICTURE_DIR}resized/`;
+// Suffix of the copies the firebase/storage-resize-images extension used to write, see
+// deleteProfilePicture in src/firebase/api/authentication.ts.
+const RESIZED_SUFFIX = "_150x200";
 
 // lastSignInTime only moves on an actual sign-in, so someone who stays logged in on their phone
 // would look inactive; lastRefreshTime moves every time the app refreshes their ID token.
@@ -42,14 +51,68 @@ const hasEngagements = async (uid: string): Promise<boolean> => {
   return false;
 };
 
+const toResizedPath = (path: string): string => {
+  const filename = path.slice(path.lastIndexOf("/") + 1);
+  const dot = filename.lastIndexOf(".");
+  const base = dot >= 0 ? filename.slice(0, dot) : filename;
+  const extension = dot >= 0 ? filename.slice(dot) : "";
+  return `${RESIZED_DIR}${base}${RESIZED_SUFFIX}${extension}`;
+};
+
 /**
- * Daily: deletes users who haven't signed in for USER_INACTIVITY_MONTHS, removing their
- * profile picture, their users/{uid} doc and their Auth account, in that order, so a failed run
- * never leaves a picture without the doc that points at it.
+ * Deletes every copy of a user's profile picture: the file photoUrl points at, earlier uploads
+ * under another extension (migration 006 left the originals in place), and the resize
+ * extension's copies of all of them. Pictures are named after the user's email, so any
+ * address the user has had (Auth or users doc) is checked.
+ */
+const deleteProfilePictures = async (emails: string[], photoUrl: unknown): Promise<void> => {
+  const fromUrl = parseStorageUrl(photoUrl);
+  const bucket = getStorage().bucket(fromUrl?.bucket);
+  const paths = new Set<string>(fromUrl ? [fromUrl.path] : []);
+
+  for (const email of emails) {
+    // Exact names only: a bare "<email>." prefix would also match "<email>.co.webp".
+    const ownPicture = new RegExp(`^${PROFILE_PICTURE_DIR}${escapeRegExp(email)}\\.[^./]+$`);
+    const [files] = await bucket.getFiles({ prefix: `${PROFILE_PICTURE_DIR}${email}.` });
+    files.filter((file) => ownPicture.test(file.name)).forEach((file) => paths.add(file.name));
+  }
+
+  const allPaths = [...paths].flatMap((path) => [path, toResizedPath(path)]);
+  await Promise.all(allPaths.map((path) => deleteFileIfExists(bucket, path)));
+};
+
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Removes one user: profile pictures, invite, users/{uid} doc and Auth account, in that order,
+ * so a failed step leaves the Auth account in place and the next run retries the whole user.
+ * The invite is deleted so the person can be invited and register again later.
+ */
+const deleteUserData = async (authUser: UserRecord): Promise<void> => {
+  const userRef = db.collection("users").doc(authUser.uid);
+  const userDoc = await userRef.get();
+  const emails = [...new Set([authUser.email, userDoc.get("email")])].filter(
+    (email): email is string => typeof email === "string" && !!email
+  );
+
+  await deleteProfilePictures(emails, userDoc.get("photoUrl"));
+  await Promise.all(emails.map((email) => db.collection("invites").doc(email).delete()));
+  await userRef.delete();
+  await getAuth().deleteUser(authUser.uid);
+};
+
+/**
+ * Daily: deletes users who haven't signed in for USER_INACTIVITY_MONTHS. Users are global, so
+ * this only runs in a prod build (see IS_PROD_BUILD).
  */
 export const cleanupInactiveUsers = onSchedule(
   { ...SCHEDULE_OPTIONS, schedule: "every day 04:00" },
   async () => {
+    if (!IS_PROD_BUILD) {
+      console.log("Skipping inactive user cleanup: users are global and this is not a prod build.");
+      return;
+    }
+
     const cutoff = monthsAgo(USER_INACTIVITY_MONTHS);
     const candidates = await listInactiveAuthUsers(cutoff);
     const deleted: string[] = [];
@@ -57,21 +120,15 @@ export const cleanupInactiveUsers = onSchedule(
     const failed: string[] = [];
 
     for (const authUser of candidates) {
-      const { uid } = authUser;
       try {
-        if (await hasEngagements(uid)) {
-          skipped.push(uid);
+        if (await hasEngagements(authUser.uid)) {
+          skipped.push(authUser.uid);
           continue;
         }
-
-        const userRef = db.collection("users").doc(uid);
-        const userDoc = await userRef.get();
-        await deleteStorageFileByUrl(userDoc.get("photoUrl"));
-        await userRef.delete();
-        await getAuth().deleteUser(uid);
-        deleted.push(uid);
+        await deleteUserData(authUser);
+        deleted.push(authUser.uid);
       } catch (error) {
-        failed.push(`${uid}: ${error}`);
+        failed.push(`${authUser.uid}: ${error}`);
       }
     }
 

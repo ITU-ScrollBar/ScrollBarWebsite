@@ -61,10 +61,11 @@ export const getUserEngagementsData = async (
     .filter((date): date is Date => date !== null)
     .sort((a, b) => a.getTime() - b.getTime())[0];
 
-  if (!shiftCount || !firstShift) {
+  if (!shiftCount) {
     return null;
   }
-  return { firstShift, shiftCount };
+  // Archived stats may lack a first shift if its date was unreadable; still show the count.
+  return { firstShift: firstShift ?? new Date(), shiftCount };
 };
 
 /**

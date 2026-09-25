@@ -563,9 +563,9 @@ app.get('/calendar/:uid', async (req, res) => {
       return res.status(500).send('Failed to create calendar');
     }
 
-    const currentUser = (await db.collection('users').doc(uid).get()).data() as Tender;
-    currentUser.lastCalendarDownload = new Date();
-    await db.collection('users').doc(uid).set(currentUser);
+    // update, not set: rewriting the whole doc could undo concurrent writes such as the data
+    // retention job's archivedShiftStats increments.
+    await db.collection('users').doc(uid).update({ lastCalendarDownload: new Date() });
 
     const filename = `calendar-${uid}.ics`;
     res.setHeader('Content-Type', 'text/calendar; charset=utf-8');

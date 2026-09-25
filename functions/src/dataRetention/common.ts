@@ -11,10 +11,14 @@ if (!admin.apps.length) {
 
 export const db = admin.firestore();
 
-// Users are global but their shifts live under both envs, and whichever branch deployed last
-// owns the functions, so the cleanup always covers both envs rather than just VITE_APP_ENV.
-export const RETENTION_ENVS = ["prod", "dev"] as const;
-export type RetentionEnv = (typeof RETENTION_ENVS)[number];
+type Bucket = ReturnType<ReturnType<typeof getStorage>["bucket"]>;
+
+// Pushes to both main and dev deploy these functions to the same project, so only a prod build
+// is trusted with prod data and with the global users collection. A dev build only cleans dev.
+// A prod build also cleans dev, because users are global and their shifts live under both envs.
+export const IS_PROD_BUILD = (process.env.VITE_APP_ENV || "dev") === "prod";
+export type RetentionEnv = "prod" | "dev";
+export const RETENTION_ENVS: RetentionEnv[] = IS_PROD_BUILD ? ["prod", "dev"] : ["dev"];
 
 export const SHIFT_RETENTION_MONTHS = 6;
 export const USER_INACTIVITY_MONTHS = 14;
@@ -35,20 +39,31 @@ export const monthsAgo = (months: number): Date => {
 export const envCollection = (env: RetentionEnv, name: string) =>
   db.collection("env").doc(env).collection(name);
 
-const isNotFound = (error: unknown) => (error as { code?: number }).code === 404;
+export const chunk = <T>(items: T[], size: number): T[][] => {
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) chunks.push(items.slice(i, i + size));
+  return chunks;
+};
 
 /**
- * Deletes the Storage object behind a Firebase download URL
- * (https://firebasestorage.googleapis.com/v0/b/<bucket>/o/<encoded path>?...).
- * A missing file counts as deleted; anything else is rethrown.
+ * Splits a Firebase download URL
+ * (https://firebasestorage.googleapis.com/v0/b/<bucket>/o/<encoded path>?...) into its parts.
  */
-export const deleteStorageFileByUrl = async (url: unknown): Promise<void> => {
+export const parseStorageUrl = (url: unknown): { bucket: string; path: string } | null => {
   const match = typeof url === "string" && url.match(/\/v0\/b\/([^/]+)\/o\/([^?]+)/);
-  if (!match) return;
+  return match ? { bucket: match[1], path: decodeURIComponent(match[2]) } : null;
+};
 
+/** Deletes a Storage object. A missing file counts as deleted; anything else is rethrown. */
+export const deleteFileIfExists = async (bucket: Bucket, path: string): Promise<void> => {
   try {
-    await getStorage().bucket(match[1]).file(decodeURIComponent(match[2])).delete();
+    await bucket.file(path).delete();
   } catch (error) {
-    if (!isNotFound(error)) throw error;
+    if ((error as { code?: number }).code !== 404) throw error;
   }
+};
+
+export const deleteStorageFileByUrl = async (url: unknown): Promise<void> => {
+  const parsed = parseStorageUrl(url);
+  if (parsed) await deleteFileIfExists(getStorage().bucket(parsed.bucket), parsed.path);
 };
