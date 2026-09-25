@@ -19,6 +19,8 @@ type Bucket = ReturnType<ReturnType<typeof getStorage>["bucket"]>;
 export const IS_PROD_BUILD = (process.env.VITE_APP_ENV || "dev") === "prod";
 export type RetentionEnv = "prod" | "dev";
 export const RETENTION_ENVS: RetentionEnv[] = IS_PROD_BUILD ? ["prod", "dev"] : ["dev"];
+// Every env that can hold references to a (global) user.
+export const ALL_ENVS: RetentionEnv[] = ["prod", "dev"];
 
 export const SHIFT_RETENTION_MONTHS = 6;
 export const USER_INACTIVITY_MONTHS = 14;

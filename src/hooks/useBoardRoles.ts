@@ -21,7 +21,7 @@ type UseBoardRolesReturn = {
 interface FirebaseBoardRole {
   id: string;
   name: string;
-  assignedUserRef?: DocumentReference;
+  assignedUserRef?: DocumentReference | null;
   sortingIndex?: number;
   contactEmail?: string;
 }
@@ -39,9 +39,10 @@ export default function useBoardRoles(): UseBoardRolesReturn {
         // Map FirebaseBoardRole and resolve assignedUser
         const roles = await Promise.all(snapshot.docs.map(async (doc) => {
           const data = doc.data() as FirebaseBoardRole;
-          const snapshot = await getDoc(data.assignedUserRef as DocumentReference);
+          // Unassigned roles (and roles whose user was deleted) have a null ref.
+          const snapshot = data.assignedUserRef ? await getDoc(data.assignedUserRef) : null;
           let assignedUser: Tender | undefined = undefined;
-          if (snapshot.exists()) {
+          if (snapshot?.exists()) {
             assignedUser = { uid: snapshot.id, ...snapshot.data() } as unknown as Tender;
           };
 

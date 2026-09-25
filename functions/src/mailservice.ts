@@ -158,13 +158,15 @@ export const sendShiftGrabbedConfirmation = onDocumentUpdated(
                 const tender = tenderSnap.data() as Tender;
                 const tenderTakingShiftSnap = await db.collection('/users').doc(engagementAfter.userId).get();
                 const tenderTakingShift = tenderTakingShiftSnap.data() as Tender;
+                // Either user may have been deleted since the engagement was created.
+                if (!tender?.email) return;
 
                 await mailgun.messages.create(mailgunDomain, {
                     to: tender.email,
                     from: `ScrollBar Web <no-reply@${mailgunDomain}>`,
                     subject: 'Your shift has been grabbed!',
                     template: 'shift_taken',
-                    'h:X-Mailgun-Variables': JSON.stringify({ name: tenderTakingShift.displayName }),
+                    'h:X-Mailgun-Variables': JSON.stringify({ name: tenderTakingShift?.displayName ?? 'Someone' }),
                 });
             }
             return;
