@@ -16,9 +16,10 @@ type UserListProps = {
   className?: string;
   getContactEmail?: (user: TenderWithRole) => string | undefined;
   columns: number;
+  loading?: boolean;
 };
 
-export function UserList({ users, className, getContactEmail, columns }: UserListProps) {
+export function UserList({ users, className, getContactEmail, columns, loading }: UserListProps) {
   const [studylines, setStudylines] = React.useState<StudyLine[]>([]);
 
   const sortedUsers = useMemo(() => {
@@ -68,6 +69,7 @@ export function UserList({ users, className, getContactEmail, columns }: UserLis
     <List
       className={className}
       grid={{ gutter: 16, column: columns }}
+      loading={loading}
       dataSource={sortedUsers}
       renderItem={(user) => {
         const contactEmail = getContactEmail?.(user);

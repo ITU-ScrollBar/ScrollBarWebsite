@@ -1,10 +1,9 @@
-import { useEffect, useMemo } from 'react'
+import { lazy, Suspense, useEffect, useMemo } from 'react'
 import { Button, Col, Divider, Layout, Row } from 'antd'
 import Title from 'antd/es/typography/Title'
 import Paragraph from 'antd/es/typography/Paragraph'
 import HeaderBar from '../components/HomePage/HeaderBar'
 import useSettings from '../hooks/useSettings'
-import MDEditor from '@uiw/react-md-editor'
 import { useTenderContext } from '../contexts/TenderContext'
 import useBoardRoles from '../hooks/useBoardRoles'
 import { Loading } from '../components/Loading'
@@ -14,6 +13,9 @@ import { useLocation } from 'react-router-dom'
 import { UserList, TenderWithRole } from '../components/UserList'
 import { useWindowSize } from '../hooks/useWindowSize'
 import { getSignupWindowState } from '../utils/signupWindow'
+
+// The md editor bundle is large and only needed when signups are open.
+const Markdown = lazy(() => import('@uiw/react-md-editor').then((m) => ({ default: m.default.Markdown })))
 
 export default function HomePage() {
   const { settingsState } = useSettings();
@@ -50,7 +52,7 @@ export default function HomePage() {
     ).isOpen;
   }, [settingsState.settings.openForSignupsEnd, settingsState.settings.openForSignupsStart]);
 
-  if (settingsState.loading || boardRolesState.loading) {
+  if (settingsState.loading) {
     return <Loading centerOverlay={true} />;
   }
 
@@ -158,16 +160,18 @@ export default function HomePage() {
                   {settingsState.settings.joinScrollBarTitle}
                 </Title>
 
-                <MDEditor.Markdown
-                  style={{
-                    fontSize: '18px',
-                    lineHeight: '36px',
-                    textAlign: 'center',
-                    color: 'black',
-                    background: 'white',
-                  }}
-                  source={settingsState.settings.joinScrollBarText}
-                />
+                <Suspense>
+                  <Markdown
+                    style={{
+                      fontSize: '18px',
+                      lineHeight: '36px',
+                      textAlign: 'center',
+                      color: 'black',
+                      background: 'white',
+                    }}
+                    source={settingsState.settings.joinScrollBarText}
+                  />
+                </Suspense>
 
                 <Button
                   type="primary"
@@ -195,7 +199,7 @@ export default function HomePage() {
             <Title level={2} style={{ scrollMarginTop: '135px' }} id="boardMembers">
               The Board
             </Title>
-            <UserList users={boardMembers} columns={isMobile ? 3 : 10} />
+            <UserList users={boardMembers} columns={isMobile ? 3 : 10} loading={boardRolesState.loading} />
           </Col>
         </Row>
 
@@ -213,7 +217,7 @@ export default function HomePage() {
             <Title level={2} style={{ scrollMarginTop: '135px' }} id="volunteers">
               The Volunteers
             </Title>
-            <UserList users={activeTenders} columns={isMobile ? 3 : 10} />
+            <UserList users={activeTenders} columns={isMobile ? 3 : 10} loading={!tenderState.isLoaded} />
           </Col>
         </Row>
       </div>

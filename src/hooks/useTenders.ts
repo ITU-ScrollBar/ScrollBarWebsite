@@ -2,9 +2,7 @@ import { message } from "antd";
 import { useEffect, useState } from "react";
 import {
   deleteInvite,
-  getStudyLines,
   inviteUser,
-  streamInvitedUsers,
   streamUsers,
   updateUser,
   deleteUser,
@@ -12,14 +10,12 @@ import {
 } from "../firebase/api/authentication";
 import { queueApplicationInviteEmails } from "../firebase/api/applications";
 import { countFutureEngagementsForUser } from "../firebase/api/engagements";
-import { Tender, Invite, StudyLine } from "../types/types-file"; // Ensure the correct import path
-import { DocumentData } from "firebase/firestore";
+import { Tender } from "../types/types-file"; // Ensure the correct import path
 
 type TenderState = {
   loading: boolean;
   isLoaded: boolean;
   tenders: Tender[];
-  studylines?: StudyLine[]; // Optional property for study lines
 };
 
 type AddInvitesResult = {
@@ -32,36 +28,10 @@ const useTenders = () => {
     loading: false,
     isLoaded: false,
     tenders: [],
-    studylines: [], // Initialize with an empty array or fetch from API if needed
   });
-
-  const [invitedTenders, setInvitedTenders] = useState<Invite[]>([]);
 
   useEffect(() => {
     setTenderState((prevState) => ({ ...prevState, loading: true }));
-
-    // Fetch study lines
-    getStudyLines()
-      .then((response) => {
-        const studylines: StudyLine[] = response.map((doc: DocumentData) => {
-          return doc as StudyLine; // Type the document data as StudyLine
-        });
-
-        setTenderState((prevState) => ({
-          ...prevState,
-          loading: false,
-          isLoaded: true,
-          studylines: studylines,
-        }));
-      })
-      .catch((error) => {
-        message.error(`Failed to fetch study lines: ${error.message}`);
-        setTenderState((prevState) => ({
-          ...prevState,
-          loading: false,
-          isLoaded: false,
-        }));
-      });
 
     // Stream tenders data
     const unsubscribeTenders = streamUsers({
@@ -89,25 +59,8 @@ const useTenders = () => {
       },
     });
 
-    // Stream invited tenders data
-    const unsubscribeInvitedTenders = streamInvitedUsers({
-      next: (snapshot) => {
-        const updatedInvites: Invite[] = snapshot.docs.map((doc) => {
-          const data = doc.data() as Invite; // Typing the data as Invite
-          return { ...data, id: doc.id, key: doc.id };
-        });
-        setInvitedTenders(updatedInvites);
-      },
-      error: (error) => {
-        message.error(
-          `An error occurred while streaming invited tenders: ${error.message}`
-        );
-      },
-    });
-
     // Cleanup streams on component unmount
     return () => {
-      unsubscribeInvitedTenders();
       unsubscribeTenders();
     };
   }, []);
@@ -235,7 +188,6 @@ const useTenders = () => {
 
   return {
     tenderState,
-    invitedTenders,
     addInvite,
     addInvites,
     removeInvite,

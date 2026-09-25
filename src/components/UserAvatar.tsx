@@ -60,7 +60,7 @@ export const UserAvatar = ({
   return (
     <div {...restProps} style={combinedStyle}>
       <Avatar
-        src={user.photoUrl || avatar}
+        src={<img src={user.photoUrl || avatar} loading="lazy" alt="" onError={(e) => { e.currentTarget.src = avatar; }} />}
         size={size}
         style={{ display: "block", left: 1.5, top: 1.5, zIndex: 9 }}
       />
