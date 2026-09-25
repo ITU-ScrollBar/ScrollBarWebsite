@@ -1,10 +1,11 @@
 import * as functions from 'firebase-functions/v2';
 import calendarApp from './calendar';
 import * as mailservice from './mailservice';
-import { adminChangeUserEmail } from './userManagerService';
+import { adminChangeUserEmail, adminDeleteUser } from './userManagerService';
 import { generateShiftPlan } from './shiftPlanning';
 import { createTicket, listTickets, setTicketStatus } from './tickets';
 import { completeApplication, startApplication } from './applications';
+import { cleanupInactiveUsers, cleanupOldShiftsAndEvents } from './dataRetention';
 
 // Export the express app as the `calendar` HTTPS function.
 export const calendar = functions.https.onRequest({invoker: "public", region: "europe-west1"}, calendarApp as any);
@@ -21,9 +22,12 @@ export const sendLendingRequestCreatedEmail = mailservice.sendLendingRequestCrea
 export const sendLendingRequestApprovedEmail = mailservice.sendLendingRequestApprovedEmail;
 export const sendAnonymousFeedbackCreatedEmail = mailservice.sendAnonymousFeedbackCreatedEmail;
 export const resetUserMail = adminChangeUserEmail;
+export const deleteUserAccount = adminDeleteUser;
 export { generateShiftPlan };
 export { createTicket };
 export { listTickets };
 export { setTicketStatus };
 export { startApplication };
 export { completeApplication };
+export { cleanupOldShiftsAndEvents };
+export { cleanupInactiveUsers };

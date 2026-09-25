@@ -3,6 +3,7 @@ import { onCall, HttpsError, CallableRequest } from "firebase-functions/v2/https
 import * as admin from 'firebase-admin';
 import { getAuth } from "firebase-admin/auth";
 import { Role, Tender } from "./types/types-file";
+import { deleteUserCompletely, hasUpcomingEngagements } from "./dataRetention/userDeletion";
 
 type ChangeEmailData = {
   targetUid: string;
@@ -42,6 +43,45 @@ export const adminChangeUserEmail = onCall(
 
     await getAuth().updateUser(targetUid, { email: newEmail });
 
+    return { ok: true };
+  }
+);
+
+type DeleteUserData = {
+  targetUid: string;
+};
+
+// Roles that can reach a "delete tender" button (admin/users and admin/shifts).
+const USER_DELETION_ROLES: string[] = [Role.BOARD, Role.SHIFT_MANAGER, Role.TENDER_MANAGER];
+
+/**
+ * Deletes a user entirely (users doc, Auth account, profile pictures and references), replacing
+ * the old client-side soft delete that left a "Deleted User" doc behind.
+ */
+export const adminDeleteUser = onCall(
+  { region: "europe-west1" },
+  async (req: CallableRequest<DeleteUserData>) => {
+    if (!req.auth) {
+      throw new HttpsError("unauthenticated", "Sign in required");
+    }
+
+    const caller = (await db.doc(`users/${req.auth.uid}`).get()).data() as Tender | undefined;
+    if (!(caller?.isAdmin || caller?.roles?.some((role) => USER_DELETION_ROLES.includes(role)))) {
+      throw new HttpsError("permission-denied", "Not allowed");
+    }
+
+    const { targetUid } = req.data ?? ({} as DeleteUserData);
+    if (!targetUid || typeof targetUid !== "string") {
+      throw new HttpsError("invalid-argument", "targetUid is required");
+    }
+    if (targetUid === req.auth.uid) {
+      throw new HttpsError("failed-precondition", "You can't delete yourself");
+    }
+    if (await hasUpcomingEngagements(targetUid)) {
+      throw new HttpsError("failed-precondition", "Remove the user from their upcoming shifts first");
+    }
+
+    await deleteUserCompletely(targetUid);
     return { ok: true };
   }
 );

@@ -14,6 +14,8 @@ import {
   limit,
   getDocs,
   getCountFromServer,
+  getDoc,
+  Timestamp,
 } from 'firebase/firestore';
 import { Engagement } from '../../types/types-file'; // Define your Engagement type separately
 import { db } from '../index';
@@ -33,19 +35,37 @@ export const streamEngagements = (
   return onSnapshot(q, onNext, onError);
 };
 
+/**
+ * Lifetime shift stats for a user: live engagements plus the ones data retention has deleted,
+ * which are kept as totals on users/{uid}.archivedShiftStats.{env}.
+ */
 export const getUserEngagementsData = async (
   uid: string
 ): Promise<{ firstShift: Date, shiftCount: number } | null> => {
   const engagementsRef = collection(doc(collection(db, 'env'), env), 'engagements');
   const firstShiftQuery = query(engagementsRef, where('userId', '==', uid), orderBy('shiftEnd', 'asc'), limit(1));
   const shiftCountQuery = query(engagementsRef, where('userId', '==', uid));
-  const joinYear = await getDocs(firstShiftQuery);
-  const count = await getCountFromServer(shiftCountQuery);
-  if (!joinYear.empty && count.data().count) {
-    return { firstShift: joinYear.docs[0].data().shiftEnd.toDate(), shiftCount: count.data().count };
-  } else {
+  const [joinYear, count, userDoc] = await Promise.all([
+    getDocs(firstShiftQuery),
+    getCountFromServer(shiftCountQuery),
+    getDoc(doc(db, 'users', uid)),
+  ]);
+
+  const archived = userDoc.get(`archivedShiftStats.${env}`);
+  const archivedCount = typeof archived?.count === 'number' ? archived.count : 0;
+  const archivedFirstShift = archived?.firstShiftEnd instanceof Timestamp ? archived.firstShiftEnd.toDate() : null;
+  const liveFirstShift = joinYear.empty ? null : joinYear.docs[0].data().shiftEnd.toDate();
+
+  const shiftCount = count.data().count + archivedCount;
+  const firstShift = [archivedFirstShift, liveFirstShift]
+    .filter((date): date is Date => date !== null)
+    .sort((a, b) => a.getTime() - b.getTime())[0];
+
+  if (!shiftCount) {
     return null;
   }
+  // Archived stats may lack a first shift if its date was unreadable; still show the count.
+  return { firstShift: firstShift ?? new Date(), shiftCount };
 };
 
 /**

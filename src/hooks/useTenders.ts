@@ -6,7 +6,6 @@ import {
   streamUsers,
   updateUser,
   deleteUser,
-  deleteProfilePicture
 } from "../firebase/api/authentication";
 import { queueApplicationInviteEmails } from "../firebase/api/applications";
 import { countFutureEngagementsForUser } from "../firebase/api/engagements";
@@ -147,7 +146,7 @@ const useTenders = () => {
       });
   };
 
-  // Soft-deletes a tender
+  // Deletes a tender entirely (doc, account, profile picture), see deleteUser
   // Only succeeds if the tender exists and has no future shifts/engagements
   const deleteTender = async (id: string) => {
     const tender = tenderState.tenders.find(tender => tender.uid === id);
@@ -170,11 +169,6 @@ const useTenders = () => {
       return;
     }
 
-    if (tender.photoUrl) {
-      deleteProfilePicture(tender.photoUrl).catch((error) => {
-        message.error(`Failed to delete tender photo: ${error.message}`);
-      });
-    }
     const tenderName = tender.displayName;
     deleteUser(tender.uid)
       .then(() => {

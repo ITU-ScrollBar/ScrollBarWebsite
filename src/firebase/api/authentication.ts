@@ -26,7 +26,8 @@ import {
   deleteObject,
 } from 'firebase/storage';
 
-import { auth, db, storage } from '../index';
+import { httpsCallable } from 'firebase/functions';
+import { auth, db, functions, storage } from '../index';
 import { getCollection, getDocument, getExtension } from './common';
 import { Role } from '../../types/types-file';
 
@@ -260,13 +261,10 @@ export const sendResetPasswordEmailToUser = ({
   return sendPasswordResetEmail(auth, email);
 };
 
-// Soft-delete user
+// Delete a user entirely: users doc, Auth account, profile pictures and references to them.
+// Runs in the deleteUserAccount function, since only the Admin SDK can delete other Auth users.
 export const deleteUser = async (userId: string): Promise<void> => {
-  return updateDoc(doc(db, 'users', userId), {
-    photoUrl: '',
-    active: false,
-    displayName: 'Deleted User',
-    email: '',
-    phone: '',
+  await httpsCallable<{ targetUid: string }, { ok: boolean }>(functions, 'deleteUserAccount')({
+    targetUid: userId,
   });
 };
