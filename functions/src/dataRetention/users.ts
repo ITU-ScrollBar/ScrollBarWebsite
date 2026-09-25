@@ -102,11 +102,12 @@ const deleteUserData = async (authUser: UserRecord): Promise<void> => {
 };
 
 /**
- * Daily: deletes users who haven't signed in for USER_INACTIVITY_MONTHS. Users are global, so
+ * Monthly: deletes users who haven't signed in for USER_INACTIVITY_MONTHS. Users are global, so
  * this only runs in a prod build (see IS_PROD_BUILD).
  */
 export const cleanupInactiveUsers = onSchedule(
-  { ...SCHEDULE_OPTIONS, schedule: "every day 04:00" },
+  // 1st of the month at 04:00
+  { ...SCHEDULE_OPTIONS, schedule: "0 4 1 * *" },
   async () => {
     if (!IS_PROD_BUILD) {
       console.log("Skipping inactive user cleanup: users are global and this is not a prod build.");
