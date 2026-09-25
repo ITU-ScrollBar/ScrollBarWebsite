@@ -174,10 +174,56 @@ const cleanupEvents = async (env: RetentionEnv, cutoff: Date): Promise<number> =
   return deleted;
 };
 
+const cleanupInternalEvents = async (env: RetentionEnv, cutoff: Date): Promise<number> => {
+  const snapshot = await envCollection(env, "internalEvents").where("end", "<", cutoff).get();
+  for (const page of chunk(snapshot.docs, EVENT_BATCH_SIZE)) {
+    const batch = db.batch();
+    page.forEach((event) => batch.delete(event.ref));
+    await batch.commit();
+  }
+  return snapshot.size;
+};
+
 /**
- * Weekly: deletes shifts, their engagements and events that ended more than
- * SHIFT_RETENTION_MONTHS ago. Engagements are counted into the user's archivedShiftStats
- * first so the profile's total shift counter keeps them.
+ * Deletes shift planning periods whose submissions closed before the cutoff, together with
+ * their survey responses. Runs after cleanupEvents: a period is only deleted once none of its
+ * events are left, so an admin never opens a period whose events are half gone, and its
+ * planner-generated engagements have already been removed with those events' shifts.
+ */
+const cleanupPlanningPeriods = async (env: RetentionEnv, cutoff: Date): Promise<number> => {
+  const snapshot = await envCollection(env, "shiftPlanningPeriods")
+    .where("submissionClosesAt", "<", cutoff)
+    .get();
+  let deleted = 0;
+
+  for (const period of snapshot.docs) {
+    const eventIds = uniqueStrings(period.get("eventIds") ?? []);
+    const events = eventIds.length
+      ? await db.getAll(...eventIds.map((id) => envCollection(env, "events").doc(id)))
+      : [];
+    if (events.some((event) => event.exists)) continue;
+
+    const responses = await envCollection(env, "shiftPlanningResponses")
+      .where("periodId", "==", period.id)
+      .get();
+    for (const page of chunk(responses.docs, EVENT_BATCH_SIZE)) {
+      const batch = db.batch();
+      page.forEach((response) => batch.delete(response.ref));
+      await batch.commit();
+    }
+    // Responses first: if this fails, the period is still there for the next run to retry.
+    await period.ref.delete();
+    deleted++;
+  }
+
+  return deleted;
+};
+
+/**
+ * Weekly: deletes shifts, their engagements, events, internal events and shift planning periods
+ * (with their responses) that ended or closed more than SHIFT_RETENTION_MONTHS ago. Engagements
+ * are counted into the user's archivedShiftStats first so the profile's total shift counter
+ * keeps them.
  */
 export const cleanupOldShiftsAndEvents = onSchedule(
   // Mondays at 03:00
@@ -189,8 +235,11 @@ export const cleanupOldShiftsAndEvents = onSchedule(
       const shifts = await cleanupShifts(env, cutoff);
       const orphanedEngagements = await cleanupOrphanedEngagements(env, cutoff);
       const events = await cleanupEvents(env, cutoff);
+      const internalEvents = await cleanupInternalEvents(env, cutoff);
+      const periods = await cleanupPlanningPeriods(env, cutoff);
       console.log(
-        `[${env}] Deleted ${shifts} shifts, ${orphanedEngagements} orphaned engagements and ${events} events that ended before ${cutoff.toISOString()}.`
+        `[${env}] Deleted ${shifts} shifts, ${orphanedEngagements} orphaned engagements, ${events} events, ` +
+          `${internalEvents} internal events and ${periods} shift planning periods from before ${cutoff.toISOString()}.`
       );
     }
   }
