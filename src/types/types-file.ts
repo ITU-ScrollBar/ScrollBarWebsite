@@ -171,8 +171,16 @@ export type Tender = {
   teamIds?: string[];
   avoidShiftWithUserIds?: string[];
   lastCalendarDownload?: Date;
+  // Keyed by env. Written by the cleanupOldShiftsAndEvents function when it deletes old engagements.
+  archivedShiftStats?: Record<string, ArchivedShiftStats>;
   // Add other fields here
 };
+
+// Engagements removed by data retention, kept as totals so the profile's shift counter survives.
+export interface ArchivedShiftStats {
+  count: number;
+  firstShiftEnd?: Date;
+}
 
 export type Invite = {
   id: string;
