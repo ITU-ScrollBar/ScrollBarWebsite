@@ -21,13 +21,12 @@ function Shifts({ filter = ShiftFiltering.ALL_SHIFTS, title }: ShiftsProps) {
   const BACKGROUND = "#FFF";
   const BOX_SHADOW = "0 2px 6px rgba(7, 7, 7, 0.5)";
 
-  if (shiftState.loading || eventState.loading || engagementState.loading) {
-    const resources: string[] = [];
-    if (shiftState.loading) resources.push("shifts");
-    if (eventState.loading) resources.push("events");
-    if (engagementState.loading) resources.push("engagements");
-    return <Loading resources={resources} centerOverlay={true} />;
-  }
+  // Loading stays inside the list card so the title (and, on the profile page,
+  // everything around this section) renders without waiting on the streams.
+  const loadingResources: string[] = [];
+  if (shiftState.loading) loadingResources.push("shifts");
+  if (eventState.loading) loadingResources.push("events");
+  if (engagementState.loading) loadingResources.push("engagements");
 
   return (
     <Layout
@@ -52,12 +51,16 @@ function Shifts({ filter = ShiftFiltering.ALL_SHIFTS, title }: ShiftsProps) {
               marginBottom: 28,
             }}
           >
-            <ShiftList
-              shifts={shiftState.shifts}
-              engagements={engagementState.engagements}
-              tenders={tenderState.tenders}
-              shiftFiltering={filter}
-            />
+            {loadingResources.length ? (
+              <Loading resources={loadingResources} />
+            ) : (
+              <ShiftList
+                shifts={shiftState.shifts}
+                engagements={engagementState.engagements}
+                tenders={tenderState.tenders}
+                shiftFiltering={filter}
+              />
+            )}
           </div>
         </Layout.Content>
       </Layout>

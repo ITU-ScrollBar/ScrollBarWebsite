@@ -77,6 +77,7 @@ const useEvents = () => {
       },
       error: (error: Error) => {
         message.error('An error occurred loading events: ' + error.message);
+        setEventState((prev) => ({ ...prev, loading: false }));
       },
     });
 
