@@ -497,6 +497,8 @@ export default function ShiftManagement() {
                     label: "Shifts Overview",
                     children: (
                       <ShiftPlanOverviewTab
+                        period={selectedPeriod}
+                        periodEvents={selectedPeriodEvents}
                         periodShifts={periodShifts}
                         tenders={tenderState.tenders}
                         responses={responseState.responses}

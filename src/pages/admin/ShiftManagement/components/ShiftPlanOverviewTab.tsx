@@ -3,10 +3,13 @@ import { Segmented, Space } from "antd";
 import { useEngagementContext } from "../../../../contexts/EngagementContext";
 import {
   Engagement,
+  Event,
   Shift,
+  ShiftPlanningPeriod,
   ShiftPlanningResponse,
   Tender,
 } from "../../../../types/types-file";
+import ExportShiftPlanButton from "./ExportShiftPlanButton";
 import ShiftPlanOverviewAssignedView, {
   useAssignedRows,
 } from "./ShiftPlanOverviewTabs/ShiftPlanOverviewAssignedView";
@@ -24,6 +27,8 @@ import { useNameFilter } from "./ShiftPlanOverviewTabs/ShiftPlanOverviewShared";
 type ViewKey = "assigned" | "passive" | "legacy" | "leaving";
 
 type Props = {
+  period: ShiftPlanningPeriod;
+  periodEvents: Event[];
   periodShifts: Shift[];
   tenders: Tender[];
   responses: ShiftPlanningResponse[];
@@ -31,6 +36,8 @@ type Props = {
 };
 
 export default function ShiftPlanOverviewTab({
+  period,
+  periodEvents,
   periodShifts,
   tenders,
   responses,
@@ -77,16 +84,25 @@ export default function ShiftPlanOverviewTab({
 
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
-      <Segmented<ViewKey>
-        value={view}
-        onChange={setView}
-        options={[
-          { label: `Assigned (${assignedRows.length})`, value: "assigned" },
-          { label: `Passive (${passiveRows.length})`, value: "passive" },
-          { label: `Legacy (${legacyRows.length})`, value: "legacy" },
-          { label: `Leaving (${leavingRows.length})`, value: "leaving" },
-        ]}
-      />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <Segmented<ViewKey>
+          value={view}
+          onChange={setView}
+          options={[
+            { label: `Assigned (${assignedRows.length})`, value: "assigned" },
+            { label: `Passive (${passiveRows.length})`, value: "passive" },
+            { label: `Legacy (${legacyRows.length})`, value: "legacy" },
+            { label: `Leaving (${leavingRows.length})`, value: "leaving" },
+          ]}
+        />
+        <ExportShiftPlanButton
+          period={period}
+          events={periodEvents}
+          shifts={periodShifts}
+          engagements={periodEngagements}
+          tenders={tenders}
+        />
+      </div>
 
       {view === "assigned" && (
         <ShiftPlanOverviewAssignedView rows={assignedRows} nameFilter={nameFilter} />

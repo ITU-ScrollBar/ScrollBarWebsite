@@ -97,6 +97,7 @@ export default function ShiftEventInformationSection({
         end: primary.end,
         tenders: primary.tenders,
         category: primary.category,
+        ...(primary.weight !== undefined ? { weight: primary.weight } : {}),
         linkedShiftId: primary.id,
       });
     } catch {
