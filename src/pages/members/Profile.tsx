@@ -6,7 +6,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import avatar from "../../assets/images/avatar.png";
 import StudyLinePicker from "./StudyLinePicker";
 import { updateUser } from "../../firebase/api/authentication";
-import { UserAvatarWithUpload } from "../../components/UserAvatar";
+import { UserAvatarWithUpload } from "../../components/UserAvatarWithUpload";
 import { Role, ShiftFiltering } from "../../types/types-file";
 import { CalendarSection } from "../../components/CalendarComponent";
 import { Loading } from "../../components/Loading";

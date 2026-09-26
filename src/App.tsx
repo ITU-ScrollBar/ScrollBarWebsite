@@ -23,10 +23,11 @@ const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 const loadProtectedRoutes = () => import("./routes/ProtectedRoutes");
 const loadTenderMenu = () => import("./components/HomePage/TenderMenu");
 const loadProfile = () => import("./pages/members/Profile");
+const loadShifts = () => import("./pages/members/Shifts");
 const ProtectedRoutes = lazy(loadProtectedRoutes);
 const RoleProtectedRoute = lazy(() => import("./routes/RoleProtectedRoute"));
 const Register = lazy(() => import("./pages/Register"));
-const Shifts = lazy(() => import("./pages/members/Shifts"));
+const Shifts = lazy(loadShifts);
 const Profile = lazy(loadProfile);
 const GetHelpPage = lazy(() => import("./pages/members/GetHelpPage"));
 const ShiftAvailabilityPage = lazy(() => import("./pages/members/ShiftAvailabilityPage"));
@@ -54,6 +55,7 @@ const FormResponsesPage = lazy(() => import("./pages/admin/FormResponsesPage"));
 // Errors are ignored here; they surface when lazy() renders the route.
 const preloadRouteChunks = (path: string) => {
   const opensProfile = /^\/(members\/profile|login)\/?$/.test(path);
+  const opensShifts = /^\/tenders\/(allshifts|upforgrabs)\/?$/.test(path);
   const isMemberArea = /^\/(tenders|members|admin)(\/|$)/.test(path);
   const ignore = () => {};
   if (opensProfile || isMemberArea) {
@@ -62,6 +64,9 @@ const preloadRouteChunks = (path: string) => {
   }
   if (opensProfile) {
     loadProfile().catch(ignore);
+  }
+  if (opensShifts) {
+    loadShifts().catch(ignore);
   }
 };
 preloadRouteChunks(window.location.pathname);

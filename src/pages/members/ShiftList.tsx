@@ -1,9 +1,5 @@
 import { Typography, Button, Popconfirm, message, Badge } from "antd";
-import {
-  getEngagementsForShift,
-  getTenderForEngagement,
-  getTenderDisplayName,
-} from "./helpers";
+import { getTenderDisplayName } from "./helpers";
 import {
   Shift,
   Engagement,
@@ -13,7 +9,7 @@ import {
   Role,
 } from "../../types/types-file";
 import { useAuth } from "../../contexts/AuthContext";
-import { useEffect, useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useEventContext } from "../../contexts/EventContext";
 import { useEngagementContext } from "../../contexts/EngagementContext";
 import { UserAvatar } from "../../components/UserAvatar";
@@ -52,33 +48,50 @@ export function ShiftList({
 }: ShiftListProps) {
   const { currentUser } = useAuth();
   const { eventState } = useEventContext();
-  const [filteredShifts, setFilteredShifts] = useState<Shift[]>([]);
   const { setUpForGrabs, takeShift } = useEngagementContext();
   const internalEventsState = useInternalEventContext();
   const internalState = internalEventsState.internalEventState;
   const { teamState } = useTeamContext();
   const { isMobile } = useWindowSize();
 
-  useEffect(() => {
-    let result = shifts;
-
-    if (shiftFiltering === ShiftFiltering.MY_SHIFTS && currentUser?.uid) {
-      const userShiftIds = engagements
-        .filter((e) => e.userId === currentUser.uid)
-        .map((e) => e.shiftId);
-      result = result.filter((s) => userShiftIds.includes(s.id));
-    } else if (shiftFiltering === ShiftFiltering.UP_FOR_GRABS) {
-      const shiftIdsWithUpForGrabs = engagements
-        .filter((e) => e.upForGrabs)
-        .map((e) => e.shiftId);
-      result = result.filter((s) => shiftIdsWithUpForGrabs.includes(s.id));
+  // Lookup maps keep rendering linear in the number of shifts, engagements and
+  // tenders instead of rescanning every list for each shift and avatar.
+  const engagementsByShift = useMemo(() => {
+    const map = new Map<string, Engagement[]>();
+    for (const engagement of engagements) {
+      const list = map.get(engagement.shiftId);
+      if (list) list.push(engagement);
+      else map.set(engagement.shiftId, [engagement]);
     }
+    return map;
+  }, [engagements]);
 
-    result = result.filter((shift) =>
-      engagements.some((e) => e.shiftId === shift.id)
-    );
-    setFilteredShifts(result);
-  }, [shifts, engagements, shiftFiltering, currentUser]);
+  const eventsById = useMemo(
+    () => new Map(eventState.events.map((event) => [event.id, event])),
+    [eventState.events]
+  );
+
+  const tendersById = useMemo(
+    () => new Map(tenders.map((tender) => [tender.uid, tender])),
+    [tenders]
+  );
+
+  // Derived during render (not in an effect) so the first paint already has the
+  // right shifts instead of flashing "Shifts are not published yet".
+  const filteredShifts = useMemo(() => {
+    const uid = currentUser?.uid;
+    return shifts.filter((shift) => {
+      const shiftEngagements = engagementsByShift.get(shift.id!);
+      if (!shiftEngagements) return false;
+      if (shiftFiltering === ShiftFiltering.MY_SHIFTS && uid) {
+        return shiftEngagements.some((e) => e.userId === uid);
+      }
+      if (shiftFiltering === ShiftFiltering.UP_FOR_GRABS) {
+        return shiftEngagements.some((e) => e.upForGrabs);
+      }
+      return true;
+    });
+  }, [shifts, engagementsByShift, shiftFiltering, currentUser?.uid]);
 
   const asDate = (
     d:
@@ -228,7 +241,7 @@ export function ShiftList({
   };
 
   const renderTender = (engagement: Engagement, isAnchor = false) => {
-    const tender = getTenderForEngagement(engagement, tenders);
+    const tender = engagement.userId ? tendersById.get(engagement.userId) : undefined;
     if (!tender) return null;
 
     const isUpForGrabs =
@@ -282,7 +295,7 @@ export function ShiftList({
   );
 
   const renderShiftCard = (shift: Shift) => {
-    const shiftEngagements = getEngagementsForShift(shift.id!, engagements);
+    const shiftEngagements = engagementsByShift.get(shift.id!) ?? [];
     const anchors = shiftEngagements.filter(
       (e) => e.type === engagementType.ANCHOR
     );
@@ -384,7 +397,7 @@ export function ShiftList({
         }
 
         const eventId = m.id;
-        const event = eventState.events.find((e) => e.id === eventId);
+        const event = eventsById.get(eventId);
         if (!event) return null;
 
         const shiftsForEvent = shiftsByEvent[eventId] || [];
