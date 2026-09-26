@@ -19,7 +19,7 @@ import { Key, useEffect, useState } from "react";
 import { getStudyLines } from "../../firebase/api/authentication";
 import { EditOutlined } from "@ant-design/icons";
 import StudyLinePicker from "../../pages/members/StudyLinePicker";
-import { UserAvatarWithUpload } from "../UserAvatar";
+import { UserAvatarWithUpload } from "../UserAvatarWithUpload";
 import { useWindowSize } from "../../hooks/useWindowSize";
 import RoleTag from "../RoleTag";
 import { useTeamContext } from "../../contexts/TeamContext";
