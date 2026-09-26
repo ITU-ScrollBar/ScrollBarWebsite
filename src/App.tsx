@@ -20,14 +20,17 @@ import updateLocale from 'dayjs/plugin/updateLocale';
 const ApplyPage = lazy(() => import("./pages/ApplyPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
-const ProtectedRoutes = lazy(() => import("./routes/ProtectedRoutes"));
+const loadProtectedRoutes = () => import("./routes/ProtectedRoutes");
+const loadTenderMenu = () => import("./components/HomePage/TenderMenu");
+const loadProfile = () => import("./pages/members/Profile");
+const ProtectedRoutes = lazy(loadProtectedRoutes);
 const RoleProtectedRoute = lazy(() => import("./routes/RoleProtectedRoute"));
 const Register = lazy(() => import("./pages/Register"));
 const Shifts = lazy(() => import("./pages/members/Shifts"));
-const Profile = lazy(() => import("./pages/members/Profile"));
+const Profile = lazy(loadProfile);
 const GetHelpPage = lazy(() => import("./pages/members/GetHelpPage"));
 const ShiftAvailabilityPage = lazy(() => import("./pages/members/ShiftAvailabilityPage"));
-const TenderMenu = lazy(() => import("./components/HomePage/TenderMenu").then((m) => ({ default: m.TenderMenu })));
+const TenderMenu = lazy(() => loadTenderMenu().then((m) => ({ default: m.TenderMenu })));
 const EventManagement = lazy(() => import("./pages/admin/EventManagement/EventManagement"));
 const GlobalSettingsPage = lazy(() => import("./pages/admin/GlobalSettingsPage"));
 const EventsPage = lazy(() => import("./pages/EventsPage"));
@@ -44,6 +47,24 @@ const FormsPage = lazy(() => import("./pages/members/FormsPage"));
 const LendingRequestPage = lazy(() => import("./pages/members/LendingRequestPage"));
 const AnonymousFeedbackPage = lazy(() => import("./pages/members/AnonymousFeedbackPage"));
 const FormResponsesPage = lazy(() => import("./pages/admin/FormResponsesPage"));
+
+// Nested lazy routes otherwise download one after another (ProtectedRoutes, then
+// TenderMenu once auth resolves, then the page), so start the chunks for the page
+// being opened right away. /login is included because it lands on the profile.
+// Errors are ignored here; the lazy() call retries and surfaces them.
+const preloadRouteChunks = (path: string) => {
+  const opensProfile = /^\/(members\/profile|login)\/?$/.test(path);
+  const isMemberArea = /^\/(tenders|members|admin)(\/|$)/.test(path);
+  const ignore = () => {};
+  if (opensProfile || isMemberArea) {
+    loadProtectedRoutes().catch(ignore);
+    loadTenderMenu().catch(ignore);
+  }
+  if (opensProfile) {
+    loadProfile().catch(ignore);
+  }
+};
+preloadRouteChunks(window.location.pathname);
 
 function App() {
   dayjs.extend(updateLocale);

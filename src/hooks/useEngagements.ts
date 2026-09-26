@@ -1,5 +1,5 @@
 import { message } from 'antd';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   createEngagement,
   deleteEngagement,
@@ -54,25 +54,27 @@ const useEngagements = () => {
     return unsubscribe;
   }, [currentUser]);
 
-  const getProfileData = (uid: string) => {
+  // Stable references keep the context value (and consumers' effects, such as the
+  // profile stats fetch) from re-running on every engagement snapshot.
+  const getProfileData = useCallback((uid: string) => {
     return getUserEngagementsData(uid);
-  };
+  }, []);
 
-  const addEngagement = (newEngagement: Engagement) => {
+  const addEngagement = useCallback((newEngagement: Engagement) => {
     return createEngagement(newEngagement);
-  };
+  }, []);
 
-  const removeEngagement = (engagement: Engagement) => {
+  const removeEngagement = useCallback((engagement: Engagement) => {
     return deleteEngagement(engagement);
-  };
+  }, []);
 
-  const takeShift = (id: string, userId: string) => {
+  const takeShift = useCallback((id: string, userId: string) => {
     return updateShift(id, userId);
-  };
+  }, []);
 
-  const setUpForGrabs = (id: string, status: boolean) => {
+  const setUpForGrabs = useCallback((id: string, status: boolean) => {
     return updateGrabs(id, status);
-  };
+  }, []);
 
   return {
     engagementState,

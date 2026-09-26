@@ -1,4 +1,4 @@
-import { Alert, Button, Layout, Space, Row, Col, Select, notification } from "antd";
+import { Alert, Button, Layout, Space, Row, Col, Select, Spin, message, notification } from "antd";
 import { useNavigate } from "react-router-dom";
 import Title from "antd/es/typography/Title";
 import Text from "antd/es/typography/Text";
@@ -21,12 +21,13 @@ import { filterOpenPeriodsForUser } from "../../firebase/api/shiftPlanning";
 export default function Profile() {
   const navigate = useNavigate();
   const { loading, currentUser } = useAuth();
-  const { engagementState, getProfileData } = useEngagementContext();
+  const { getProfileData } = useEngagementContext();
   const { periodState, loadUserResponse } = useShiftPlanningContext();
   const [userData, setUserData] = useState<{
     firstShift: Date | null;
     shiftCount: number | null;
   } | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [hasPendingPlanningSubmission, setHasPendingPlanningSubmission] = useState(false);
   const { teamState } = useTeamContext();
 
@@ -36,14 +37,30 @@ export default function Profile() {
     [isNewbie, periodState.periods]
   );
 
+  const uid = currentUser?.uid;
+
+  // Keyed on uid (not the whole user object) so editing study line or teams
+  // doesn't refetch the lifetime stats.
   useEffect(() => {
-    (async () => {
-      if (currentUser) {
-        const data = await getProfileData(currentUser.uid);
-        setUserData(data);
-      }
-    })();
-  }, [currentUser, getProfileData]);
+    if (!uid) return;
+    let cancelled = false;
+
+    setStatsLoading(true);
+    getProfileData(uid)
+      .then((data) => {
+        if (!cancelled) setUserData(data);
+      })
+      .catch((error: Error) => {
+        if (!cancelled) message.error("Could not load your statistics: " + error.message);
+      })
+      .finally(() => {
+        if (!cancelled) setStatsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [uid, getProfileData]);
 
   useEffect(() => {
     let cancelled = false;
@@ -71,14 +88,6 @@ export default function Profile() {
     if (!currentUser) return;
     updateUser({ id: currentUser.uid, field: "studyline", value: studyLine });
   };
-
-  if (
-    engagementState.loading ||
-    !engagementState.isLoaded ||
-    !engagementState.engagements
-  ) {
-    return <Loading centerOverlay={true} resources={["your shifts"]} />;
-  }
 
   if (loading || !currentUser) {
     return <Loading centerOverlay={true} resources={["you"]} />;
@@ -197,8 +206,14 @@ export default function Profile() {
                   <Title level={4} style={{ marginTop: 16, marginBottom: 8 }}>
                     Statistics
                   </Title>
-                  <Text>Total shifts: {userProfile?.totalShifts ?? 5}</Text>
-                  <Text>Member since: {userProfile?.memberSince}</Text>
+                  {statsLoading ? (
+                    <Spin size="small" />
+                  ) : (
+                    <>
+                      <Text>Total shifts: {userProfile.totalShifts}</Text>
+                      <Text>Member since: {userProfile.memberSince}</Text>
+                    </>
+                  )}
                 </Space>
 
                 <div>
