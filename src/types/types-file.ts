@@ -141,6 +141,9 @@ export interface Shift {
   end: Date;
   category?: ShiftCategory;
   linkedShiftId?: string; // Set on satellite shifts; points to the primary shift's ID
+  // Relative share of tenders on mandatory (big party) events, where headcount isn't fixed.
+  // Missing means 1; a shift with weight 2 gets about twice as many people as one with weight 1.
+  weight?: number;
 }
 
 export interface ShiftUpdateParams {
