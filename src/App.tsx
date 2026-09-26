@@ -51,7 +51,7 @@ const FormResponsesPage = lazy(() => import("./pages/admin/FormResponsesPage"));
 // Nested lazy routes otherwise download one after another (ProtectedRoutes, then
 // TenderMenu once auth resolves, then the page), so start the chunks for the page
 // being opened right away. /login is included because it lands on the profile.
-// Errors are ignored here; the lazy() call retries and surfaces them.
+// Errors are ignored here; they surface when lazy() renders the route.
 const preloadRouteChunks = (path: string) => {
   const opensProfile = /^\/(members\/profile|login)\/?$/.test(path);
   const isMemberArea = /^\/(tenders|members|admin)(\/|$)/.test(path);

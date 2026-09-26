@@ -28,6 +28,7 @@ export default function Profile() {
     shiftCount: number | null;
   } | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [statsFailed, setStatsFailed] = useState(false);
   const [hasPendingPlanningSubmission, setHasPendingPlanningSubmission] = useState(false);
   const { teamState } = useTeamContext();
 
@@ -46,12 +47,15 @@ export default function Profile() {
     let cancelled = false;
 
     setStatsLoading(true);
+    setStatsFailed(false);
     getProfileData(uid)
       .then((data) => {
         if (!cancelled) setUserData(data);
       })
       .catch((error: Error) => {
-        if (!cancelled) message.error("Could not load your statistics: " + error.message);
+        if (cancelled) return;
+        setStatsFailed(true);
+        message.error("Could not load your statistics: " + error.message);
       })
       .finally(() => {
         if (!cancelled) setStatsLoading(false);
@@ -208,6 +212,8 @@ export default function Profile() {
                   </Title>
                   {statsLoading ? (
                     <Spin size="small" />
+                  ) : statsFailed ? (
+                    <Text type="secondary">Statistics unavailable</Text>
                   ) : (
                     <>
                       <Text>Total shifts: {userProfile.totalShifts}</Text>

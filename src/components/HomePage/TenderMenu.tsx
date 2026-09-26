@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, Suspense } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import type { MenuProps } from 'antd';
 import { ConfigProvider, Menu } from "antd";
@@ -190,7 +190,8 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
           </ConfigProvider>
         </div>
       </div>
-      {children || <Outlet />}
+      {/* Own boundary so the menu stays visible while a lazy page chunk loads. */}
+      <Suspense fallback={<Loading />}>{children || <Outlet />}</Suspense>
     </div>
   );
 };

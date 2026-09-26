@@ -48,6 +48,7 @@ const useEngagements = () => {
       },
       (error: Error) => {
         message.error('An error occurred loading engagements: ' + error.message);
+        setEngagementState((prev) => ({ ...prev, loading: false }));
       }
     );
   
