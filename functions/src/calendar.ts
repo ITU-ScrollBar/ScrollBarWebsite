@@ -4,6 +4,8 @@ import { Timestamp } from 'firebase-admin/firestore';
 import { createEvents, EventAttributes } from 'ics';
 import formsRouter from './forms';
 import { ensureBoardAccess } from './httpAuth';
+import { resolveStorageBucketName } from './dataRetention/common';
+import { resolvedAtFields } from './ticketResolvedAt';
 import {
   Event,
   InternalEvent,
@@ -83,30 +85,6 @@ type TicketUpdatePayload = {
   requestType?: TicketRequestType;
   impact?: TicketImpact;
   status?: TicketStatus;
-};
-
-const resolveStorageBucketName = (): string => {
-  const firebaseConfigRaw = process.env.FIREBASE_CONFIG;
-  if (firebaseConfigRaw) {
-    try {
-      const parsed = JSON.parse(firebaseConfigRaw) as { storageBucket?: string };
-      if (parsed.storageBucket) {
-        return parsed.storageBucket;
-      }
-    } catch {
-      // Ignore malformed FIREBASE_CONFIG and fallback.
-    }
-  }
-
-  if (process.env.FIREBASE_STORAGE_BUCKET) {
-    return process.env.FIREBASE_STORAGE_BUCKET;
-  }
-
-  if (process.env.VITE_APP_FIREBASE_STORAGE_BUCKET) {
-    return process.env.VITE_APP_FIREBASE_STORAGE_BUCKET;
-  }
-
-  return `${process.env.GCLOUD_PROJECT}.appspot.com`;
 };
 
 const extractStoragePathFromUrl = (value: string): string | null => {
@@ -370,10 +348,12 @@ app.patch('/tickets/:id/status', async (req, res) => {
     }
 
     const env = process.env.VITE_APP_ENV || 'dev';
+    const ticketRef = db.collection('env').doc(env).collection('tickets').doc(ticketId);
 
-    await db.collection('env').doc(env).collection('tickets').doc(ticketId).set(
+    await ticketRef.set(
       {
         status,
+        ...(await resolvedAtFields(ticketRef, status as TicketStatus)),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       },
       { merge: true }
@@ -467,10 +447,12 @@ app.patch('/tickets/:id', async (req, res) => {
     }
 
     const env = process.env.VITE_APP_ENV || 'dev';
+    const ticketRef = db.collection('env').doc(env).collection('tickets').doc(ticketId);
 
-    await db.collection('env').doc(env).collection('tickets').doc(ticketId).set(
+    await ticketRef.set(
       {
         ...updatePayload,
+        ...(status !== undefined ? await resolvedAtFields(ticketRef, status) : {}),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       },
       { merge: true }

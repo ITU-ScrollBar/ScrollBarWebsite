@@ -5,7 +5,7 @@ import { adminChangeUserEmail, adminDeleteUser } from './userManagerService';
 import { generateShiftPlan } from './shiftPlanning';
 import { createTicket, listTickets, setTicketStatus } from './tickets';
 import { completeApplication, startApplication } from './applications';
-import { cleanupInactiveUsers, cleanupOldShiftsAndEvents } from './dataRetention';
+import { cleanupInactiveUsers, cleanupOldShiftsAndEvents, cleanupResolvedTickets } from './dataRetention';
 
 // Export the express app as the `calendar` HTTPS function.
 export const calendar = functions.https.onRequest({invoker: "public", region: "europe-west1"}, calendarApp as any);
@@ -31,3 +31,4 @@ export { startApplication };
 export { completeApplication };
 export { cleanupOldShiftsAndEvents };
 export { cleanupInactiveUsers };
+export { cleanupResolvedTickets };
