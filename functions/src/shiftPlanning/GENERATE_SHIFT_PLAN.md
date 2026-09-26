@@ -13,25 +13,26 @@ why the order matters — see "Why this order" below.
 flowchart TD
     Start([Generate shift plan]) --> Guard{Period already<br/>generated?}
     Guard -- yes --> Reject[["failed-precondition:<br/>reset the period first"]]
-    Guard -- no --> P1
+    Guard -- no --> P2
 
-    subgraph P1["Phase 1 — Non-mandatory anchors"]
+    subgraph P2["Phase 1a — New anchor training"]
         direction TB
-        P1a["anchorOnly experienced anchors<br/>leveled-filled first<br/>(no tender fallback, so priority)"]
-        P1b["mixed experienced anchors<br/>fill whatever anchor slots remain"]
-        P1a --> P1b
-    end
-
-    P1 --> P2
-
-    subgraph P2["Phase 2 — New anchors"]
-        direction TB
-        P2a["Each new anchor guaranteed<br/>1 opening + 1 closing anchor shift"]
-        P2b["Restricted to shifts already anchored<br/>by an experienced anchor (Phase 1),<br/>and to shifts on/after the anchor<br/>seminar cutoff date"]
+        P2a["Each new anchor gets 1 opening +<br/>1 closing shift next to an<br/>experienced anchor"]
+        P2b["Earliest workable shift on/after the<br/>anchor seminar cutoff; if it has no<br/>anchor yet, a mentor is placed with them"]
         P2a --> P2b
     end
 
-    P2 --> P3
+    P2 --> P1
+
+    subgraph P1["Phase 1 — Non-mandatory anchors"]
+        direction TB
+        P1a["anchorOnly anchors<br/>leveled-filled first<br/>(no tender fallback, so priority)"]
+        P1b["mixed anchors<br/>fill whatever anchor slots remain"]
+        P1c["Second pass without opening/closing<br/>caps for shifts still missing an anchor"]
+        P1a --> P1b --> P1c
+    end
+
+    P1 --> P3
 
     subgraph P3["Phase 3 — Non-mandatory tenders"]
         direction TB
@@ -73,7 +74,22 @@ Every candidate slot in every phase is also checked against the **avoid-shift-wi
 (`avoidShiftWithUserIds` on the user doc) — two people who shouldn't work together are never
 matched to the same shift, in either direction, in any phase.
 
+"Anchors" in Phases 1 and 4 means experienced anchors plus new anchors who have finished
+training: once a new anchor's opening and closing training shifts are done, they can be the only
+anchor on any shift that starts after the later of the two ends.
+
+After Phase 5, any shift that still has no anchor but has someone who could anchor it working as
+a tender (placed by this run) gets that person promoted to anchor. Headcount doesn't change.
+
 ## Why this order
+
+- **New anchor training first** (Phase 1a before Phase 1): training needs an experienced anchor
+  and the new anchor on the same shift, early in the period. Doing it before experienced anchors
+  are spread out means the planner can pick the earliest shift that works for both, and place a
+  mentor there if needed, instead of only choosing between shifts Phase 1 happened to anchor.
+  Shifts are tried earliest first, first with mentors under the normal caps, then without the
+  opening/closing caps, then without any cap, so a new anchor only goes untrained if no
+  experienced anchor is available on any of their workable opening (or closing) shifts.
 
 - **Mandatory runs after non-mandatory** (Phase 4/5 after Phase 1/2/3): mandatory duty is
   guaranteed regardless of load, so it doesn't need — and mustn't be blocked by — the total-shift
@@ -110,6 +126,35 @@ produced, guaranteed regardless of load. Both mandatory phases still *steer* tow
 category someone's currently lower on (true-total counters), they just never refuse a slot because
 of it — a preference, not a limit.
 
+## Anchor coverage beats balance
+
+An anchor on every shift matters more than keeping someone's opening/closing split or
+anchor-vs-tender split even. So:
+
+- When an anchor picks a slot, a slot nobody else could cover is taken first, before the
+  opening/closing preference.
+- Phase 1 runs a second pass without the opening/closing caps (the total cap still applies) for
+  any shift still missing an anchor. Before this, an anchor who had hit their opening cap could
+  end up as a tender on one shift of an evening while another shift of the same evening had no
+  anchor.
+- The promotion step after Phase 5 catches anything left.
+
+## Spreading each person's shifts over the period
+
+When a person could take several slots, Phases 1 and 3 prefer the one furthest (in days) from
+their other non-mandatory shifts, capped at the ideal spacing
+`(last shift start - first shift start) / perUserTotalCap`. Past that distance the older
+tie-breakers (category, least-filled shift) decide. Mandatory events (big parties) are ignored:
+everyone works them anyway, so they neither count as a shift nor get spread.
+
+## Shift weight on mandatory events
+
+Big parties don't have a fixed headcount, so mandatory shifts carry a `weight` (default 1) instead
+of a tender count, editable in the admin shift editor. Phase 5 splits participants between an
+event's shifts in proportion to weight: a category's target is
+`ceil(participants × category weight / event weight)`, and "least loaded" compares
+`headcount / weight`.
+
 ## Two kinds of opening/closing counters
 
 - **Capped counters** (`assignedOpeningCountByUser` / `assignedClosingCountByUser`) — exclude
@@ -134,13 +179,13 @@ Mandatory tender placement isn't a single greedy pass — it's three ordered, ne
 per mandatory event, because middle shifts are more desirable than opening/closing ones, so *who*
 gets a middle shift matters as much as *how many* people end up on each individual shift.
 
-Target headcount per shift is computed once per event:
+Target headcount per category is computed once per event, from shift weights (default 1):
 
 ```
-perShiftTarget = ceil(participants / eventShifts.length)   // satellites count as their own shift
-middleTarget   = perShiftTarget × number of middle shifts
-openingTarget  = perShiftTarget × number of opening shifts
-closingTarget  = perShiftTarget × number of closing shifts
+middleTarget   = ceil(participants × weight of middle shifts  / weight of all event shifts)
+openingTarget  = ceil(participants × weight of opening shifts / weight of all event shifts)
+closingTarget  = ceil(participants × weight of closing shifts / weight of all event shifts)
+// satellites count as their own shift with their own weight
 ```
 
 1. **Middle, first** — sort participants by `totalOpeningCountByUser + totalClosingCountByUser`,
@@ -196,8 +241,8 @@ Verified against the actual code, not just the design intent. Status as of the l
 | 7 | Tenders capped at `ceil(shifts per member)` | ✅ holds | `perUserTotalCap` bounds each person's *total* (anchor+tender combined); tender-count is always ≤ total, so it's always within the cap. Denominator is `activeUsers.length` (all active members, matching the existing admin UI "shifts per member" stat) rather than tender-eligible members only — a deliberate choice for consistency, not a bug. |
 | 8 | If a user can join any shift in a mandatory event, they get one that day | ✅ holds | Phase 5's Pass 3 always assigns anyone still unplaced who has at least one eligible shift — no cap or target can block it, by design. |
 | 9 | If a user can't join any shift in a mandatory event, they get nothing that day | ✅ holds | Phase 5 only ever pushes `mandatory_assignment_not_met` in Pass 3, and only when zero eligible shifts exist for that person. |
-| 10 | Users on each other's avoid-list never share a shift | ✅ holds | Checked via `hasAvoidConflictOnShift` in every phase — Phase 1/4 (`canTakeAnchorSlot` + level-fill filtering), Phase 2 (`hasConflict` passed to the matcher), Phase 3 (`canTakeTenderSlot` + level-fill filtering), Phase 5 (`isEligibleForMandatoryShift`, all three passes). |
-| 11 | Mandatory event shifts filled as equally as possible | ✅ holds | Each mandatory event computes an explicit `perShiftTarget = ceil(participants / eventShifts.length)` and fills toward it directly (see "Phase 5's three passes" above), rather than relying on emergent convergence from greedy ordering. Bounded by availability, same caveat as everywhere else — can't force someone onto a shift they didn't mark themselves available for. |
+| 10 | Users on each other's avoid-list never share a shift | ✅ holds | Checked via `hasAvoidConflictOnShift` in every phase — Phase 1/4 (`canTakeAnchorSlot` + level-fill filtering), Phase 1a (`trainingShiftsFor` for the trainee, `canTakeAnchorSlot` + `usersAvoidEachOther` for the mentor), Phase 3 (`canTakeTenderSlot` + level-fill filtering), Phase 5 (`isEligibleForMandatoryShift`, all three passes). |
+| 11 | Mandatory event shifts filled in proportion to their weight | ✅ holds | Each mandatory event computes weighted category targets and a weight-relative "least loaded" and fills toward them directly (see "Phase 5's three passes" above), rather than relying on emergent convergence from greedy ordering. Bounded by availability, same caveat as everywhere else — can't force someone onto a shift they didn't mark themselves available for. |
 
 **No open gaps as of this review** — the anchor-duty opening/closing balance gap noted previously
 was closed when the tie-break fix and the shared `canTakeAnchorSlot` hard cap were added.

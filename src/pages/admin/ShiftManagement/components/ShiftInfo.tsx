@@ -1,4 +1,4 @@
-import { InputNumber, Input, DatePicker, Button, Divider, Popconfirm, Select, Space, Typography } from "antd";
+import { InputNumber, Input, DatePicker, Button, Divider, Popconfirm, Select, Space, Tooltip, Typography } from "antd";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { ReactNode } from "react";
 import dayjs from "dayjs";
@@ -6,6 +6,9 @@ import { useShiftContext } from "../../../../contexts/ShiftContext";
 import { Shift, ShiftCategory } from "../../../../types/types-file";
 
 const { Text } = Typography;
+
+const DEFAULT_WEIGHT = 1;
+const WEIGHT_MIN = 0.1;
 
 export default function ShiftInfo(props: {
   shift: Shift;
@@ -103,20 +106,35 @@ export default function ShiftInfo(props: {
         />
       </Space>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <Text type="secondary">Total tenders including anchors</Text>
-        <InputNumber
-          size="small"
-          min={1}
-          value={shift.tenders}
-          disabled={isMandatory}
-          onChange={(value) => { if (value !== null) updateShift(shift.id, "tenders", value); }}
-          style={{ width: 96 }}
-        />
-      </div>
+      {isMandatory ? (
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <Tooltip title="Relative share of the tenders on this shift. A shift with weight 2 gets about twice as many people as a shift with weight 1.">
+            <Text type="secondary">Weight</Text>
+          </Tooltip>
+          <InputNumber
+            size="small"
+            min={WEIGHT_MIN}
+            step={0.5}
+            value={shift.weight ?? DEFAULT_WEIGHT}
+            onChange={(value) => { if (value !== null) updateShift(shift.id, "weight", value); }}
+            style={{ width: 96 }}
+          />
+        </div>
+      ) : (
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <Text type="secondary">Total tenders including anchors</Text>
+          <InputNumber
+            size="small"
+            min={1}
+            value={shift.tenders}
+            onChange={(value) => { if (value !== null) updateShift(shift.id, "tenders", value); }}
+            style={{ width: 96 }}
+          />
+        </div>
+      )}
 
       {isMandatory && (
-        <Text type="secondary">Mandatory event — all available tenders are assigned</Text>
+        <Text type="secondary">Mandatory event — all available tenders are assigned, split by weight</Text>
       )}
 
       {primaryAssignment}
@@ -141,18 +159,33 @@ export default function ShiftInfo(props: {
                 onChange={(event) => onUpdateSatellite("location", event.target.value)}
                 style={{ width: 140 }}
               />
-              <InputNumber
-                size="small"
-                min={1}
-                value={satelliteShift.tenders}
-                disabled={isMandatory}
-                onChange={(value) => {
-                  if (value !== null) {
-                    onUpdateSatellite("tenders", value);
-                  }
-                }}
-                style={{ width: 80 }}
-              />
+              {isMandatory ? (
+                <InputNumber
+                  size="small"
+                  min={WEIGHT_MIN}
+                  step={0.5}
+                  addonBefore="Weight"
+                  value={satelliteShift.weight ?? DEFAULT_WEIGHT}
+                  onChange={(value) => {
+                    if (value !== null) {
+                      onUpdateSatellite("weight", value);
+                    }
+                  }}
+                  style={{ width: 140 }}
+                />
+              ) : (
+                <InputNumber
+                  size="small"
+                  min={1}
+                  value={satelliteShift.tenders}
+                  onChange={(value) => {
+                    if (value !== null) {
+                      onUpdateSatellite("tenders", value);
+                    }
+                  }}
+                  style={{ width: 80 }}
+                />
+              )}
               <Popconfirm
                 title="Remove satellite shift?"
                 description="This will remove the satellite shift and all tenders assigned to it."
