@@ -97,34 +97,22 @@ export default function EventsPage() {
             Our Events This Semester
           </Title>
 
-          {events.length > 0 ? (() => {
-            const featuredEvent = events[0];
-            const otherEvents = events.slice(1);
-            return (
-              <div 
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: isMobile ? 'repeat(1, 1fr)' : 'repeat(4, 1fr)',
-                  gap: isMobile ? '12px' : '16px',
-                  width: '100%',
-                }}
-              >
-                <div 
-                  style={{
-                    gridRow: isMobile ? 'span 1' : 'span 2',
-                    gridColumn: 'span 1',
-                  }}
-                >
-                  <EventCard event={featuredEvent} isFeatured={true} isMobile={isMobile} />
+          {events.length > 0 ? (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? 'repeat(1, 1fr)' : 'repeat(4, 1fr)',
+                gap: isMobile ? '12px' : '16px',
+                width: '100%',
+              }}
+            >
+              {events.map((event) => (
+                <div key={event.id}>
+                  <EventCard event={event} isMobile={isMobile} />
                 </div>
-                {otherEvents.map((event) => (
-                  <div key={event.id}>
-                    <EventCard event={event} isFeatured={false} isMobile={isMobile} />
-                  </div>
-                ))}
-              </div>
-            );
-          })() : (
+              ))}
+            </div>
+          ) : (
             <Paragraph style={{ textAlign: "center" }}>No upcoming events at the moment.</Paragraph>
           )}
         </Col>
