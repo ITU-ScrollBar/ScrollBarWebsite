@@ -47,6 +47,31 @@ export const chunk = <T>(items: T[], size: number): T[][] => {
   return chunks;
 };
 
+// initializeApp is called with options, so FIREBASE_CONFIG isn't read and bucket() has no default.
+export const resolveStorageBucketName = (): string => {
+  const firebaseConfigRaw = process.env.FIREBASE_CONFIG;
+  if (firebaseConfigRaw) {
+    try {
+      const parsed = JSON.parse(firebaseConfigRaw) as { storageBucket?: string };
+      if (parsed.storageBucket) {
+        return parsed.storageBucket;
+      }
+    } catch {
+      // Ignore malformed FIREBASE_CONFIG and fallback.
+    }
+  }
+
+  if (process.env.FIREBASE_STORAGE_BUCKET) {
+    return process.env.FIREBASE_STORAGE_BUCKET;
+  }
+
+  if (process.env.VITE_APP_FIREBASE_STORAGE_BUCKET) {
+    return process.env.VITE_APP_FIREBASE_STORAGE_BUCKET;
+  }
+
+  return `${process.env.GCLOUD_PROJECT}.appspot.com`;
+};
+
 /**
  * Splits a Firebase download URL
  * (https://firebasestorage.googleapis.com/v0/b/<bucket>/o/<encoded path>?...) into its parts.
