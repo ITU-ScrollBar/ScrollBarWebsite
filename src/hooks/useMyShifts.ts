@@ -18,8 +18,8 @@ export type MyShiftsState = {
   events: (Event & { key: string })[];
 };
 
-// Each stage remembers which ids it was loaded for, so loading stays true
-// while a stage catches up after the ids change.
+// Each stage remembers which ids it was loaded for, so a stage whose ids
+// changed can be told apart from one that is up to date.
 type Loaded<T> = { forKey: string; items: T[] };
 
 /**
@@ -38,7 +38,10 @@ export const useMyShifts = (uid: string | undefined): MyShiftsState => {
     return streamUserFutureEngagements(
       uid,
       (snapshot) => {
-        const ids = [...new Set(snapshot.docs.map((doc) => doc.get("shiftId") as string))].sort();
+        // Falsy ids are skipped: an empty id in a documentId() filter throws.
+        const ids = [...new Set(snapshot.docs.map((doc) => doc.get("shiftId") as string | undefined))]
+          .filter((id): id is string => !!id)
+          .sort();
         setMyShiftIdsKey(ids.join(","));
       },
       (error) => {
@@ -75,7 +78,7 @@ export const useMyShifts = (uid: string | undefined): MyShiftsState => {
 
   const eventIdsKey = useMemo(() => {
     if (!shifts || shifts.forKey !== myShiftIdsKey) return null;
-    return [...new Set(shifts.items.map((shift) => shift.eventId))].sort().join(",");
+    return [...new Set(shifts.items.map((shift) => shift.eventId))].filter(Boolean).sort().join(",");
   }, [shifts, myShiftIdsKey]);
 
   useEffect(() => {
@@ -98,12 +101,10 @@ export const useMyShifts = (uid: string | undefined): MyShiftsState => {
     );
   }, [eventIdsKey]);
 
-  const loading =
-    myShiftIdsKey === null ||
-    engagements?.forKey !== myShiftIdsKey ||
-    shifts?.forKey !== myShiftIdsKey ||
-    eventIdsKey === null ||
-    events?.forKey !== eventIdsKey;
+  // Only the first load shows a spinner. When the user's shifts change later
+  // (a swap goes through), the previous list stays up while the stages catch
+  // up, instead of blanking the section.
+  const loading = myShiftIdsKey === null || !engagements || !shifts || !events;
 
   return useMemo(
     () => ({
