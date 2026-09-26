@@ -22,7 +22,7 @@ import { useInternalEventContext } from "../../contexts/InternalEventContext";
 import { useTeamContext } from "../../contexts/TeamContext";
 import { useWindowSize } from "../../hooks/useWindowSize";
 import Loading from "../../components/Loading";
-import { renderInternalEvent } from "../admin/InternalEventsPage";
+import { renderInternalEvent } from "../../components/InternalEventCard";
 
 const { Title, Paragraph } = Typography;
 
@@ -60,8 +60,6 @@ export function ShiftList({
   const { isMobile } = useWindowSize();
 
   useEffect(() => {
-    if (internalState?.loading) return;
-
     let result = shifts;
 
     if (shiftFiltering === ShiftFiltering.MY_SHIFTS && currentUser?.uid) {
@@ -80,7 +78,7 @@ export function ShiftList({
       engagements.some((e) => e.shiftId === shift.id)
     );
     setFilteredShifts(result);
-  }, [shifts, engagements, shiftFiltering, currentUser, internalState]);
+  }, [shifts, engagements, shiftFiltering, currentUser]);
 
   const asDate = (
     d:
@@ -207,8 +205,9 @@ export function ShiftList({
     return out;
   }, [events, internalEvents]);
 
-  if (internalState?.loading) {
-    return <Loading resources={["internal events"]} centerOverlay={true} />;
+  // Internal events are only merged into the "my shifts" view.
+  if (shiftFiltering === ShiftFiltering.MY_SHIFTS && internalState?.loading) {
+    return <Loading resources={["internal events"]} />;
   }
 
   const grabShift = (engagement: Engagement) => {
