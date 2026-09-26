@@ -8,7 +8,7 @@ import {
   updateEvent as updateEventInDb,
 } from '../firebase/api/events'; // Adjust the import path as necessary
 import { Event, EventCreateParams } from '../types/types-file'; // Ensure you have Event type defined
-import { Timestamp } from 'firebase/firestore';
+import { DocumentData, QueryDocumentSnapshot, Timestamp } from 'firebase/firestore';
 
 type EventState = {
   loading: boolean;
@@ -32,32 +32,35 @@ type EventFirebase = {
 
 
 
-const useEvents = () => {
+export const toEvent = (doc: QueryDocumentSnapshot<DocumentData>): Event & { key: string } => {
+  const data = doc.data() as EventFirebase;
+  return {
+    ...data,
+    id: doc.id,
+    key: doc.id, // `key` is guaranteed to be a string
+    start: data.start?.toDate(), // Convert Timestamp to Date
+    end: data.end?.toDate(), // Convert Timestamp to Date
+  };
+};
+
+// `enabled` stays false until a component actually reads this data (see
+// useStreamRequest), so routes that don't need it never download it.
+const useEvents = (enabled: boolean) => {
   const [eventState, setEventState] = useState<EventState>({
-    loading: false,
+    loading: true,
     isLoaded: false,
     events: [],
     previousEvents: [],
   });
 
   useEffect(() => {
+    if (!enabled) return;
     setEventState((prev) => ({ ...prev, loading: true }));
 
     const unsubscribe = streamEvents({
       next: (snapshot) => {
         const updatedEvents = snapshot.docs
-          .map((doc) => {
-            const data = doc.data() as EventFirebase; // Assuming Event is the correct type of data
-            const id = doc.id;
-
-            return {
-              ...data,
-              id,
-              key: id, // `key` is guaranteed to be a string
-              start: data.start?.toDate(), // Convert Timestamp to Date
-              end: data.end?.toDate(), // Convert Timestamp to Date
-            };
-          })
+          .map(toEvent)
           // Soft-deleted events are filtered here rather than in the query so
           // the stream can keep a single inequality filter for its date window.
           .filter((event) => !event.deleted);
@@ -82,7 +85,7 @@ const useEvents = () => {
     });
 
     return unsubscribe;
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, [enabled]);
 
   const addEvent = (event: EventCreateParams) => {
     return createEvent(event)

@@ -7,7 +7,9 @@ import {
   onSnapshot,
   QuerySnapshot,
   DocumentData,
+  QueryDocumentSnapshot,
   Unsubscribe,
+  documentId,
   limit,
   where,
   Timestamp,
@@ -17,6 +19,7 @@ import { db, storage } from '..';
 import { EventCreateParams } from '../../types/types-file'; // Assuming you define your Event type here
 import { getLiveDataWindowStart } from './dataWindow';
 import { getExtension } from './common';
+import { streamWhereIn } from './streamWhereIn';
 import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 
 const env =import.meta.env.VITE_APP_ENV as string;
@@ -81,6 +84,15 @@ export const streamEvents = (observer: { next: (snapshot: QuerySnapshot<Document
   // Return the unsubscribe function from onSnapshot
   return onSnapshot(q, observer.next, observer.error);
 };
+
+/**
+ * Streams the given events by id.
+ */
+export const streamEventsByIds = (
+  ids: string[],
+  onNext: (docs: QueryDocumentSnapshot<DocumentData>[]) => void,
+  onError: (error: Error) => void
+): Unsubscribe => streamWhereIn(getEventsCollection(), documentId(), ids, onNext, onError);
 
 /**
  * Streams only the most recent/next upcoming event ordered by start date.
