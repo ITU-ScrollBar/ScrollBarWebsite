@@ -11,11 +11,14 @@ import {
   writeBatch,
   QuerySnapshot,
   DocumentData,
+  QueryDocumentSnapshot,
   Unsubscribe,
+  documentId,
 } from 'firebase/firestore';
 import { db } from '..';
 import { Shift } from '../../types/types-file';
 import { getLiveDataWindowStart } from './dataWindow';
+import { streamWhereIn } from './streamWhereIn';
 
 const env = import.meta.env.VITE_APP_ENV as string;
 
@@ -75,3 +78,12 @@ export const streamShifts = ({ next, error }: Observer): Unsubscribe => {
   );
   return onSnapshot(q, next, error);
 };
+
+/**
+ * Streams the given shifts by id.
+ */
+export const streamShiftsByIds = (
+  ids: string[],
+  onNext: (docs: QueryDocumentSnapshot<DocumentData>[]) => void,
+  onError: (error: Error) => void
+): Unsubscribe => streamWhereIn(getShiftsCollection(), documentId(), ids, onNext, onError);

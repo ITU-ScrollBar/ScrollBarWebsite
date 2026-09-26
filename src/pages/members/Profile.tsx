@@ -21,7 +21,7 @@ import { filterOpenPeriodsForUser } from "../../firebase/api/shiftPlanning";
 export default function Profile() {
   const navigate = useNavigate();
   const { loading, currentUser } = useAuth();
-  const { getProfileData } = useEngagementContext();
+  const { getProfileData } = useEngagementContext({ stream: false });
   const { periodState, loadUserResponse } = useShiftPlanningContext();
   const [userData, setUserData] = useState<{
     firstShift: Date | null;

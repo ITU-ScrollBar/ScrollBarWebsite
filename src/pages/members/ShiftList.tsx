@@ -7,10 +7,10 @@ import {
   ShiftFiltering,
   engagementType,
   Role,
+  Event,
 } from "../../types/types-file";
 import { useAuth } from "../../contexts/AuthContext";
 import { useMemo } from "react";
-import { useEventContext } from "../../contexts/EventContext";
 import { useEngagementContext } from "../../contexts/EngagementContext";
 import { UserAvatar } from "../../components/UserAvatar";
 import { UpForGrabsBadge } from "../../badges/UpForGrabsBadge";
@@ -36,6 +36,7 @@ const COLORS = {
 interface ShiftListProps {
   shifts: Shift[];
   engagements: Engagement[];
+  events: (Event & { key: string })[];
   tenders: Tender[];
   shiftFiltering?: ShiftFiltering;
 }
@@ -43,12 +44,13 @@ interface ShiftListProps {
 export function ShiftList({
   shifts,
   engagements,
+  events: allEvents,
   tenders,
   shiftFiltering = ShiftFiltering.ALL_SHIFTS,
 }: ShiftListProps) {
   const { currentUser } = useAuth();
-  const { eventState } = useEventContext();
-  const { setUpForGrabs, takeShift } = useEngagementContext();
+  // Only the actions: the data comes in through props.
+  const { setUpForGrabs, takeShift } = useEngagementContext({ stream: false });
   const internalEventsState = useInternalEventContext();
   const internalState = internalEventsState.internalEventState;
   const { teamState } = useTeamContext();
@@ -67,8 +69,8 @@ export function ShiftList({
   }, [engagements]);
 
   const eventsById = useMemo(
-    () => new Map(eventState.events.map((event) => [event.id, event])),
-    [eventState.events]
+    () => new Map(allEvents.map((event) => [event.id, event])),
+    [allEvents]
   );
 
   const tendersById = useMemo(
@@ -142,11 +144,11 @@ export function ShiftList({
 
   const events = useMemo(
     () =>
-      eventState.events
+      allEvents
         .filter((e) => shiftFiltering === ShiftFiltering.ALL_SHIFTS || !!shiftsByEvent[e.id]) // Show events on all shifts page
         .slice()
         .sort((a, b) => asDate(a.start).getTime() - asDate(b.start).getTime()),
-    [eventState.events, shiftsByEvent, shiftFiltering]
+    [allEvents, shiftsByEvent, shiftFiltering]
   );
 
   const normalizedInternalEvents = useMemo(() => {
@@ -288,7 +290,7 @@ export function ShiftList({
     );
   };
 
-  const renderEventHeader = (event: (typeof eventState.events)[number]) => (
+  const renderEventHeader = (event: (typeof allEvents)[number]) => (
     <Title level={2} style={{ marginBottom: 12 }}>
       {`${event.title ?? "Unknown Event"} (${event.start.getUTCDate()}/${event.start.getUTCMonth() + 1})`}
     </Title>

@@ -11,30 +11,35 @@ import { EventProvider } from '../contexts/EventContext';
 import { Loading } from '../components/Loading';
 
 const ProtectedRoutes: React.FC = () => {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, authUid, loading } = useAuth();
 
+  let content: React.ReactNode;
   if (loading) {
     // Show a loading indicator while checking auth state
-    return <Loading />;
+    content = <Loading />;
+  } else if (!currentUser) {
+    // If not loading and no user, redirect to login
+    content = <Navigate to="/login" replace />; // 'replace' prevents going back to the protected route
+  } else if (!currentUser.active) {
+    content = <Navigate to="/deletedUser" replace />;
+  } else {
+    // If user is logged in, render the child route components
+    content = <Outlet />;
   }
 
-  // If not loading and no user, redirect to login
-  if (!currentUser) {
-    return <Navigate to="/login" replace />; // 'replace' prevents going back to the protected route
+  if (!authUid) {
+    return content;
   }
 
-  if (!currentUser.active) {
-    return <Navigate to="/deletedUser" replace />;
-  }
-
-  // If user is logged in, render the child route components
+  // Mounted as soon as Firebase Auth knows who is signed in, so the providers'
+  // listeners start alongside the users/{uid} fetch instead of after it.
   return <EventProvider>
     <EngagementProvider>
       <ShiftProvider>
         <ShiftPlanningProvider>
           <InternalEventProvider>
             <TeamProvider>
-              <Outlet />
+              {content}
             </TeamProvider>
           </InternalEventProvider>
         </ShiftPlanningProvider>

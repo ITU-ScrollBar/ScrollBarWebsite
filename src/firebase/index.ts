@@ -1,5 +1,10 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import {
+  browserLocalPersistence,
+  browserSessionPersistence,
+  indexedDBLocalPersistence,
+  initializeAuth,
+} from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 import { getStorage } from "firebase/storage";
@@ -16,7 +21,13 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+// getAuth() would also install the popup/redirect resolver, which on phones and
+// Safari loads Google's gapi script and an auth iframe before the signed-in user
+// is known. Only email/password sign-in is used, so skip it. Same persistence
+// order as getAuth(), so existing sessions keep working.
+export const auth = initializeAuth(app, {
+  persistence: [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence],
+});
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const functions = getFunctions(app, "europe-west1");

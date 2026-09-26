@@ -20,6 +20,10 @@ import { message } from "antd";
 // Define and export AuthContextType and AuthProviderProps
 export interface AuthContextType {
   currentUser: Tender | null;
+  // uid of the signed-in Firebase Auth user. Known before currentUser, which
+  // waits on the users/{uid} doc, so listeners that only need a signed-in
+  // user can start one round trip earlier.
+  authUid: string | null;
   loading: boolean;
   login: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -35,10 +39,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<Tender | null>(null);
+  const [authUid, setAuthUid] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setAuthUid(user?.uid ?? null);
       // If no firebase auth user, clear profile and stop loading
       if (!user) {
         setCurrentUser(null);
@@ -105,13 +111,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value = useMemo(
     () => ({
       currentUser,
+      authUid,
       loading,
       login,
       logout,
       setUser,
       resetPassword,
     }),
-    [currentUser, loading]
+    [currentUser, authUid, loading]
   );
 
   return (

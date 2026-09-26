@@ -9,6 +9,7 @@ import {
   deleteDoc,
   addDoc,
   QuerySnapshot,
+  QueryDocumentSnapshot,
   DocumentData,
   Unsubscribe,
   limit,
@@ -19,6 +20,7 @@ import {
 } from 'firebase/firestore';
 import { Engagement } from '../../types/types-file'; // Define your Engagement type separately
 import { db } from '../index';
+import { streamWhereIn } from './streamWhereIn';
 
 const env = import.meta.env.VITE_APP_ENV as string;
 
@@ -33,6 +35,31 @@ export const streamEngagements = (
   const engagementsRef = collection(doc(collection(db, 'env'), env), 'engagements');
   const q = query(engagementsRef, where('shiftEnd', '>=', new Date()), orderBy('shiftEnd', 'asc'));
   return onSnapshot(q, onNext, onError);
+};
+
+/**
+ * Streams one user's engagements on shifts that haven't ended yet.
+ */
+export const streamUserFutureEngagements = (
+  uid: string,
+  onNext: (snapshot: QuerySnapshot<DocumentData>) => void,
+  onError?: (error: Error) => void
+): Unsubscribe => {
+  const engagementsRef = collection(doc(collection(db, 'env'), env), 'engagements');
+  const q = query(engagementsRef, where('userId', '==', uid), where('shiftEnd', '>=', new Date()));
+  return onSnapshot(q, onNext, onError);
+};
+
+/**
+ * Streams every engagement (anyone's) on the given shifts.
+ */
+export const streamEngagementsForShifts = (
+  shiftIds: string[],
+  onNext: (docs: QueryDocumentSnapshot<DocumentData>[]) => void,
+  onError: (error: Error) => void
+): Unsubscribe => {
+  const engagementsRef = collection(doc(collection(db, 'env'), env), 'engagements');
+  return streamWhereIn(engagementsRef, 'shiftId', shiftIds, onNext, onError);
 };
 
 /**
