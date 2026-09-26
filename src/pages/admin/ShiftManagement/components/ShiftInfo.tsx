@@ -9,6 +9,9 @@ const { Text } = Typography;
 
 const DEFAULT_WEIGHT = 1;
 const WEIGHT_MIN = 0.1;
+// Without this the input drops a typed comma and reads "1,5" as 15. With it, "1,5" and "1.5"
+// both mean 1.5.
+const WEIGHT_DECIMAL_SEPARATOR = ",";
 
 export default function ShiftInfo(props: {
   shift: Shift;
@@ -114,6 +117,7 @@ export default function ShiftInfo(props: {
           <InputNumber
             size="small"
             min={WEIGHT_MIN}
+            decimalSeparator={WEIGHT_DECIMAL_SEPARATOR}
             step={0.5}
             value={shift.weight ?? DEFAULT_WEIGHT}
             onChange={(value) => { if (value !== null) updateShift(shift.id, "weight", value); }}
@@ -163,6 +167,7 @@ export default function ShiftInfo(props: {
                 <InputNumber
                   size="small"
                   min={WEIGHT_MIN}
+                  decimalSeparator={WEIGHT_DECIMAL_SEPARATOR}
                   step={0.5}
                   addonBefore="Weight"
                   value={satelliteShift.weight ?? DEFAULT_WEIGHT}
