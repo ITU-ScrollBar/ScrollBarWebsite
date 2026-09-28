@@ -45,6 +45,7 @@ export interface Settings {
   constitution: string;
   djdescription?: string;
   hero: string;
+  heroPoster?: string;
   homepageTitle: string;
   homepageDescription: string;
   getHelpTitle: string;

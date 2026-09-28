@@ -16,22 +16,39 @@ type SettingsContextType = {
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
+// The last settings doc is kept in localStorage so repeat visits render right
+// away (the home page's hero video URL lives here) and refresh from the snapshot.
+const CACHE_KEY = "settings";
+
+const readCachedSettings = (): Settings | null => {
+  try {
+    return JSON.parse(localStorage.getItem(CACHE_KEY) ?? "null");
+  } catch {
+    return null;
+  }
+};
+
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [settingsState, setSettingsState] = useState<SettingsState>({
-    loading: true,
-    settings: {} as Settings,
+  const [settingsState, setSettingsState] = useState<SettingsState>(() => {
+    const cached = readCachedSettings();
+    return { loading: !cached, settings: cached ?? ({} as Settings) };
   });
 
   useEffect(() => {
-    setSettingsState((prev) => ({ ...prev, loading: true }));
-
-    const unsubscribe = streamSettings((snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data() as Settings;
+    const unsubscribe = streamSettings({
+      next: (snapshot) => {
+        const data = (snapshot.exists() ? snapshot.data() : {}) as Settings;
         setSettingsState({ loading: false, settings: data });
-      } else {
-        setSettingsState({ loading: false, settings: {} as Settings });
-      }
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+        } catch {
+          // Storage can be full or blocked; the cache is only a speed-up.
+        }
+      },
+      error: (error) => {
+        message.error("An error occurred loading settings: " + error.message);
+        setSettingsState((prev) => ({ ...prev, loading: false }));
+      },
     });
 
     return unsubscribe;

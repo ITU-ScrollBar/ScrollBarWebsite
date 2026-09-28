@@ -196,6 +196,12 @@ const GlobalSettingsPage = () => {
       value: settingsState.settings.hero,
     },
     {
+      key: "heroPoster",
+      inputType: "upload",
+      label: "Hero video poster (image shown until the video plays)",
+      value: settingsState.settings.heroPoster || "",
+    },
+    {
       key: "constitution",
       inputType: "upload",
       label: "Link to constitution",

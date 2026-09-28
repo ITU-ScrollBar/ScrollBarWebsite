@@ -7,7 +7,16 @@
     <title>ScrollBar</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Static first screen of the home page (dark hero + logo), painted before any JS
+           runs. React replaces it when it mounts. Removed right away on other routes. -->
+      <div id="home-shell" style="position: relative; height: 100vh; background: #000">
+        <img src="/src/assets/images/logo.png" alt="" style="position: absolute; top: 2px; left: 50px; width: 187px; height: auto" />
+      </div>
+      <script>
+        if (location.pathname !== "/") document.getElementById("home-shell").remove();
+      </script>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

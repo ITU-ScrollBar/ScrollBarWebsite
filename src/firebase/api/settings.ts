@@ -13,7 +13,10 @@ import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 /**
  * Type for Firestore snapshot observer
  */
-type Observer = (snapshot: DocumentSnapshot<DocumentData>) => void;
+type Observer = {
+  next: (snapshot: DocumentSnapshot<DocumentData>) => void;
+  error: (error: Error) => void;
+};
 
 /**
  * Reference to the single settings document

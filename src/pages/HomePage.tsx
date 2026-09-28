@@ -6,7 +6,6 @@ import HeaderBar from '../components/HomePage/HeaderBar'
 import useSettings from '../hooks/useSettings'
 import { useTenderContext } from '../contexts/TenderContext'
 import useBoardRoles from '../hooks/useBoardRoles'
-import { Loading } from '../components/Loading'
 import CountDown from '../components/EventPage/EventCountDown'
 import {useNextEvent}  from '../hooks/useEvents'
 import { useLocation } from 'react-router-dom'
@@ -52,11 +51,6 @@ export default function HomePage() {
     ).isOpen;
   }, [settingsState.settings.openForSignupsEnd, settingsState.settings.openForSignupsStart]);
 
-  if (settingsState.loading) {
-    return <Loading centerOverlay={true} />;
-  }
-
-
   return (
     <Layout style={{ minHeight: '100vh', width: '100%', flexDirection: 'column', height: 'auto'}}>
       <HeaderBar />
@@ -67,24 +61,30 @@ export default function HomePage() {
           width: '100%',
           height: '100vh', // increased from 91vh → 100vh (10% taller)
           overflow: 'hidden',
+          backgroundColor: 'black', // matches the static first screen in index.html until the video plays
         }}
       >
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-          }}
-        >
-          <source
-            src={settingsState.settings.hero}
-            type="video/mp4"
-          />
-        </video>
+        {/* Keyed on the URL: a changed <source> alone doesn't reload the video (e.g. cached settings, then a new hero). */}
+        {settingsState.settings.hero && (
+          <video
+            key={settingsState.settings.hero}
+            autoPlay
+            loop
+            muted
+            playsInline
+            poster={settingsState.settings.heroPoster}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+            }}
+          >
+            <source
+              src={settingsState.settings.hero}
+              type="video/mp4"
+            />
+          </video>
+        )}
 
         {/* Black transparent overlay */}
         <div
