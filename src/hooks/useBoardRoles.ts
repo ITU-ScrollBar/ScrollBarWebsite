@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { addRole, deleteRole, streamRoles, updateRole } from '../firebase/api/boardRoles';
 import { BoardRole, Tender } from '../types/types-file';
 import { message } from 'antd';
-import { DocumentReference, getDoc } from 'firebase/firestore';
+import { DocumentReference } from 'firebase/firestore';
+import { useTenderContext } from '../contexts/TenderContext';
 
 type BoardRolesState = {
   loading: boolean;
@@ -27,43 +28,42 @@ interface FirebaseBoardRole {
 }
 
 export default function useBoardRoles(): UseBoardRolesReturn {
-  const [boardRolesState, setBoardRolesState] = useState<BoardRolesState>({
+  const { tenderState } = useTenderContext();
+  const [rolesState, setRolesState] = useState<{ loading: boolean; roles: FirebaseBoardRole[] }>({
     loading: true,
-    boardRoles: [],
+    roles: [],
   });
 
   useEffect(() => {
-    setBoardRolesState((prev) => ({ ...prev, loading: true }));
     const unsubscribe = streamRoles(
-      async (snapshot) => {
-        // Map FirebaseBoardRole and resolve assignedUser
-        const roles = await Promise.all(snapshot.docs.map(async (doc) => {
-          const data = doc.data() as FirebaseBoardRole;
-          // Unassigned roles (and roles whose user was deleted) have a null ref.
-          const snapshot = data.assignedUserRef ? await getDoc(data.assignedUserRef) : null;
-          let assignedUser: Tender | undefined = undefined;
-          if (snapshot?.exists()) {
-            assignedUser = { uid: snapshot.id, ...snapshot.data() } as unknown as Tender;
-          };
-
-          return {
-            id: doc.id,
-            name: data.name,
-            assignedUser,
-            sortingIndex: data.sortingIndex,
-            contactEmail: data.contactEmail,
-          } as BoardRole;
-        }));
-
-        setBoardRolesState((prev) => ({ ...prev, boardRoles: roles, loading: false }));
+      (snapshot) => {
+        const roles = snapshot.docs.map((doc) => ({ ...(doc.data() as FirebaseBoardRole), id: doc.id }));
+        setRolesState({ loading: false, roles });
       },
       (error: Error) => {
         message.error('An error occurred loading board roles: ' + error.message);
-        setBoardRolesState((prev) => ({ ...prev, boardRoles: [], loading: false }));
+        setRolesState({ loading: false, roles: [] });
       }
     );
     return unsubscribe;
   }, []);
+
+  // Assigned users come from the active users TenderProvider already streams,
+  // instead of a getDoc per role after the roles snapshot. Roles whose user is
+  // inactive or deleted show as unassigned.
+  const boardRolesState = useMemo<BoardRolesState>(() => {
+    const tendersById = new Map(tenderState.tenders.map((t) => [t.uid, t]));
+    return {
+      loading: rolesState.loading || tenderState.loading,
+      boardRoles: rolesState.roles.map((role) => ({
+        id: role.id,
+        name: role.name,
+        assignedUser: role.assignedUserRef ? tendersById.get(role.assignedUserRef.id) : undefined,
+        sortingIndex: role.sortingIndex,
+        contactEmail: role.contactEmail,
+      } as BoardRole)),
+    };
+  }, [rolesState, tenderState.tenders, tenderState.loading]);
 
   const updateBoardRole = (id: string, update: { name?: string; assignedUser?: Tender; sortingIndex?: number; contactEmail?: string }) => {
     updateRole(id, update);
