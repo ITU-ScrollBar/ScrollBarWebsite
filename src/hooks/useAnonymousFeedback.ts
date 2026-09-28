@@ -6,7 +6,7 @@ import {
   listAnonymousFeedback,
   submitAnonymousFeedback,
 } from "../firebase/api/anonymousFeedback";
-import { AnonymousFeedback } from "../types/types-file";
+import { AnonymousFeedback, AnonymousFeedbackCreateParams } from "../types/types-file";
 
 type AnonymousFeedbackState = {
   loading: boolean;
@@ -69,8 +69,8 @@ const useAnonymousFeedback = ({ autoLoad = true }: UseAnonymousFeedbackOptions =
     };
   }, [autoLoad, loadFeedback]);
 
-  const addFeedback = async (feedback: string) => {
-    return submitAnonymousFeedback(feedback);
+  const addFeedback = async (params: AnonymousFeedbackCreateParams) => {
+    return submitAnonymousFeedback(params);
   };
 
   const addComment = async (id: string, body: string) => {

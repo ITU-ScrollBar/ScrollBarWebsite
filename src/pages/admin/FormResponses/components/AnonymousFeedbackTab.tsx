@@ -85,8 +85,8 @@ export default function AnonymousFeedbackTab({ tenders }: AnonymousFeedbackTabPr
         type="info"
         showIcon
         style={{ marginBottom: 16 }}
-        message="These submissions are anonymous"
-        description="No name, email or account is stored with these submissions, and they are not linked to a member. Comments you write here are only visible to the board."
+        message="These submissions are anonymous unless the sender wrote a name"
+        description="No email or account is stored with these submissions, and they are not linked to a member. A name is only shown when the sender chose to type one. Comments you write here are only visible to the board."
       />
 
       {feedbackState.entries.length === 0 ? (
@@ -108,6 +108,7 @@ export default function AnonymousFeedbackTab({ tenders }: AnonymousFeedbackTabPr
               >
                 <Space size={8} wrap>
                   <Text type="secondary">{formatFormDateTime(entry.createdAt)}</Text>
+                  {entry.name ? <Tag>{entry.name}</Tag> : null}
                   {entry.comments.length > 0 ? (
                     <Tag icon={<CommentOutlined />}>{entry.comments.length}</Tag>
                   ) : null}
@@ -122,7 +123,7 @@ export default function AnonymousFeedbackTab({ tenders }: AnonymousFeedbackTabPr
       )}
 
       <Drawer
-        title="Anonymous feedback"
+        title={selectedFeedback?.name ? `Feedback from ${selectedFeedback.name}` : "Anonymous feedback"}
         open={Boolean(selectedFeedback)}
         size={isMobile ? "default" : "large"}
         onClose={() => setSelectedId(null)}
