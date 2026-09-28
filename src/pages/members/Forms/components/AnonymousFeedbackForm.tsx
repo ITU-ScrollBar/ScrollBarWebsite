@@ -6,6 +6,7 @@ import useAnonymousFeedback from "../../../../hooks/useAnonymousFeedback";
 const { TextArea } = Input;
 
 type FeedbackFormValues = {
+  name?: string;
   feedback: string;
 };
 
@@ -16,12 +17,18 @@ export default function AnonymousFeedbackForm() {
   const navigate = useNavigate();
   const [form] = Form.useForm<FeedbackFormValues>();
   const [submitting, setSubmitting] = useState(false);
+  const hasName = Boolean(Form.useWatch("name", form)?.trim());
 
   const onFinish = async (values: FeedbackFormValues) => {
     setSubmitting(true);
     try {
-      await addFeedback(values.feedback.trim());
-      message.success("Thanks! Your feedback was sent to the board anonymously.");
+      const name = values.name?.trim();
+      await addFeedback({ feedback: values.feedback.trim(), ...(name ? { name } : {}) });
+      message.success(
+        name
+          ? "Thanks! Your feedback was sent to the board with your name."
+          : "Thanks! Your feedback was sent to the board anonymously."
+      );
       navigate("/tenders/forms");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to send feedback.";
@@ -33,6 +40,15 @@ export default function AnonymousFeedbackForm() {
 
   return (
     <Form<FeedbackFormValues> form={form} layout="vertical" onFinish={onFinish} requiredMark={false}>
+      <Form.Item
+        label={<strong>(Optional) Name</strong>}
+        name="name"
+        extra="Please write your name here if you would like the board to reach out to you in regards to a solution of your feedback. We do not respond directly to all types of feedback to ensure privacy for all members. If you are in doubt, please reach out to a board member. If you write your name, your feedback is no longer anonymous."
+        rules={[{ max: 100, message: "Keep it to 100 characters or less." }]}
+      >
+        <Input placeholder="Leave empty to stay anonymous" maxLength={100} />
+      </Form.Item>
+
       <Form.Item
         label="Put your feedback here!"
         name="feedback"
@@ -51,7 +67,7 @@ export default function AnonymousFeedbackForm() {
 
       <Form.Item style={{ marginBottom: 0 }}>
         <Button type="primary" htmlType="submit" loading={submitting} block>
-          Send anonymously
+          {hasName ? "Send with my name" : "Send anonymously"}
         </Button>
       </Form.Item>
     </Form>

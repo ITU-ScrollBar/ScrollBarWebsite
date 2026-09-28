@@ -1,4 +1,4 @@
-import { AnonymousFeedback } from "../../types/types-file";
+import { AnonymousFeedback, AnonymousFeedbackCreateParams } from "../../types/types-file";
 import { callCalendarFunction } from "./common";
 import {
   CommentHttpResponse,
@@ -13,6 +13,7 @@ type AnonymousFeedbackHttpResponse = {
   feedback: {
     id: string;
     feedback: string;
+    name?: string;
     createdAtMs?: number;
     updatedAtMs?: number;
     comments?: CommentHttpResponse[];
@@ -21,12 +22,15 @@ type AnonymousFeedbackHttpResponse = {
 
 /**
  * Submits anonymous feedback. The request is authenticated so outsiders cannot spam the board,
- * but the backend deliberately stores nothing that identifies the sender.
+ * but the backend deliberately stores nothing that identifies the sender beyond an optional,
+ * self-typed name.
  */
-export const submitAnonymousFeedback = async (feedback: string): Promise<{ id: string }> => {
+export const submitAnonymousFeedback = async (
+  params: AnonymousFeedbackCreateParams
+): Promise<{ id: string }> => {
   return callCalendarFunction<{ id: string }>(basePath, {
     method: "POST",
-    body: { feedback },
+    body: params,
     unauthenticatedMessage: "You must be signed in to submit feedback.",
     failureMessage: "Failed to submit feedback",
   });
@@ -43,6 +47,7 @@ export const listAnonymousFeedback = async (): Promise<(AnonymousFeedback & { ke
     id: entry.id,
     key: entry.id,
     feedback: entry.feedback,
+    name: entry.name,
     createdAt: entry.createdAtMs ? new Date(entry.createdAtMs) : undefined,
     updatedAt: entry.updatedAtMs ? new Date(entry.updatedAtMs) : undefined,
     comments: mapComments(entry.comments),

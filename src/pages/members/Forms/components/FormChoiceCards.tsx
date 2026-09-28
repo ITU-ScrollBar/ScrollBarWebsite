@@ -35,7 +35,7 @@ const formChoices: FormChoice[] = [
     icon: <CommentOutlined />,
     title: "Anonymous feedback",
     description:
-      "Anything you want the board to hear without us knowing who sent it. Nothing about you is stored.",
+      "Anything you want the board to hear without us knowing who sent it. Nothing about you is stored unless you add your name.",
   },
 ];
 

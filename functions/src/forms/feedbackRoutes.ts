@@ -6,9 +6,11 @@ import { appendComment, mapComments, removeComment, validateCommentBody } from '
 const db = admin.firestore();
 
 const feedbackMaxLength = 3000;
+const nameMaxLength = 100;
 
 type StoredFeedback = {
   feedback?: string;
+  name?: string;
   comments?: unknown;
   createdAt?: admin.firestore.Timestamp;
   updatedAt?: admin.firestore.Timestamp;
@@ -23,6 +25,7 @@ const mapFeedback = (feedbackDoc: admin.firestore.QueryDocumentSnapshot) => {
   return {
     id: feedbackDoc.id,
     feedback: data.feedback ?? '',
+    name: data.name,
     createdAtMs: data.createdAt?.toMillis(),
     updatedAtMs: data.updatedAt?.toMillis(),
     comments: mapComments(data.comments),
@@ -34,20 +37,28 @@ const router = express.Router();
 router.post('/', async (req, res) => {
   try {
     // The token is verified so outsiders cannot spam the board, but the uid is deliberately never
-    // written to the document: the submission must stay untraceable to the member who sent it.
+    // written to the document: the submission must stay untraceable to the member who sent it,
+    // unless they choose to type a name.
     const uid = await authenticateRequest(req, res);
     if (!uid) {
       return;
     }
 
-    const feedback = ((req.body ?? {}) as { feedback?: string }).feedback?.trim() ?? '';
+    const body = (req.body ?? {}) as { feedback?: unknown; name?: unknown };
+    const feedback = typeof body.feedback === 'string' ? body.feedback.trim() : '';
+    const name = typeof body.name === 'string' ? body.name.trim() : '';
 
     if (!feedback || feedback.length > feedbackMaxLength) {
       return res.status(400).send(`feedback must be between 1 and ${feedbackMaxLength} characters`);
     }
 
+    if (name.length > nameMaxLength) {
+      return res.status(400).send(`name must be at most ${nameMaxLength} characters`);
+    }
+
     const feedbackRef = await feedbackCollection().add({
       feedback,
+      ...(name ? { name } : {}),
       comments: [],
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),

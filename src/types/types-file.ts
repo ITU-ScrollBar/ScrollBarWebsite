@@ -446,6 +446,7 @@ export interface AnonymousFeedback {
   id: string;
   key?: string;
   feedback: string;
+  name?: string;
   createdAt?: Date;
   updatedAt?: Date;
   comments: FormComment[];
@@ -453,4 +454,5 @@ export interface AnonymousFeedback {
 
 export interface AnonymousFeedbackCreateParams {
   feedback: string;
+  name?: string;
 }
