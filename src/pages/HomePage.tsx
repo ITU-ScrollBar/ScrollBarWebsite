@@ -13,8 +13,8 @@ import { UserList, TenderWithRole } from '../components/UserList'
 import { useWindowSize } from '../hooks/useWindowSize'
 import { getSignupWindowState } from '../utils/signupWindow'
 
-// The md editor bundle is large and only needed when signups are open.
-const Markdown = lazy(() => import('@uiw/react-md-editor').then((m) => ({ default: m.default.Markdown })))
+// The markdown renderer is only needed when signups are open.
+const Markdown = lazy(() => import('../components/Markdown'))
 
 export default function HomePage() {
   const { settingsState } = useSettings();
