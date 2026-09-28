@@ -67,11 +67,10 @@ export function UserList({ users, className, getContactEmail, columns, loading }
 
   // Laid out like antd's List grid (Row gutter 16, each item 100/columns % wide) without
   // pulling List's pagination, select and input code into every page's startup JS.
-  if (loading) {
-    return <Spin><div style={{ minHeight: 53 }} /></Spin>;
-  }
   if (!sortedUsers.length) {
-    return <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />;
+    return loading
+      ? <Spin><div style={{ minHeight: 53 }} /></Spin>
+      : <div style={{ padding: 16 }}><Empty image={Empty.PRESENTED_IMAGE_SIMPLE} /></div>;
   }
 
   return (
@@ -80,7 +79,7 @@ export function UserList({ users, className, getContactEmail, columns, loading }
         const contactEmail = getContactEmail?.(user);
 
         return (
-          <div key={index} style={{ width: `${100 / columns}%`, padding: "0 8px", marginBottom: 16 }}>
+          <div key={index} style={{ boxSizing: "border-box", width: `${100 / columns}%`, padding: "0 8px", marginBottom: 16 }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
               {user.role && (
                 <div style={{ marginTop: 8, textAlign: "center", fontWeight: "bold" }}>{user.role.name}</div>
