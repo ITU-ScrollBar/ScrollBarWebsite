@@ -43,7 +43,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    // The previous user's users/{uid} listener, stopped when the signed-in user changes.
+    let unsubscribeUser = () => {};
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      unsubscribeUser();
+      unsubscribeUser = () => {};
       setAuthUid(user?.uid ?? null);
       // If no firebase auth user, clear profile and stop loading
       if (!user) {
@@ -55,7 +59,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // For an authenticated firebase user, fetch the app profile from Firestore
       // and keep loading true until that fetch completes to avoid premature redirects.
       setLoading(true);
-      getUser(user.uid, {
+      unsubscribeUser = getUser(user.uid, {
         next: (snapshot) => {
           if (snapshot.exists()) {
             const userdata = snapshot.data() as Tender;
@@ -75,6 +79,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     return () => {
       unsubscribe();
+      unsubscribeUser();
     };
   }, []);
 

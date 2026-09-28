@@ -3,7 +3,7 @@ import { Col, Divider, Layout, Row } from 'antd'
 import { useWindowSize } from "../hooks/useWindowSize";
 import useSettings from '../hooks/useSettings';
 import HeaderBar from '../components/HomePage/HeaderBar';
-import DEFAULT_EVENT_IMAGE from '../assets/images/background.png';
+import DEFAULT_EVENT_IMAGE from '../assets/images/background.jpg';
 import MDEditor from '@uiw/react-md-editor';
 
 
