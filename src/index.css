@@ -84,7 +84,7 @@ button:focus-visible {
   color: #d7ce00 !important;
 }
 
-.user-list-centered .ant-row {
+.user-list-centered {
   justify-content: center;
 }
 
