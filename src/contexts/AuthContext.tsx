@@ -20,9 +20,9 @@ import { message } from "antd";
 // Define and export AuthContextType and AuthProviderProps
 export interface AuthContextType {
   currentUser: Tender | null;
-  // uid of the signed-in Firebase Auth user. Known before currentUser, which
-  // waits on the users/{uid} doc, so listeners that only need a signed-in
-  // user can start one round trip earlier.
+  // uid of the signed-in Firebase Auth user. Unless a saved profile is showing, it's known
+  // before currentUser, which waits on the users/{uid} doc, so listeners that only need a
+  // signed-in user can start one round trip earlier.
   authUid: string | null;
   loading: boolean;
   login: (email: string, pass: string) => Promise<void>;
@@ -66,7 +66,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     // The previous user's users/{uid} listener, stopped when the signed-in user changes.
     let unsubscribeUser = () => {};
+    // The saved profile shown since page load. Only Auth's first answer can confirm it.
+    let cachedUid = readCachedUser()?.uid;
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      const confirmsCached = !!user && user.uid === cachedUid;
+      cachedUid = undefined;
       unsubscribeUser();
       unsubscribeUser = () => {};
       setAuthUid(user?.uid ?? null);
@@ -81,7 +85,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // For an authenticated firebase user, fetch the app profile from Firestore
       // and keep loading true until that fetch completes to avoid premature redirects,
       // unless their cached profile is already showing.
-      if (readCachedUser()?.uid !== user.uid) {
+      if (!confirmsCached) {
         setCurrentUser(null);
         setLoading(true);
       }
