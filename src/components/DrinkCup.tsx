@@ -42,7 +42,7 @@ export default function DrinkCup({
 }: DrinkCupProps) {
   const levelCl = pours.reduce((sum, pour) => sum + pour.cl, 0);
 
-  // Only a new pour shows the stream; Back and Forward-after-reset just change the layers.
+  // A pour (or Forward putting one back) shows the stream; Back just removes the top layer.
   const [seenPours, setSeenPours] = useState(pours.length);
   const [streamKey, setStreamKey] = useState<number | null>(null);
   if (pours.length !== seenPours) {

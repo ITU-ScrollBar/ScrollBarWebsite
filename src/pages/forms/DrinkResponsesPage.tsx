@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ReloadOutlined } from "@ant-design/icons";
 import { App as AntdApp, Alert, Button, Col, Empty, Layout, Row, Typography } from "antd";
 import { Loading } from "../../components/Loading";
@@ -14,14 +14,6 @@ export default function DrinkResponsesPage() {
   const { notification, message } = AntdApp.useApp();
   const { drinksState, deleteDrink, refreshDrinks } = useDrinkSubmissions();
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!drinksState.error) {
-      return;
-    }
-
-    notification.error({ message: "Unable to load drinks", description: drinksState.error });
-  }, [notification, drinksState.error]);
 
   const removeDrink = async (drink: DrinkSubmission) => {
     setDeletingId(drink.id);

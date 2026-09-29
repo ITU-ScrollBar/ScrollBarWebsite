@@ -133,7 +133,7 @@ export default function DrinkBuilderPage() {
               background: "#fff",
               borderTop: "2px solid #202020",
               boxShadow: "0 -4px 16px rgba(0, 0, 0, 0.12)",
-              padding: "12px 16px 16px",
+              padding: "12px 16px calc(16px + env(safe-area-inset-bottom))",
             }}
           >
             {amountPicker}

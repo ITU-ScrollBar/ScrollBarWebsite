@@ -5,6 +5,7 @@ import {
   DrinkIngredient,
   DrinkState,
   DrinkStep,
+  applyDrinkStep,
   buildDrink,
   checkDrinkStep,
 } from "../../../../types/drinkRecipe";
@@ -50,10 +51,13 @@ export default function useDrinkBuilder(): UseDrinkBuilderResult {
         return false;
       }
 
-      setHistory((prev) => ({
-        steps: [...prev.steps, { ingredientId: ingredient.id, amount }],
-        undone: [],
-      }));
+      setHistory((prev) => {
+        // Re-checked against the queued history so two quick pours can't slip past the rules.
+        const step: DrinkStep = { ingredientId: ingredient.id, amount };
+        return "error" in applyDrinkStep(buildDrink(prev.steps).state, step)
+          ? prev
+          : { steps: [...prev.steps, step], undone: [] };
+      });
       return true;
     },
     [drink]
