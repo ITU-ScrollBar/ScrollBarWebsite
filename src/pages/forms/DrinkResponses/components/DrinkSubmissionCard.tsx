@@ -4,7 +4,7 @@ import { Alert, Button, Card, Popconfirm, Typography } from "antd";
 import DrinkCup from "../../../../components/DrinkCup";
 import DrinkRecipeList from "../../../../components/DrinkRecipeList";
 import { DrinkSubmission, buildDrink } from "../../../../types/drinkRecipe";
-import { formatCl, formatShots } from "../../../../utils/drinks";
+import { formatCl, formatShots, mixDrinkColor } from "../../../../utils/drinks";
 import { formatFormDateTime } from "../../../../utils/formResponses";
 
 const { Text, Title } = Typography;
@@ -18,6 +18,7 @@ type DrinkSubmissionCardProps = {
 export default function DrinkSubmissionCard({ drink, deleting, onDelete }: DrinkSubmissionCardProps) {
   // Rebuilt from the stored steps so names and colors follow the current catalog.
   const { state, error } = useMemo(() => buildDrink(drink.steps), [drink.steps]);
+  const mixedColor = useMemo(() => mixDrinkColor(state.pours), [state.pours]);
 
   return (
     <Card
@@ -53,6 +54,23 @@ export default function DrinkSubmissionCard({ drink, deleting, onDelete }: Drink
         </Text>
         <Text type="secondary" style={{ display: "block", marginBottom: 8 }}>
           {formatCl(drink.totalCl)} · {formatShots(drink.shots)} shots
+          {mixedColor ? (
+            <>
+              {" · mixed "}
+              <span
+                aria-hidden="true"
+                style={{
+                  display: "inline-block",
+                  width: 12,
+                  height: 12,
+                  borderRadius: "50%",
+                  verticalAlign: "middle",
+                  border: "1px solid rgba(0, 0, 0, 0.25)",
+                  background: `linear-gradient(${mixedColor}, ${mixedColor}), #f4f8fb`,
+                }}
+              />
+            </>
+          ) : null}
         </Text>
         {error ? (
           <Alert
