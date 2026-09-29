@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Col, Divider, Empty, Layout, Row, Typography } from "antd";
-import MDEditor from "@uiw/react-md-editor";
+import Markdown from "../../components/Markdown";
 import useBoardRoles from "../../hooks/useBoardRoles";
 import useSettings from "../../hooks/useSettings";
 import { useTenderContext } from "../../contexts/TenderContext";
@@ -55,7 +55,7 @@ export default function GetHelpPage() {
         <Row justify="center">
           <Col xs={24} lg={18}>
             <Title level={2} style={{ textAlign: "center" }}>{settingsState.settings.getHelpTitle}</Title>
-            <MDEditor.Markdown
+            <Markdown
               style={{
                 fontSize: "16px",
                 lineHeight: "32px",

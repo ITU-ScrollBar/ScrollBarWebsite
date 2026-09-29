@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/x-icon" href="/logo.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Every page talks to Firestore, and most show Storage images or video; open those
+         connections while the JS downloads instead of after it runs. -->
+    <link rel="preconnect" href="https://firestore.googleapis.com" />
+    <link rel="preconnect" href="https://firebasestorage.googleapis.com" />
     <title>ScrollBar</title>
   </head>
   <body>
@@ -11,10 +15,22 @@
       <!-- Static first screen of the home page (dark hero + logo), painted before any JS
            runs. React replaces it when it mounts. Removed right away on other routes. -->
       <div id="home-shell" style="position: relative; height: 100vh; background: #000">
-        <img src="/src/assets/images/logo.png" alt="" style="position: absolute; top: 2px; left: 50px; width: 187px; height: auto" />
+        <img src="/src/assets/images/logo.png" alt="" fetchpriority="high" style="position: absolute; top: 2px; left: 50px; width: 187px; height: auto" />
       </div>
       <script>
         if (location.pathname !== "/") document.getElementById("home-shell").remove();
+        // Firebase Auth checks a saved sign-in (and signs in) against these hosts before
+        // any member page can load its data. Only warmed where that happens, so public
+        // pages don't open connections they never use.
+        if (/^\/(members|tenders|admin|login)(\/|$)/.test(location.pathname)) {
+          for (const host of ["identitytoolkit", "securetoken"]) {
+            const link = document.createElement("link");
+            link.rel = "preconnect";
+            link.href = "https://" + host + ".googleapis.com";
+            link.crossOrigin = "";
+            document.head.append(link);
+          }
+        }
       </script>
     </div>
     <script type="module" src="/src/main.tsx"></script>

@@ -20,9 +20,9 @@ import { message } from "antd";
 // Define and export AuthContextType and AuthProviderProps
 export interface AuthContextType {
   currentUser: Tender | null;
-  // uid of the signed-in Firebase Auth user. Known before currentUser, which
-  // waits on the users/{uid} doc, so listeners that only need a signed-in
-  // user can start one round trip earlier.
+  // uid of the signed-in Firebase Auth user. Unless a saved profile is showing, it's known
+  // before currentUser, which waits on the users/{uid} doc, so listeners that only need a
+  // signed-in user can start one round trip earlier.
   authUid: string | null;
   loading: boolean;
   login: (email: string, pass: string) => Promise<void>;
@@ -37,37 +37,71 @@ export interface AuthProviderProps {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// The signed-in member's users/{uid} doc from their last visit, so member pages render right
+// away instead of after Firebase Auth and Firestore answer. Cleared when no one is signed in.
+const CACHE_KEY = "currentUser";
+
+const readCachedUser = (): Tender | null => {
+  try {
+    return JSON.parse(localStorage.getItem(CACHE_KEY) ?? "null");
+  } catch {
+    return null;
+  }
+};
+
+const writeCachedUser = (user: Tender | null) => {
+  try {
+    if (user) localStorage.setItem(CACHE_KEY, JSON.stringify(user));
+    else localStorage.removeItem(CACHE_KEY);
+  } catch {
+    // Storage can be full or blocked; the cache is only a speed-up.
+  }
+};
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<Tender | null>(null);
+  const [currentUser, setCurrentUser] = useState<Tender | null>(readCachedUser);
   const [authUid, setAuthUid] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(() => currentUser === null);
 
   useEffect(() => {
+    // The previous user's users/{uid} listener, stopped when the signed-in user changes.
+    let unsubscribeUser = () => {};
+    // The saved profile shown since page load. Only Auth's first answer can confirm it.
+    let cachedUid = readCachedUser()?.uid;
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      const confirmsCached = !!user && user.uid === cachedUid;
+      cachedUid = undefined;
+      unsubscribeUser();
+      unsubscribeUser = () => {};
       setAuthUid(user?.uid ?? null);
       // If no firebase auth user, clear profile and stop loading
       if (!user) {
         setCurrentUser(null);
+        writeCachedUser(null);
         setLoading(false);
         return;
       }
 
       // For an authenticated firebase user, fetch the app profile from Firestore
-      // and keep loading true until that fetch completes to avoid premature redirects.
-      setLoading(true);
-      getUser(user.uid, {
+      // and keep loading true until that fetch completes to avoid premature redirects,
+      // unless their cached profile is already showing.
+      if (!confirmsCached) {
+        setCurrentUser(null);
+        setLoading(true);
+      }
+      unsubscribeUser = getUser(user.uid, {
         next: (snapshot) => {
-          if (snapshot.exists()) {
-            const userdata = snapshot.data() as Tender;
-            setCurrentUser({ ...userdata, uid: user.uid });
-          } else {
-            setCurrentUser(null);
-          }
+          const userdata = snapshot.exists() ? { ...(snapshot.data() as Tender), uid: user.uid } : null;
+          setCurrentUser(userdata);
+          // Inactive members aren't cached: their saved profile would send them to /deletedUser
+          // before the fresh one could say they were made active again.
+          writeCachedUser(userdata?.active ? userdata : null);
           setLoading(false);
         },
         error: (error) => {
           console.error("Error fetching user data:", error);
           setCurrentUser(null);
+          writeCachedUser(null);
           setLoading(false);
         },
       });
@@ -75,6 +109,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     return () => {
       unsubscribe();
+      unsubscribeUser();
     };
   }, []);
 

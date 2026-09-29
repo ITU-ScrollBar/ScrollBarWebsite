@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import useSettings from "../../hooks/useSettings";
 import { Button, Input, InputRef, message, Switch, Table, TableProps, Upload } from "antd";
 import MDEditor from "@uiw/react-md-editor";
+import Markdown from "../../components/Markdown";
 import { Loading } from "../../components/Loading";
 import { useWindowSize } from "../../hooks/useWindowSize";
 import { formatWindowDate, fromDateTimeInputValue, toDateTimeInputValue } from "../../utils/signupWindow";
@@ -61,7 +62,7 @@ const EditableCell = ({
     if (inputType === "textarea") {
       return (
         <div>
-          <MDEditor.Markdown
+          <Markdown
             source={editValue}
             style={{ background: "white", color: "black", textWrap: "wrap" }}
           />
@@ -135,7 +136,7 @@ const EditableCell = ({
             }
           }}
         >
-          <MDEditor.Markdown
+          <Markdown
             source={value.trim().length > 0 ? value.trim() : "Click to edit"}
             style={{ background: "white", color: "black", textWrap: "wrap" }}
           />

@@ -27,12 +27,13 @@ const ProtectedRoutes: React.FC = () => {
     content = <Outlet />;
   }
 
-  if (!authUid) {
+  if (!authUid && !currentUser) {
     return content;
   }
 
-  // Mounted as soon as Firebase Auth knows who is signed in, so the providers'
-  // listeners start alongside the users/{uid} fetch instead of after it.
+  // Mounted as soon as Firebase Auth knows who is signed in (or their cached profile
+  // is showing), so the providers' listeners start alongside the users/{uid} fetch
+  // instead of after it. Firestore holds their queries until Auth is ready.
   return <EventProvider>
     <EngagementProvider>
       <ShiftProvider>

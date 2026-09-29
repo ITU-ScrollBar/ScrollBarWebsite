@@ -6,7 +6,7 @@ import { useWindowSize } from "../hooks/useWindowSize";
 import HeaderBar from '../components/HomePage/HeaderBar';
 import CountDown from '../components/EventPage/EventCountDown';
 import { useEventContext } from '../contexts/EventContext';
-import DEFAULT_EVENT_IMAGE from '../assets/images/background.png';
+import DEFAULT_EVENT_IMAGE from '../assets/images/background.jpg';
 import { EventCard } from '../components/EventPage/EventCard';
 
 export default function EventsPage() {

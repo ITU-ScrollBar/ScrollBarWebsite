@@ -1,4 +1,4 @@
-import { Col, ConfigProvider, Image, Row, Typography } from "antd";
+import { Col, ConfigProvider, Row, Typography } from "antd";
 import logo from "../../assets/images/logo.png";
 import Title from "antd/es/typography/Title";
 import Paragraph from "antd/es/typography/Paragraph";
@@ -29,7 +29,8 @@ export default function FooterBar() {
         xs={24}
         style={{ display: "flex", justifyContent: "center" }}
       >
-        <Image src={logo} style={{ width: "250px" }} preview={false} />
+        {/* Plain img: antd's Image pulls its whole preview viewer into every page's startup JS. */}
+        <img src={logo} alt="ScrollBar" style={{ width: "250px", height: "auto" }} />
       </Col>
 
       {/* Center: Address */}
