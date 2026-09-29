@@ -17,10 +17,12 @@ const useEngagements = () => {
     isLoaded: false,
     engagements: [],
   });
-  const { currentUser } = useAuth();
+  // Keyed on the uid, not the user doc: swapping the saved profile for the fresh one (or editing
+  // your own profile) would otherwise restart the stream and download every engagement again.
+  const uid = useAuth().currentUser?.uid;
 
   useEffect(() => {
-    if (!currentUser) {
+    if (!uid) {
       return;
     }
     setEngagementState((prev) => ({ ...prev, loading: true }));
@@ -53,7 +55,7 @@ const useEngagements = () => {
     );
   
     return unsubscribe;
-  }, [currentUser]);
+  }, [uid]);
 
   // Stable references keep the context value (and consumers' effects, such as the
   // profile stats fetch) from re-running on every engagement snapshot.

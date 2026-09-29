@@ -56,7 +56,7 @@ const impactOptions = [
 export default function TicketsPage() {
   const { message } = AntdApp.useApp();
   const { currentUser } = useAuth();
-  const { addTicket } = useTickets();
+  const { addTicket } = useTickets({ autoLoad: false });
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [form] = Form.useForm<TicketFormValues>();
