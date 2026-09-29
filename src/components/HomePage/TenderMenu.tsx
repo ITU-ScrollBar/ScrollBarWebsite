@@ -109,6 +109,10 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
         label: 'Form Responses',
         key: 'admin/forms',
       });
+      adminItems.push({
+        label: 'Drink Submissions',
+        key: 'forms/drinks/responses',
+      });
     }
     if (currentUser?.isAdmin) {
       adminItems.push({
