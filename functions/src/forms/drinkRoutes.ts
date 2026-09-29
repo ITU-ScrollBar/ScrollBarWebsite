@@ -13,6 +13,34 @@ import {
 
 const db = admin.firestore();
 
+// The board page lists the newest drinks only, so a flood of submissions can't make it unusable.
+const listLimit = 500;
+
+// Best-effort throttle for the public POST. It is per function instance, which is enough to stop
+// a single script from filling the collection without adding App Check to a temporary feature.
+const submitWindowMs = 10 * 60 * 1000;
+const submitLimitPerWindow = 15;
+const recentSubmits = new Map<string, number[]>();
+
+const isThrottled = (req: express.Request): boolean => {
+  const forwarded = req.headers['x-forwarded-for'];
+  const clientIp =
+    (typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : '') || req.ip || 'unknown';
+  const now = Date.now();
+  const recent = (recentSubmits.get(clientIp) ?? []).filter((time) => now - time < submitWindowMs);
+
+  if (recent.length >= submitLimitPerWindow) {
+    recentSubmits.set(clientIp, recent);
+    return true;
+  }
+
+  recentSubmits.set(clientIp, [...recent, now]);
+  if (recentSubmits.size > 5000) {
+    recentSubmits.clear();
+  }
+  return false;
+};
+
 type StoredDrinkSubmission = {
   drinkName?: string;
   creatorName?: string;
@@ -64,6 +92,10 @@ const router = express.Router();
 // replayed against the same rules as the page so only drinks the bar can actually make get stored.
 router.post('/', async (req, res) => {
   try {
+    if (isThrottled(req)) {
+      return res.status(429).send('Too many drinks submitted. Try again in a few minutes.');
+    }
+
     const body = (req.body ?? {}) as {
       drinkName?: unknown;
       creatorName?: unknown;
@@ -123,10 +155,8 @@ router.get('/', async (req, res) => {
       return;
     }
 
-    const snapshot = await drinkCollection().get();
-    const drinks = snapshot.docs
-      .map(mapDrinkSubmission)
-      .sort((a, b) => (b.createdAtMs ?? 0) - (a.createdAtMs ?? 0));
+    const snapshot = await drinkCollection().orderBy('createdAt', 'desc').limit(listLimit).get();
+    const drinks = snapshot.docs.map(mapDrinkSubmission);
 
     return res.status(200).json({ drinks });
   } catch (error) {
