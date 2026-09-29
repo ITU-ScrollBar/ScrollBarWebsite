@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { DRINK_CUP_CL, DRINK_FILL_LINE_CL, DrinkPour } from "../types/drinkRecipe";
+import { mixDrinkColor } from "../utils/drinks";
 import "./DrinkCup.css";
 
 // Drawing coordinates of the plastic cup, shared by the SVG outline and the liquid layers.
@@ -32,6 +33,8 @@ type DrinkCupProps = {
   animate?: boolean;
   width?: number | string;
   showFillLine?: boolean;
+  /** Stirred: the layers blend into the drink's final color. */
+  mixed?: boolean;
 };
 
 export default function DrinkCup({
@@ -39,8 +42,10 @@ export default function DrinkCup({
   animate = true,
   width = "100%",
   showFillLine = true,
+  mixed = false,
 }: DrinkCupProps) {
   const levelCl = pours.reduce((sum, pour) => sum + pour.cl, 0);
+  const mixedColor = mixed ? mixDrinkColor(pours) : null;
 
   // A pour (or Forward putting one back) shows the stream; Back just removes the top layer.
   const [seenPours, setSeenPours] = useState(pours.length);
@@ -90,6 +95,20 @@ export default function DrinkCup({
             }}
           />
         ))}
+        {mixedColor ? (
+          <div
+            className={animate ? "drink-cup-mixed" : undefined}
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: percent(levelCl, DRINK_CUP_CL),
+              // The layers stay underneath, so the mixed color sits on an opaque base like the cup.
+              background: `linear-gradient(${mixedColor}, ${mixedColor}), #f4f8fb`,
+            }}
+          />
+        ) : null}
       </div>
 
       {streamKey !== null && lastPour ? (
