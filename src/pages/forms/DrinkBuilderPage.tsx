@@ -87,8 +87,8 @@ export default function DrinkBuilderPage() {
               Build a drink
             </h1>
             <Paragraph style={{ color: "rgba(255, 255, 255, 0.8)", margin: 0, fontSize: 16 }}>
-              Mix your own drink from what we have in the bar. Pick an ingredient, choose how much
-              to pour, and send your creation to the board.
+              Make your own drink from what we have in the bar and send it in. Your drink could
+              end up in ScrollBar's advent calendar, and it might even be served at a Friday bar.
             </Paragraph>
           </div>
         </div>
