@@ -48,6 +48,8 @@ const FormsPage = lazy(() => import("./pages/members/FormsPage"));
 const LendingRequestPage = lazy(() => import("./pages/members/LendingRequestPage"));
 const AnonymousFeedbackPage = lazy(() => import("./pages/members/AnonymousFeedbackPage"));
 const FormResponsesPage = lazy(() => import("./pages/admin/FormResponsesPage"));
+const DrinkBuilderPage = lazy(() => import("./pages/forms/DrinkBuilderPage"));
+const DrinkResponsesPage = lazy(() => import("./pages/forms/DrinkResponsesPage"));
 
 // Nested lazy routes otherwise download one after another (ProtectedRoutes, then
 // TenderMenu once auth resolves, then the page), so start the chunks for the page
@@ -56,7 +58,7 @@ const FormResponsesPage = lazy(() => import("./pages/admin/FormResponsesPage"));
 const preloadRouteChunks = (path: string) => {
   const opensProfile = /^\/(members\/profile|login)\/?$/.test(path);
   const opensShifts = /^\/tenders\/(allshifts|upforgrabs)\/?$/.test(path);
-  const isMemberArea = /^\/(tenders|members|admin)(\/|$)/.test(path);
+  const isMemberArea = /^\/(tenders|members|admin|forms\/drinks\/responses)(\/|$)/.test(path);
   const ignore = () => {};
   if (opensProfile || isMemberArea) {
     loadProtectedRoutes().catch(ignore);
@@ -101,6 +103,7 @@ function App() {
                   <Route path="/events" element={<EventProvider><EventsPage /></EventProvider>} /> 
                   <Route path="/deletedUser" element={<InactiveUserPage />} /> 
                   <Route path="/dj" element={<DJPage />} /> 
+                  <Route path="/forms/drinks" element={<DrinkBuilderPage />} />
 
                   {/* --- Protected Routes --- */}
                   <Route element={<ProtectedRoutes />}>
@@ -210,6 +213,7 @@ function App() {
                         }
                       >
                         <Route path="admin/forms" element={<FormResponsesPage />} />
+                        <Route path="/forms/drinks/responses" element={<DrinkResponsesPage />} />
                       </Route>
                       <Route
                         element={

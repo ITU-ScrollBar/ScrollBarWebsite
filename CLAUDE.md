@@ -48,7 +48,7 @@ Providers are mounted at two levels, which decides where a context is available:
 
 The live `shifts`/`events` listeners only cover a rolling 12-month window (`src/firebase/api/dataWindow.ts`). Anything that needs older data has to query for it explicitly.
 
-`src/types/types-file.ts` holds types shared by the frontend and functions. The copy in `functions/src/types/` is gitignored and overwritten on every functions build, so never edit that copy.
+`src/types/types-file.ts` holds types shared by the frontend and functions, and `src/types/drinkRecipe.ts` holds the drink builder's catalog and pouring rules (it must stay import-free). The copies in `functions/src/types/` are gitignored and overwritten on every functions build, so never edit them.
 
 ### Routing and access control
 

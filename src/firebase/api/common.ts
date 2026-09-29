@@ -61,7 +61,9 @@ export const calendarFunctionUrl = `https://europe-west1-${projectId}.cloudfunct
 type CalendarRequestInit = {
   method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   body?: unknown;
-  unauthenticatedMessage: string;
+  /** Set to false for public routes: the token is still sent when someone is signed in. */
+  requireAuth?: boolean;
+  unauthenticatedMessage?: string;
   failureMessage: string;
 };
 
@@ -77,15 +79,15 @@ export const callCalendarFunction = async <T>(
   // sign-in, and auth.currentUser stays null until it has.
   await auth.authStateReady();
   const currentUser = auth.currentUser;
-  if (!currentUser) {
-    throw new Error(init.unauthenticatedMessage);
+  if (!currentUser && init.requireAuth !== false) {
+    throw new Error(init.unauthenticatedMessage ?? 'You must be signed in.');
   }
 
-  const token = await currentUser.getIdToken();
+  const token = currentUser ? await currentUser.getIdToken() : null;
   const response = await fetch(`${calendarFunctionUrl}${path}`, {
     method: init.method,
     headers: {
-      Authorization: `Bearer ${token}`,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(init.body === undefined ? {} : { 'Content-Type': 'application/json' }),
     },
     body: init.body === undefined ? undefined : JSON.stringify(init.body),
