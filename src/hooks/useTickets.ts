@@ -22,7 +22,12 @@ type TicketState = {
   tickets: (Ticket & { key: string })[];
 };
 
-const useTickets = () => {
+type UseTicketsOptions = {
+  // Listing is board-only, so the member-facing submit page opts out of loading entirely.
+  autoLoad?: boolean;
+};
+
+const useTickets = ({ autoLoad = true }: UseTicketsOptions = {}) => {
   const [ticketState, setTicketState] = useState<TicketState>({
     loading: false,
     isLoaded: false,
@@ -54,6 +59,10 @@ const useTickets = () => {
   }, []);
 
   useEffect(() => {
+    if (!autoLoad) {
+      return;
+    }
+
     void loadTickets(false);
 
     const intervalId = window.setInterval(() => {
@@ -63,7 +72,7 @@ const useTickets = () => {
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [loadTickets]);
+  }, [autoLoad, loadTickets]);
 
   const addTicket = async (ticket: TicketCreateParams, imageFiles: File[] = []) => {
     return createTicket(ticket, imageFiles);

@@ -73,6 +73,9 @@ export const callCalendarFunction = async <T>(
   path: string,
   init: CalendarRequestInit
 ): Promise<T> => {
+  // Member pages can render from the cached profile before Firebase Auth has restored the
+  // sign-in, and auth.currentUser stays null until it has.
+  await auth.authStateReady();
   const currentUser = auth.currentUser;
   if (!currentUser) {
     throw new Error(init.unauthenticatedMessage);
