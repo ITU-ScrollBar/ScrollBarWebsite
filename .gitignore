@@ -2,8 +2,9 @@
 .credentials.json
 .firebase
 
-# Type-file copied to functions project
+# Shared type files copied to functions project
 */src/types/types-file.ts
+*/src/types/drinkRecipe.ts
 
 # Logs
 logs
