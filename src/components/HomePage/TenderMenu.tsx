@@ -112,6 +112,10 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
     }
     if (currentUser?.isAdmin) {
       adminItems.push({
+        label: 'IT Dashboard',
+        key: 'admin/it',
+      },
+      {
         label: 'System Settings',
         key: 'admin/settings',
       },

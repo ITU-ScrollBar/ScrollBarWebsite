@@ -33,6 +33,7 @@ const GetHelpPage = lazy(() => import("./pages/members/GetHelpPage"));
 const ShiftAvailabilityPage = lazy(() => import("./pages/members/ShiftAvailabilityPage"));
 const TenderMenu = lazy(() => loadTenderMenu().then((m) => ({ default: m.TenderMenu })));
 const EventManagement = lazy(() => import("./pages/admin/EventManagement/EventManagement"));
+const ITDashboardPage = lazy(() => import("./pages/admin/ITDashboardPage"));
 const GlobalSettingsPage = lazy(() => import("./pages/admin/GlobalSettingsPage"));
 const EventsPage = lazy(() => import("./pages/EventsPage"));
 const UserManagerPage = lazy(() => import("./pages/admin/UserManagerPage"));
@@ -141,6 +142,9 @@ function App() {
                           path="admin/settings"
                           element={<GlobalSettingsPage />}
                         />
+                      </Route>
+                      <Route element={<RoleProtectedRoute />}>
+                        <Route path="admin/it" element={<ITDashboardPage />} />
                       </Route>
                       <Route element={<RoleProtectedRoute />}>
                         <Route
