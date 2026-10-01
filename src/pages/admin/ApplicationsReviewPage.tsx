@@ -11,6 +11,7 @@ import {
   Image,
   Layout,
   message,
+  notification,
   Popconfirm,
   Space,
   Table,
@@ -71,6 +72,20 @@ export default function ApplicationsReviewPage() {
   const hasFailedDeliveries = useMemo(() => {
     return applicationsState.applications.some((application) => application.emailDeliveryStatus === "failed");
   }, [applicationsState.applications]);
+
+  // Statuses are set to pending before the emails are queued, because the mail functions
+  // mark each application success or failed as they send, and a later write would hide that.
+  // Returns how many emails could not be queued.
+  const sendDecisionEmails = async (accepted: IntakeApplication[], rejected: IntakeApplication[]) => {
+    await setEmailDeliveryStatuses(
+      [...accepted, ...rejected].map(({ id }) => ({ id, emailDeliveryStatus: "pending" as const }))
+    );
+    const inviteResult = await addInvites(accepted, settingsState.settings.inviteEmailBodyText);
+    const rejectResult = await queueRejectedEmails(rejected, settingsState.settings.rejectionEmailBodyText);
+    const failed = [...inviteResult.failed, ...rejectResult.failed];
+    await setEmailDeliveryStatuses(failed.map(({ id }) => ({ id, emailDeliveryStatus: "failed" as const })));
+    return failed.length;
+  };
 
   const renderDeliveryIcon = (status: "pending" | "success" | "failed") => {
     if (status === "success") {
@@ -461,40 +476,7 @@ export default function ApplicationsReviewPage() {
                   if (!currentUser?.uid) return;
                   setSubmittingRound(true);
                   try {
-                    const inviteResult = await addInvites(
-                      grouped.accept.map((application) => ({
-                        id: application.id,
-                        email: application.email,
-                        fullName: application.fullName,
-                        studyline: application.studyline,
-                      })),
-                      settingsState.settings.inviteEmailBodyText
-                    );
-                    const rejectResult = await queueRejectedEmails(
-                      grouped.reject.map((application) => ({
-                        id: application.id,
-                        email: application.email,
-                        fullName: application.fullName,
-                      })),
-                      settingsState.settings.rejectionEmailBodyText
-                    );
-
-                    await setEmailDeliveryStatuses([
-                      ...grouped.accept.map((application) => ({
-                        id: application.id,
-                        emailDeliveryStatus: inviteResult.successful.includes(application.id)
-                          ? ("pending" as const)
-                          : ("failed" as const),
-                      })),
-                      ...grouped.reject.map((application) => ({
-                        id: application.id,
-                        emailDeliveryStatus: rejectResult.successful.includes(application.id)
-                          ? ("pending" as const)
-                          : ("failed" as const),
-                      })),
-                    ]);
-
-                    const failedTotal = inviteResult.failed.length + rejectResult.failed.length;
+                    const failedTotal = await sendDecisionEmails(grouped.accept, grouped.reject);
                     if (failedTotal) {
                       message.warning(
                         `${failedTotal} email${failedTotal === 1 ? "" : "s"} could not be queued. You can retry failed entries.`
@@ -504,6 +486,11 @@ export default function ApplicationsReviewPage() {
                     }
 
                     await submitRound(currentUser.uid);
+                  } catch (error) {
+                    notification.error({
+                      message: "Submitting the round failed",
+                      description: (error as Error).message,
+                    });
                   } finally {
                     setSubmittingRound(false);
                   }
@@ -535,50 +522,12 @@ export default function ApplicationsReviewPage() {
                   onConfirm={async () => {
                     setRetryingFailed(true);
                     try {
-                      const failedInvites = applicationsState.applications.filter(
-                        (application) =>
-                          application.decision === "accept" && application.emailDeliveryStatus === "failed"
-                      );
-                      const failedRejections = applicationsState.applications.filter(
-                        (application) =>
-                          application.decision === "reject" && application.emailDeliveryStatus === "failed"
-                      );
-
-                      const inviteRetryResult = await addInvites(
-                        failedInvites.map((application) => ({
-                          id: application.id,
-                          email: application.email,
-                          fullName: application.fullName,
-                          studyline: application.studyline,
-                        })),
-                        settingsState.settings.inviteEmailBodyText
-                      );
-
-                      const rejectRetryResult = await queueRejectedEmails(
-                        failedRejections.map((application) => ({
-                          id: application.id,
-                          email: application.email,
-                          fullName: application.fullName,
-                        })),
-                        settingsState.settings.rejectionEmailBodyText
-                      );
-
-                      await setEmailDeliveryStatuses([
-                        ...failedInvites.map((application) => ({
-                          id: application.id,
-                          emailDeliveryStatus: inviteRetryResult.successful.includes(application.id)
-                            ? ("pending" as const)
-                            : ("failed" as const),
-                        })),
-                        ...failedRejections.map((application) => ({
-                          id: application.id,
-                          emailDeliveryStatus: rejectRetryResult.successful.includes(application.id)
-                            ? ("pending" as const)
-                            : ("failed" as const),
-                        })),
-                      ]);
-
-                      const failedTotal = inviteRetryResult.failed.length + rejectRetryResult.failed.length;
+                      const failedOf = (decision: string) =>
+                        applicationsState.applications.filter(
+                          (application) =>
+                            application.decision === decision && application.emailDeliveryStatus === "failed"
+                        );
+                      const failedTotal = await sendDecisionEmails(failedOf("accept"), failedOf("reject"));
                       if (failedTotal) {
                         message.warning(
                           `${failedTotal} email${failedTotal === 1 ? "" : "s"} still could not be queued after retry.`
@@ -586,6 +535,11 @@ export default function ApplicationsReviewPage() {
                       } else {
                         message.success("All previously failed email entries are queued. Delivery status will update automatically.");
                       }
+                    } catch (error) {
+                      notification.error({
+                        message: "Retrying failed emails failed",
+                        description: (error as Error).message,
+                      });
                     } finally {
                       setRetryingFailed(false);
                     }
