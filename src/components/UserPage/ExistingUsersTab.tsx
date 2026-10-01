@@ -91,6 +91,8 @@ export const ExistingUsersTab = () => {
       render: (teams: Team[]) => {
         return teams.map((team) => team.name).join(", ") || "No teams";
       },
+      filters: teamState.teams.map((team) => ({ text: team.name, value: team.id })),
+      onFilter: (value: boolean | Key, record: Tender) => record.teamIds?.includes(value.toString()) ?? false,
     };
     const rolesColumn = {
       title: "Role",
@@ -143,7 +145,7 @@ export const ExistingUsersTab = () => {
         editColumn,
       ]);
     }
-  }, [studylines, isMobile]);
+  }, [studylines, isMobile, teamState.teams]);
 
   const filteredData = data.filter(
     (user) =>
