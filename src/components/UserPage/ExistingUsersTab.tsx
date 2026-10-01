@@ -22,6 +22,7 @@ import StudyLinePicker from "../../pages/members/StudyLinePicker";
 import { UserAvatarWithUpload } from "../UserAvatarWithUpload";
 import { useWindowSize } from "../../hooks/useWindowSize";
 import RoleTag from "../RoleTag";
+import { roleToLabel } from "../../pages/members/helpers";
 import { useTeamContext } from "../../contexts/TeamContext";
 import { Loading } from "../Loading";
 import { getFunctions, httpsCallable } from "firebase/functions";
@@ -99,13 +100,7 @@ export const ExistingUsersTab = () => {
         (record.isAdmin ? ["admin", ...roles ?? []] : roles ?? []).map((role) => (
           <RoleTag key={role} role={role} />
         )) || "No roles",
-      filters: [
-        { text: "Admins", value: Role.ADMIN },
-        { text: "Board members", value: Role.BOARD },
-        { text: "HR", value: Role.HR },
-        { text: "Newbies", value: Role.NEWBIE },
-        { text: "Anchors", value: Role.ANCHOR },
-      ],
+      filters: Object.values(Role).map((role) => ({ text: roleToLabel(role), value: role })),
       onFilter: userFilterMatch,
     };
     const editColumn: TableColumnType<Tender> = {
