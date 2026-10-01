@@ -75,10 +75,13 @@ export const resolveStorageBucketName = (): string => {
 /**
  * Splits a Firebase download URL
  * (https://firebasestorage.googleapis.com/v0/b/<bucket>/o/<encoded path>?...) into its parts.
+ * Returns null for URLs into another project's bucket (old profile pictures still point at
+ * scrollweb-cc9b4, see migration 007): this project can't list or delete files there.
  */
 export const parseStorageUrl = (url: unknown): { bucket: string; path: string } | null => {
   const match = typeof url === "string" && url.match(/\/v0\/b\/([^/]+)\/o\/([^?]+)/);
-  return match ? { bucket: match[1], path: decodeURIComponent(match[2]) } : null;
+  if (!match || match[1] !== resolveStorageBucketName()) return null;
+  return { bucket: match[1], path: decodeURIComponent(match[2]) };
 };
 
 /** Deletes a Storage object. A missing file counts as deleted; anything else is rethrown. */
