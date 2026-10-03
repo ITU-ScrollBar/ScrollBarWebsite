@@ -17,6 +17,7 @@
     "@uiw/react-markdown-preview": "^5.2.1",
     "@uiw/react-md-editor": "^4.0.8",
     "antd": "6",
+    "fflate": "^0.8.3",
     "firebase": "^12.4.0",
     "firebase-admin": "^13.5.0",
     "heic-decode": "^2.1.0",
