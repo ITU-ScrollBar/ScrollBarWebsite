@@ -6,7 +6,7 @@ import {
   CollectionReference,
   DocumentReference,
 } from 'firebase/firestore';
-import { getDownloadURL, ref as storageRef } from 'firebase/storage';
+import { getBytes, getDownloadURL, ref as storageRef } from 'firebase/storage';
 import { auth, db, storage } from '../index';
 import { DocumentData } from './../../types/types-file';
 
@@ -51,6 +51,9 @@ export const getExtension = (path: string): string => {
 // full-URL path) surfaces as a rejection instead of escaping the caller.
 export const getStorageDownloadUrl = async (path: string): Promise<string> =>
   getDownloadURL(storageRef(storage, path));
+
+export const getStorageFileBytes = async (path: string): Promise<Uint8Array> =>
+  new Uint8Array(await getBytes(storageRef(storage, path)));
 
 const projectId = import.meta.env.VITE_APP_FIREBASE_PROJECT_ID as string;
 

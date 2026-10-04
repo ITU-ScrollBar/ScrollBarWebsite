@@ -2,6 +2,7 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   ClockCircleOutlined,
+  DownloadOutlined,
   RedoOutlined,
 } from "@ant-design/icons";
 import {
@@ -31,6 +32,7 @@ import { getStudyLines } from "../../firebase/api/authentication";
 import avatarPlaceholder from "../../assets/images/avatar.png";
 import ApplicationFileLink from "./ApplicationsReview/components/ApplicationFileLink";
 import useStorageDownloadUrls from "./ApplicationsReview/hooks/useStorageDownloadUrls";
+import downloadAllApplications from "./ApplicationsReview/utils/downloadAllApplications";
 
 const { Title, Paragraph } = Typography;
 
@@ -54,6 +56,7 @@ export default function ApplicationsReviewPage() {
   const [retryingFailed, setRetryingFailed] = useState(false);
   const [sendingInviteTest, setSendingInviteTest] = useState(false);
   const [sendingRejectionTest, setSendingRejectionTest] = useState(false);
+  const [downloadingAll, setDownloadingAll] = useState(false);
   const [studyLines, setStudyLines] = useState<StudyLine[]>([]);
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
@@ -316,6 +319,30 @@ export default function ApplicationsReviewPage() {
             Submitted at {applicationsState.submittedAt.toLocaleString()}
           </Paragraph>
         )}
+
+        <Button
+          icon={<DownloadOutlined />}
+          loading={downloadingAll}
+          disabled={!applicationsState.applications.length}
+          onClick={async () => {
+            setDownloadingAll(true);
+            try {
+              const failed = await downloadAllApplications(
+                applicationsState.applications,
+                (id) => studyLines.find((studyLine) => studyLine.id === id)?.name || id || ""
+              );
+              if (failed) {
+                message.warning(`${failed} file${failed === 1 ? "" : "s"} could not be downloaded and are missing from the zip.`);
+              }
+            } catch (error) {
+              message.error(`Failed to download applications: ${error instanceof Error ? error.message : String(error)}`);
+            } finally {
+              setDownloadingAll(false);
+            }
+          }}
+        >
+          Download all applications
+        </Button>
 
         <Tabs
           defaultActiveKey="all"
