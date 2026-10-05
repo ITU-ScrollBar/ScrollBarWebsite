@@ -71,16 +71,21 @@ export interface UserProfile {
   photoUrl: string;
 }
 
+// Invite doc IDs are emails, and Firestore IDs are case-sensitive, so every lookup and write
+// goes through this. Firebase Auth lowercases emails too.
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
+
 type InviteUserOptions = {
   manualInvite?: boolean;
 };
 
 // Create an account for a new user
 export const createAccount = async (form: FormData): Promise<User> => {
-  const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, form.email, form.password);
+  const email = normalizeEmail(form.email);
+  const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, email, form.password);
   const userData: UserProfile = {
     displayName: form.displayName,
-    email: form.email,
+    email,
     studyline: form.studyline,
     isAdmin: false,
     roles: [Role.REGULAR_ACCESS, Role.TENDER, Role.NEWBIE],
@@ -88,7 +93,7 @@ export const createAccount = async (form: FormData): Promise<User> => {
     photoUrl: '',
   };
 
-  await updateDoc(doc(db, 'invites', form.email), { registered: true });
+  await updateDoc(doc(db, 'invites', email), { registered: true });
   await saveUser(userCredential.user.uid, userData);
   return userCredential.user;
 };
@@ -105,7 +110,7 @@ export const loginWithEmailAndPassword = async (
 
 // Check if the email is already invited
 export const checkIfEmailIsInvited = (email: string): Promise<any> => {
-  return getDocument('invites', email, false);
+  return getDocument('invites', normalizeEmail(email), false);
 };
 
 // Get a list of study lines
@@ -144,7 +149,8 @@ export const streamInvitedUsers = (observer: Observer<QuerySnapshot>) => {
   });
 };
 // Invite a user by email
-export const inviteUser = (email: string, options?: InviteUserOptions): Promise<void> => {
+export const inviteUser = (rawEmail: string, options?: InviteUserOptions): Promise<void> => {
+  const email = normalizeEmail(rawEmail);
   const manualInvite = !!options?.manualInvite;
   const manualInviteRequestId = manualInvite ? `${Date.now()}-${Math.random().toString(36).slice(2)}` : undefined;
 
