@@ -36,7 +36,7 @@ export default function ShiftManagement() {
   const [generationWarnings, setGenerationWarnings] = useState<string[]>([]);
   const [isCustomShiftModalOpen, setIsCustomShiftModalOpen] = useState(false);
   const [customShiftTitle, setCustomShiftTitle] = useState("");
-  const [customShiftLocation, setCustomShiftLocation] = useState("Main bar");
+  const [customShiftLocation, setCustomShiftLocation] = useState("Main Bar");
   const [customShiftStart, setCustomShiftStart] = useState<Date>(new Date());
   const [customShiftEnd, setCustomShiftEnd] = useState<Date>(
     new Date(Date.now() + 5 * 60 * 60 * 1000)
@@ -197,7 +197,7 @@ export default function ShiftManagement() {
     }
 
     setCustomShiftTitle("");
-    setCustomShiftLocation(currentEvent.where || "Main bar");
+    setCustomShiftLocation("Main Bar");
     setCustomShiftStart(new Date(currentEvent.start));
     setCustomShiftEnd(new Date(currentEvent.start.getTime() + 5 * 60 * 60 * 1000));
     setCustomShiftTenders(4);
@@ -223,7 +223,7 @@ export default function ShiftManagement() {
         id: "",
         eventId: currentEvent.id,
         title: "Opening",
-        location: currentEvent.where || "Main bar",
+        location: "Main Bar",
         start: openingStart,
         end: openingEnd,
         tenders: 4,
@@ -233,7 +233,7 @@ export default function ShiftManagement() {
         id: "",
         eventId: currentEvent.id,
         title: "Middle",
-        location: currentEvent.where || "Main bar",
+        location: "Main Bar",
         start: openingEnd,
         end: middleEnd,
         tenders: 7,
@@ -243,7 +243,7 @@ export default function ShiftManagement() {
         id: "",
         eventId: currentEvent.id,
         title: "Closing",
-        location: currentEvent.where || "Main bar",
+        location: "Main Bar",
         start: middleEnd,
         end: eventEnd,
         tenders: 7,
@@ -290,7 +290,7 @@ export default function ShiftManagement() {
 
     try {
       for (const shift of bigPartyShifts) {
-        const primary = { ...shift, location: "Main bar" };
+        const primary = { ...shift, location: "Main Bar" };
         const primaryId = await addShift(primary);
         await addShift({ ...primary, id: "", location: "Satellite", linkedShiftId: primaryId });
       }
