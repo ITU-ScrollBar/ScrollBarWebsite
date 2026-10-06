@@ -1,7 +1,15 @@
 import { getAuth } from "firebase-admin/auth";
 import { FieldValue } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
-import { ALL_ENVS, chunk, db, deleteFileIfExists, envCollection, parseStorageUrl } from "./common";
+import {
+  ALL_ENVS,
+  chunk,
+  db,
+  deleteFileIfExists,
+  envCollection,
+  parseStorageUrl,
+  resolveStorageBucketName,
+} from "./common";
 
 const PROFILE_PICTURE_DIR = "profile_pictures/";
 const RESIZED_DIR = `${PROFILE_PICTURE_DIR}resized/`;
@@ -28,7 +36,7 @@ const toResizedPath = (path: string): string => {
  */
 const deleteProfilePictures = async (emails: string[], photoUrl: unknown): Promise<void> => {
   const fromUrl = parseStorageUrl(photoUrl);
-  const bucket = getStorage().bucket(fromUrl?.bucket);
+  const bucket = getStorage().bucket(resolveStorageBucketName());
   const paths = new Set<string>(fromUrl ? [fromUrl.path] : []);
 
   for (const email of emails) {
