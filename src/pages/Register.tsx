@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Form, Input, message, Card, Row, Col, Grid } from 'antd';
 import type { FormInstance } from 'antd';
-import { useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   checkIfEmailIsInvited,
   createAccount,
@@ -44,7 +43,7 @@ const applyPrefilledFields = (form: FormInstance<RegisterFormValues>, search: st
 };
 
 export default function Register() {
-  const { setUser } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm<RegisterFormValues>();
   const location = useLocation();
@@ -63,16 +62,21 @@ export default function Register() {
     try {
       const isInvited = await checkIfEmailIsInvited(values.email);
 
-      if (isInvited && !isInvited.registered) {
-        const user = await createAccount(values);
+      if (isInvited?.registered) {
+        message.error('This e-mail is already registered. Please log in instead.');
+      } else if (isInvited) {
+        // Creating the account also signs the user in; AuthContext picks up their profile.
+        await createAccount(values);
         message.success('You have been signed up successfully');
-        setUser(user);
+        navigate('/members/profile');
       } else {
-        message.error(
-          'This e-mail has not been invited or an account is already registered to that email'
-        );
+        message.error('This e-mail has not been invited');
       }
     } catch (error: any) {
+      if (error?.code === 'auth/email-already-in-use') {
+        message.error('This e-mail is already registered. Please log in instead.');
+        return;
+      }
       message.error(`An error occurred registering: ${error.message}`);
     } finally {
       setLoading(false);
