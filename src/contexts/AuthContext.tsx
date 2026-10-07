@@ -9,8 +9,7 @@ import React, {
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
-  signOut,
-  User
+  signOut
 } from "firebase/auth";
 import { auth } from "../firebase/index";
 import { getUser, sendResetPasswordEmailToUser } from "../firebase/api/authentication";
@@ -23,7 +22,6 @@ export interface AuthContextType {
   loading: boolean;
   login: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
-  setUser: (user: User | null) => void;
   resetPassword: (email: string) => Promise<void>;
 }
 
@@ -116,12 +114,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const setUser = (user: User | null): void => {
-    setCurrentUser(user as Tender | null);
-  };
-
-
-
   const logout = async (): Promise<void> => {
     try {
       await signOut(auth);
@@ -143,7 +135,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       loading,
       login,
       logout,
-      setUser,
       resetPassword,
     }),
     [currentUser, loading]
