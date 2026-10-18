@@ -1,11 +1,13 @@
 import { Button, Input, Modal, Popconfirm, Table, TableColumnsType, Tooltip } from "antd";
 import { useTenderContext } from "../../contexts/TenderContext";
+import useInvites from "../../hooks/useInvites";
 import { Invite } from "../../types/types-file";
 import { DeleteOutlined } from '@ant-design/icons'
 import { useState } from "react";
 
 export const InvitedUsersTab = () => {
-  const { invitedTenders, removeInvite, addInvite } = useTenderContext();
+  const { removeInvite, addInvite } = useTenderContext();
+  const invitedTenders = useInvites();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [mail, setMail] = useState("");
 

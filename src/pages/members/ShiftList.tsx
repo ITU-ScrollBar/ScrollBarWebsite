@@ -1,9 +1,5 @@
 import { Typography, Button, Popconfirm, message, Badge } from "antd";
-import {
-  getEngagementsForShift,
-  getTenderForEngagement,
-  getTenderDisplayName,
-} from "./helpers";
+import { getTenderDisplayName } from "./helpers";
 import {
   Shift,
   Engagement,
@@ -11,10 +7,10 @@ import {
   ShiftFiltering,
   engagementType,
   Role,
+  Event,
 } from "../../types/types-file";
 import { useAuth } from "../../contexts/AuthContext";
-import { useEffect, useState, useMemo } from "react";
-import { useEventContext } from "../../contexts/EventContext";
+import { useMemo } from "react";
 import { useEngagementContext } from "../../contexts/EngagementContext";
 import { UserAvatar } from "../../components/UserAvatar";
 import { UpForGrabsBadge } from "../../badges/UpForGrabsBadge";
@@ -22,7 +18,7 @@ import { useInternalEventContext } from "../../contexts/InternalEventContext";
 import { useTeamContext } from "../../contexts/TeamContext";
 import { useWindowSize } from "../../hooks/useWindowSize";
 import Loading from "../../components/Loading";
-import { renderInternalEvent } from "../admin/InternalEventsPage";
+import { renderInternalEvent } from "../../components/InternalEventCard";
 
 const { Title, Paragraph } = Typography;
 
@@ -40,6 +36,7 @@ const COLORS = {
 interface ShiftListProps {
   shifts: Shift[];
   engagements: Engagement[];
+  events: (Event & { key: string })[];
   tenders: Tender[];
   shiftFiltering?: ShiftFiltering;
 }
@@ -47,40 +44,56 @@ interface ShiftListProps {
 export function ShiftList({
   shifts,
   engagements,
+  events: allEvents,
   tenders,
   shiftFiltering = ShiftFiltering.ALL_SHIFTS,
 }: ShiftListProps) {
   const { currentUser } = useAuth();
-  const { eventState } = useEventContext();
-  const [filteredShifts, setFilteredShifts] = useState<Shift[]>([]);
-  const { setUpForGrabs, takeShift } = useEngagementContext();
+  // Only the actions: the data comes in through props.
+  const { setUpForGrabs, takeShift } = useEngagementContext({ stream: false });
   const internalEventsState = useInternalEventContext();
   const internalState = internalEventsState.internalEventState;
   const { teamState } = useTeamContext();
   const { isMobile } = useWindowSize();
 
-  useEffect(() => {
-    if (internalState?.loading) return;
-
-    let result = shifts;
-
-    if (shiftFiltering === ShiftFiltering.MY_SHIFTS && currentUser?.uid) {
-      const userShiftIds = engagements
-        .filter((e) => e.userId === currentUser.uid)
-        .map((e) => e.shiftId);
-      result = result.filter((s) => userShiftIds.includes(s.id));
-    } else if (shiftFiltering === ShiftFiltering.UP_FOR_GRABS) {
-      const shiftIdsWithUpForGrabs = engagements
-        .filter((e) => e.upForGrabs)
-        .map((e) => e.shiftId);
-      result = result.filter((s) => shiftIdsWithUpForGrabs.includes(s.id));
+  // Lookup maps keep rendering linear in the number of shifts, engagements and
+  // tenders instead of rescanning every list for each shift and avatar.
+  const engagementsByShift = useMemo(() => {
+    const map = new Map<string, Engagement[]>();
+    for (const engagement of engagements) {
+      const list = map.get(engagement.shiftId);
+      if (list) list.push(engagement);
+      else map.set(engagement.shiftId, [engagement]);
     }
+    return map;
+  }, [engagements]);
 
-    result = result.filter((shift) =>
-      engagements.some((e) => e.shiftId === shift.id)
-    );
-    setFilteredShifts(result);
-  }, [shifts, engagements, shiftFiltering, currentUser, internalState]);
+  const eventsById = useMemo(
+    () => new Map(allEvents.map((event) => [event.id, event])),
+    [allEvents]
+  );
+
+  const tendersById = useMemo(
+    () => new Map(tenders.map((tender) => [tender.uid, tender])),
+    [tenders]
+  );
+
+  // Derived during render (not in an effect) so the first paint already has the
+  // right shifts instead of flashing "Shifts are not published yet".
+  const filteredShifts = useMemo(() => {
+    const uid = currentUser?.uid;
+    return shifts.filter((shift) => {
+      const shiftEngagements = engagementsByShift.get(shift.id!);
+      if (!shiftEngagements) return false;
+      if (shiftFiltering === ShiftFiltering.MY_SHIFTS && uid) {
+        return shiftEngagements.some((e) => e.userId === uid);
+      }
+      if (shiftFiltering === ShiftFiltering.UP_FOR_GRABS) {
+        return shiftEngagements.some((e) => e.upForGrabs);
+      }
+      return true;
+    });
+  }, [shifts, engagementsByShift, shiftFiltering, currentUser?.uid]);
 
   const asDate = (
     d:
@@ -131,11 +144,11 @@ export function ShiftList({
 
   const events = useMemo(
     () =>
-      eventState.events
+      allEvents
         .filter((e) => shiftFiltering === ShiftFiltering.ALL_SHIFTS || !!shiftsByEvent[e.id]) // Show events on all shifts page
         .slice()
         .sort((a, b) => asDate(a.start).getTime() - asDate(b.start).getTime()),
-    [eventState.events, shiftsByEvent, shiftFiltering]
+    [allEvents, shiftsByEvent, shiftFiltering]
   );
 
   const normalizedInternalEvents = useMemo(() => {
@@ -207,8 +220,9 @@ export function ShiftList({
     return out;
   }, [events, internalEvents]);
 
-  if (internalState?.loading) {
-    return <Loading resources={["internal events"]} centerOverlay={true} />;
+  // Internal events are only merged into the "my shifts" view.
+  if (shiftFiltering === ShiftFiltering.MY_SHIFTS && internalState?.loading) {
+    return <Loading resources={["internal events"]} />;
   }
 
   const grabShift = (engagement: Engagement) => {
@@ -229,7 +243,7 @@ export function ShiftList({
   };
 
   const renderTender = (engagement: Engagement, isAnchor = false) => {
-    const tender = getTenderForEngagement(engagement, tenders);
+    const tender = engagement.userId ? tendersById.get(engagement.userId) : undefined;
     if (!tender) return null;
 
     const isUpForGrabs =
@@ -276,14 +290,14 @@ export function ShiftList({
     );
   };
 
-  const renderEventHeader = (event: (typeof eventState.events)[number]) => (
+  const renderEventHeader = (event: (typeof allEvents)[number]) => (
     <Title level={2} style={{ marginBottom: 12 }}>
       {`${event.title ?? "Unknown Event"} (${event.start.getUTCDate()}/${event.start.getUTCMonth() + 1})`}
     </Title>
   );
 
   const renderShiftCard = (shift: Shift) => {
-    const shiftEngagements = getEngagementsForShift(shift.id!, engagements);
+    const shiftEngagements = engagementsByShift.get(shift.id!) ?? [];
     const anchors = shiftEngagements.filter(
       (e) => e.type === engagementType.ANCHOR
     );
@@ -385,7 +399,7 @@ export function ShiftList({
         }
 
         const eventId = m.id;
-        const event = eventState.events.find((e) => e.id === eventId);
+        const event = eventsById.get(eventId);
         if (!event) return null;
 
         const shiftsForEvent = shiftsByEvent[eventId] || [];

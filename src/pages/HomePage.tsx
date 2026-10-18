@@ -1,19 +1,20 @@
-import { useEffect, useMemo } from 'react'
+import { lazy, Suspense, useEffect, useMemo } from 'react'
 import { Button, Col, Divider, Layout, Row } from 'antd'
 import Title from 'antd/es/typography/Title'
 import Paragraph from 'antd/es/typography/Paragraph'
 import HeaderBar from '../components/HomePage/HeaderBar'
 import useSettings from '../hooks/useSettings'
-import MDEditor from '@uiw/react-md-editor'
 import { useTenderContext } from '../contexts/TenderContext'
 import useBoardRoles from '../hooks/useBoardRoles'
-import { Loading } from '../components/Loading'
 import CountDown from '../components/EventPage/EventCountDown'
 import {useNextEvent}  from '../hooks/useEvents'
 import { useLocation } from 'react-router-dom'
 import { UserList, TenderWithRole } from '../components/UserList'
 import { useWindowSize } from '../hooks/useWindowSize'
 import { getSignupWindowState } from '../utils/signupWindow'
+
+// The markdown renderer is only needed when signups are open.
+const Markdown = lazy(() => import('../components/Markdown'))
 
 export default function HomePage() {
   const { settingsState } = useSettings();
@@ -50,11 +51,6 @@ export default function HomePage() {
     ).isOpen;
   }, [settingsState.settings.openForSignupsEnd, settingsState.settings.openForSignupsStart]);
 
-  if (settingsState.loading || boardRolesState.loading) {
-    return <Loading centerOverlay={true} />;
-  }
-
-
   return (
     <Layout style={{ minHeight: '100vh', width: '100%', flexDirection: 'column', height: 'auto'}}>
       <HeaderBar />
@@ -65,24 +61,30 @@ export default function HomePage() {
           width: '100%',
           height: '100vh', // increased from 91vh → 100vh (10% taller)
           overflow: 'hidden',
+          backgroundColor: 'black', // matches the static first screen in index.html until the video plays
         }}
       >
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-          }}
-        >
-          <source
-            src={settingsState.settings.hero}
-            type="video/mp4"
-          />
-        </video>
+        {/* Keyed on the URL: a changed <source> alone doesn't reload the video (e.g. cached settings, then a new hero). */}
+        {settingsState.settings.hero && (
+          <video
+            key={settingsState.settings.hero}
+            autoPlay
+            loop
+            muted
+            playsInline
+            poster={settingsState.settings.heroPoster}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+            }}
+          >
+            <source
+              src={settingsState.settings.hero}
+              type="video/mp4"
+            />
+          </video>
+        )}
 
         {/* Black transparent overlay */}
         <div
@@ -158,16 +160,18 @@ export default function HomePage() {
                   {settingsState.settings.joinScrollBarTitle}
                 </Title>
 
-                <MDEditor.Markdown
-                  style={{
-                    fontSize: '18px',
-                    lineHeight: '36px',
-                    textAlign: 'center',
-                    color: 'black',
-                    background: 'white',
-                  }}
-                  source={settingsState.settings.joinScrollBarText}
-                />
+                <Suspense>
+                  <Markdown
+                    style={{
+                      fontSize: '18px',
+                      lineHeight: '36px',
+                      textAlign: 'center',
+                      color: 'black',
+                      background: 'white',
+                    }}
+                    source={settingsState.settings.joinScrollBarText}
+                  />
+                </Suspense>
 
                 <Button
                   type="primary"
@@ -195,7 +199,7 @@ export default function HomePage() {
             <Title level={2} style={{ scrollMarginTop: '135px' }} id="boardMembers">
               The Board
             </Title>
-            <UserList users={boardMembers} columns={isMobile ? 3 : 10} />
+            <UserList users={boardMembers} columns={isMobile ? 3 : 10} loading={boardRolesState.loading} />
           </Col>
         </Row>
 
@@ -213,7 +217,7 @@ export default function HomePage() {
             <Title level={2} style={{ scrollMarginTop: '135px' }} id="volunteers">
               The Volunteers
             </Title>
-            <UserList users={activeTenders} columns={isMobile ? 3 : 10} />
+            <UserList users={activeTenders} columns={isMobile ? 3 : 10} loading={!tenderState.isLoaded} />
           </Col>
         </Row>
       </div>

@@ -12,40 +12,15 @@ interface EventData {
 
 interface EventCardProps {
   event: EventData;
-  isFeatured?: boolean;
   isMobile: boolean;
 }
 
-export const EventCard: React.FC<EventCardProps> = ({ event, isFeatured = false, isMobile }) => {
-  const EVENT_INFORMATION_LABEL = "Get all the latest Information on the Facebook Event";
-  
-  // Computed values
-  const hasUrl = event.event_url;
-  const isDesktop = !isMobile;
-  
-  const cardState = {
-    showDescription: isFeatured && hasUrl && isDesktop,
-    useFeaturedLayout: isFeatured && (hasUrl || isDesktop),
+export const EventCard: React.FC<EventCardProps> = ({ event, isMobile }) => {
+  const cardConfig = {
+    height: '190px',
+    overlayAlign: 'center' as React.CSSProperties['textAlign'],
+    overlayJustify: (isMobile ? 'center' : 'flex-start') as React.CSSProperties['justifyContent'],
   };
-  
-  const getCardConfig = () => {
-    if (cardState.useFeaturedLayout) {
-      return {
-        height: isMobile ? '190px' : '400px',
-        overlayTop: isMobile ? '0%' : '80%',
-        overlayAlign: (isMobile ? 'center' : 'left') as React.CSSProperties['textAlign'],
-        overlayJustify: 'flex-start' as React.CSSProperties['justifyContent'],
-      };
-    }
-    return {
-      height: '190px',
-      overlayTop: undefined,
-      overlayAlign: 'center' as React.CSSProperties['textAlign'],
-      overlayJustify: (isMobile ? 'center' : 'flex-start') as React.CSSProperties['justifyContent'],
-    };
-  };
-
-  const cardConfig = getCardConfig();
 
   const cardStyle: React.CSSProperties = {
     position: 'relative',
@@ -72,7 +47,6 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isFeatured = false,
     justifyContent: cardConfig.overlayJustify,
     height: isMobile ? '120px' : '150px',
     padding: isMobile ? '12px 15px' : '20px',
-    ...(cardConfig.overlayTop && { top: cardConfig.overlayTop }),
   };
 
   const textVariants = {
@@ -86,11 +60,6 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isFeatured = false,
       fontWeight: 'bold',
       marginBottom: '2px',
     },
-    description: {
-      color: 'white',
-      fontSize: '10px',
-      marginTop: 'auto',
-    },
   };
 
   const cardContent = (
@@ -102,11 +71,6 @@ export const EventCard: React.FC<EventCardProps> = ({ event, isFeatured = false,
         <Text style={{ lineHeight: 1, ...textVariants.title }}>
           {event.title}
         </Text>
-        {cardState.showDescription && (
-          <Text style={{ lineHeight: 1, ...textVariants.description }}>
-            {EVENT_INFORMATION_LABEL}
-          </Text>
-        )}
       </div>
     </Card>
   );

@@ -1,30 +1,4 @@
-import { Tender, Engagement, Role } from "../../types/types-file";
-
-/**
- * Gets all engagements for a specific shift
- * @param shiftId - The ID of the shift
- * @param engagements - Array of all engagements
- * @returns Array of engagements for the shift
- */
-export const getEngagementsForShift = (
-  shiftId: string,
-  engagements: Engagement[]
-): Engagement[] => {
-  return engagements.filter((e) => e.shiftId === shiftId);
-};
-
-/**
- * Gets tender information for a specific engagement
- * @param engagement - The engagement object
- * @param tenders - Array of all tenders
- * @returns The tender object or null if not found
- */
-export const getTenderForEngagement = (
-  engagement: Engagement,
-  tenders: Tender[]
-): Tender | null => {
-  return tenders.find((t) => t.uid === engagement.userId) || null;
-};
+import { Tender, Role } from "../../types/types-file";
 
 /**
  * Gets the display name for a tender

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from "react";
-import { List } from "antd";
+import { Empty, Spin } from "antd";
 import { MailOutlined } from "@ant-design/icons";
 import { UserAvatar } from "./UserAvatar";
 import { getTenderDisplayName } from "../pages/members/helpers";
@@ -16,9 +16,10 @@ type UserListProps = {
   className?: string;
   getContactEmail?: (user: TenderWithRole) => string | undefined;
   columns: number;
+  loading?: boolean;
 };
 
-export function UserList({ users, className, getContactEmail, columns }: UserListProps) {
+export function UserList({ users, className, getContactEmail, columns, loading }: UserListProps) {
   const [studylines, setStudylines] = React.useState<StudyLine[]>([]);
 
   const sortedUsers = useMemo(() => {
@@ -64,16 +65,21 @@ export function UserList({ users, className, getContactEmail, columns }: UserLis
       });
   }, []);
 
+  // Laid out like antd's List grid (Row gutter 16, each item 100/columns % wide) without
+  // pulling List's pagination, select and input code into every page's startup JS.
+  if (!sortedUsers.length) {
+    return loading
+      ? <Spin><div style={{ minHeight: 53 }} /></Spin>
+      : <div style={{ padding: 16 }}><Empty image={Empty.PRESENTED_IMAGE_SIMPLE} /></div>;
+  }
+
   return (
-    <List
-      className={className}
-      grid={{ gutter: 16, column: columns }}
-      dataSource={sortedUsers}
-      renderItem={(user) => {
+    <div className={className} style={{ display: "flex", flexWrap: "wrap", margin: "0 -8px", color: "rgba(0, 0, 0, 0.88)" }}>
+      {sortedUsers.map((user, index) => {
         const contactEmail = getContactEmail?.(user);
 
         return (
-          <List.Item>
+          <div key={index} style={{ boxSizing: "border-box", width: `${100 / columns}%`, padding: "0 8px", marginBottom: 16 }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
               {user.role && (
                 <div style={{ marginTop: 8, textAlign: "center", fontWeight: "bold" }}>{user.role.name}</div>
@@ -94,9 +100,9 @@ export function UserList({ users, className, getContactEmail, columns }: UserLis
                 </a>
               )}
             </div>
-          </List.Item>
+          </div>
         );
-      }}
-    />
+      })}
+    </div>
   );
 }

@@ -60,6 +60,7 @@ const useInternalEvents = () => {
       },
       error: (error: Error) => {
         message.error('An error occurred loading internal events: ' + error.message);
+        setInternalEventState((prev) => ({ ...prev, loading: false }));
       },
     });
 

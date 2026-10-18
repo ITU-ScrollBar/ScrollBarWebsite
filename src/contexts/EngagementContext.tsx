@@ -2,6 +2,7 @@
 
 import React, { createContext, useMemo, useContext, ReactNode } from "react";
 import useEngagements from "../hooks/useEngagements";
+import { useRequestStream, useStreamRequest } from "../hooks/useStreamRequest";
 import { Engagement, EngagementState } from "../types/types-file";
 import { DocumentData } from "firebase/firestore";
 
@@ -13,7 +14,14 @@ export interface EngagementContextType {
   takeShift: (id: string, userId: string) => Promise<void>;
   setUpForGrabs: (id: string, status: boolean) => Promise<void>;
   getProfileData: (uid: string) => Promise<{ firstShift: Date; shiftCount: number } | null>;
+  requestStream: () => void;
 }
+
+type ConsumerOptions = {
+  // false for components that only call actions and don't read the streamed state
+  stream?: boolean;
+};
+
 
 // Create the context
 const EngagementContext = createContext<EngagementContextType | undefined>(
@@ -22,6 +30,7 @@ const EngagementContext = createContext<EngagementContextType | undefined>(
 
 // Create the provider
 export const EngagementProvider = ({ children }: { children: ReactNode }) => {
+  const { requested, request } = useStreamRequest();
   const {
     engagementState,
     addEngagement,
@@ -29,7 +38,7 @@ export const EngagementProvider = ({ children }: { children: ReactNode }) => {
     takeShift,
     setUpForGrabs,
     getProfileData,
-  } = useEngagements();
+  } = useEngagements(requested);
 
   // Memoize context value to prevent unnecessary re-renders
   const value = useMemo(
@@ -40,8 +49,9 @@ export const EngagementProvider = ({ children }: { children: ReactNode }) => {
       takeShift,
       setUpForGrabs,
       getProfileData,
+      requestStream: request,
     }),
-    [engagementState, addEngagement, removeEngagement, takeShift, setUpForGrabs, getProfileData]
+    [engagementState, addEngagement, removeEngagement, takeShift, setUpForGrabs, getProfileData, request]
   );
 
   return (
@@ -52,8 +62,9 @@ export const EngagementProvider = ({ children }: { children: ReactNode }) => {
 };
 
 // Custom hook for using the context
-export const useEngagementContext = () => {
+export const useEngagementContext = ({ stream = true }: ConsumerOptions = {}) => {
   const context = useContext(EngagementContext);
+  useRequestStream(context?.requestStream, stream);
   if (!context) {
     throw new Error(
       "useEngagementContext must be used within an EngagementProvider"

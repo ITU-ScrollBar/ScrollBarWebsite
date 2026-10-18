@@ -26,7 +26,8 @@ import {
   deleteObject,
 } from 'firebase/storage';
 
-import { auth, db, storage } from '../index';
+import { httpsCallable } from 'firebase/functions';
+import { auth, db, functions, storage } from '../index';
 import { getCollection, getDocument, getExtension } from './common';
 import { Role } from '../../types/types-file';
 
@@ -70,19 +71,21 @@ export interface UserProfile {
   photoUrl: string;
 }
 
+// Invite doc IDs are emails, and Firestore IDs are case-sensitive, so every lookup and write
+// goes through this. Firebase Auth lowercases emails too.
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
+
 type InviteUserOptions = {
   manualInvite?: boolean;
 };
 
-// Firestore invite docs are keyed by email; normalize so lookups aren't case/whitespace sensitive
-const normalizeEmail = (email: string): string => email.trim().toLowerCase();
-
 // Create an account for a new user
 export const createAccount = async (form: FormData): Promise<User> => {
-  const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, form.email, form.password);
+  const email = normalizeEmail(form.email);
+  const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, email, form.password);
   const userData: UserProfile = {
     displayName: form.displayName,
-    email: form.email,
+    email,
     studyline: form.studyline,
     isAdmin: false,
     roles: [Role.REGULAR_ACCESS, Role.TENDER, Role.NEWBIE],
@@ -90,7 +93,7 @@ export const createAccount = async (form: FormData): Promise<User> => {
     photoUrl: '',
   };
 
-  await updateDoc(doc(db, 'invites', normalizeEmail(form.email)), { registered: true });
+  await updateDoc(doc(db, 'invites', email), { registered: true });
   await saveUser(userCredential.user.uid, userData);
   return userCredential.user;
 };
@@ -146,8 +149,8 @@ export const streamInvitedUsers = (observer: Observer<QuerySnapshot>) => {
   });
 };
 // Invite a user by email
-export const inviteUser = (email: string, options?: InviteUserOptions): Promise<void> => {
-  const normalizedEmail = normalizeEmail(email);
+export const inviteUser = (rawEmail: string, options?: InviteUserOptions): Promise<void> => {
+  const email = normalizeEmail(rawEmail);
   const manualInvite = !!options?.manualInvite;
   const manualInviteRequestId = manualInvite ? `${Date.now()}-${Math.random().toString(36).slice(2)}` : undefined;
 
@@ -156,7 +159,7 @@ export const inviteUser = (email: string, options?: InviteUserOptions): Promise<
     ...(manualInviteRequestId ? { manualInviteRequestId } : {}),
   };
 
-  return getDocument('invites', normalizedEmail, false).then((existing) => {
+  return getDocument('invites', email, false).then((existing) => {
     if (existing) {
       if (!manualInvite) {
         return;
@@ -167,12 +170,12 @@ export const inviteUser = (email: string, options?: InviteUserOptions): Promise<
         registered: existing.registered ?? false,
       };
 
-      return deleteDoc(doc(db, 'invites', normalizedEmail)).then(() =>
-        setDoc(doc(db, 'invites', normalizedEmail), recreatedPayload)
+      return deleteDoc(doc(db, 'invites', email)).then(() =>
+        setDoc(doc(db, 'invites', email), recreatedPayload)
       );
     }
 
-    return setDoc(doc(db, 'invites', normalizedEmail), invitePayload);
+    return setDoc(doc(db, 'invites', email), invitePayload);
   });
 };
 
@@ -202,6 +205,7 @@ export const uploadProfilePicture = async (
 
 // The firebase/storage-resize-images extension writes resized copies to
 // <dir>/resized/<basename>_<width>x<height>.<extension> alongside the original.
+// Avatars no longer read those copies, but old ones still have to be cleaned up.
 const RESIZED_SUFFIX = '_150x200';
 
 const buildResizedPath = (fullPath: string): string => {
@@ -214,28 +218,36 @@ const buildResizedPath = (fullPath: string): string => {
   return `${dir}/resized/${base}${RESIZED_SUFFIX}${extension}`;
 };
 
-// Resolve the resized copy of a profile picture, falling back to the original
-// URL if the resize extension hasn't produced one (or has failed).
-export const getResizedPhotoUrl = async (photoUrl: string): Promise<string> => {
-  if (!photoUrl) return photoUrl;
+const deleteIfExists = async (path: string): Promise<void> => {
   try {
-    const originalRef = ref(storage, photoUrl);
-    const resizedRef = ref(storage, buildResizedPath(originalRef.fullPath));
-    return await getDownloadURL(resizedRef);
-  } catch {
-    return photoUrl;
+    await deleteObject(ref(storage, path));
+  } catch (error) {
+    if ((error as { code?: string }).code === 'storage/object-not-found') return;
+    throw error;
   }
 };
 
-// Delete profile picture from storage when new picture is uploaded
-export const deleteFileFromStorage = async (filePath: string): Promise<void> => {
-  try {
-    const storageRef = ref(storage, filePath);
-    await deleteObject(storageRef);
-  } catch (error) {
-    console.error('Error deleting file from storage:', error);
-    throw error;
-  }
+// Delete the resized copy of a profile picture. This must happen before a new
+// picture is uploaded to the same path: otherwise the stale resized copy keeps
+// being served until the resize extension overwrites it.
+export const deleteResizedProfilePicture = async (photoUrl: string): Promise<void> => {
+  if (!photoUrl) return;
+  await deleteIfExists(buildResizedPath(ref(storage, photoUrl).fullPath));
+};
+
+// Delete a profile picture and its resized copy from storage
+export const deleteProfilePicture = async (photoUrl: string): Promise<void> => {
+  if (!photoUrl) return;
+  const { fullPath } = ref(storage, photoUrl);
+  await Promise.all([
+    deleteIfExists(fullPath),
+    deleteIfExists(buildResizedPath(fullPath)),
+  ]);
+};
+
+// Check whether two download URLs point at the same storage object
+export const isSameStorageObject = (urlA: string, urlB: string): boolean => {
+  return ref(storage, urlA).fullPath === ref(storage, urlB).fullPath;
 };
 
 // Save user data to Firestore
@@ -255,13 +267,10 @@ export const sendResetPasswordEmailToUser = ({
   return sendPasswordResetEmail(auth, email);
 };
 
-// Soft-delete user
+// Delete a user entirely: users doc, Auth account, profile pictures and references to them.
+// Runs in the deleteUserAccount function, since only the Admin SDK can delete other Auth users.
 export const deleteUser = async (userId: string): Promise<void> => {
-  return updateDoc(doc(db, 'users', userId), {
-    photoUrl: '',
-    active: false,
-    displayName: 'Deleted User',
-    email: '',
-    phone: '',
+  await httpsCallable<{ targetUid: string }, { ok: boolean }>(functions, 'deleteUserAccount')({
+    targetUid: userId,
   });
 };

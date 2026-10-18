@@ -247,25 +247,15 @@ export const updateMutualAvoidShiftPair = async (params: {
   const userRef = doc(collection(db, "users"), userId);
   const otherUserRef = doc(collection(db, "users"), otherUserId);
 
+  // update, not set with merge: if either user has been deleted this fails instead of
+  // recreating a stub users doc.
   const batch = writeBatch(db);
-  batch.set(
-    userRef,
-    {
-      avoidShiftWithUserIds: shouldAvoid
-        ? arrayUnion(otherUserId)
-        : arrayRemove(otherUserId),
-    },
-    { merge: true }
-  );
-  batch.set(
-    otherUserRef,
-    {
-      avoidShiftWithUserIds: shouldAvoid
-        ? arrayUnion(userId)
-        : arrayRemove(userId),
-    },
-    { merge: true }
-  );
+  batch.update(userRef, {
+    avoidShiftWithUserIds: shouldAvoid ? arrayUnion(otherUserId) : arrayRemove(otherUserId),
+  });
+  batch.update(otherUserRef, {
+    avoidShiftWithUserIds: shouldAvoid ? arrayUnion(userId) : arrayRemove(userId),
+  });
 
   await batch.commit();
 };

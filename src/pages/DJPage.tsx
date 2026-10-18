@@ -3,8 +3,8 @@ import { Col, Divider, Layout, Row } from 'antd'
 import { useWindowSize } from "../hooks/useWindowSize";
 import useSettings from '../hooks/useSettings';
 import HeaderBar from '../components/HomePage/HeaderBar';
-import DEFAULT_EVENT_IMAGE from '../assets/images/background.png';
-import MDEditor from '@uiw/react-md-editor';
+import DEFAULT_EVENT_IMAGE from '../assets/images/background.jpg';
+import Markdown from '../components/Markdown';
 
 
 export default function DJPage() {
@@ -83,7 +83,7 @@ export default function DJPage() {
               color: '#1a1a1a',
             }}
           >
-            <MDEditor.Markdown
+            <Markdown
               style={{
                 fontSize: '18px',
                 lineHeight: '36px',

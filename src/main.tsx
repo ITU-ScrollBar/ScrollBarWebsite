@@ -4,7 +4,6 @@ import './index.css'
 import App from './App.tsx'
 
 import { AuthProvider } from './contexts/AuthContext';
-import { EventProvider } from './contexts/EventContext.tsx';
 import { TenderProvider } from './contexts/TenderContext.tsx';
 import { SettingsProvider } from './contexts/SettingsContext.tsx';
 
@@ -12,13 +11,11 @@ import { SettingsProvider } from './contexts/SettingsContext.tsx';
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
-      <EventProvider>
-        <TenderProvider>
-          <SettingsProvider>
-            <App />
-          </SettingsProvider>
-        </TenderProvider>
-      </EventProvider>
+      <TenderProvider>
+        <SettingsProvider>
+          <App />
+        </SettingsProvider>
+      </TenderProvider>
     </AuthProvider>
   </StrictMode>,
 )

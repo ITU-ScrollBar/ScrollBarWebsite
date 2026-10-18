@@ -2,10 +2,13 @@ import express from 'express';
 import * as admin from 'firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 import { createEvents, EventAttributes } from 'ics';
+import formsRouter from './forms';
+import { ensureBoardAccess } from './httpAuth';
+import { resolveStorageBucketName } from './dataRetention/common';
+import { resolvedAtFields } from './ticketResolvedAt';
 import {
   Event,
   InternalEvent,
-  Role,
   Tender,
   TicketDepartment,
   TicketImpact,
@@ -32,6 +35,8 @@ app.use((req, res, next) => {
   }
   return next();
 });
+
+app.use(formsRouter);
 
 type Shift = {
   id: string;
@@ -80,35 +85,6 @@ type TicketUpdatePayload = {
   requestType?: TicketRequestType;
   impact?: TicketImpact;
   status?: TicketStatus;
-};
-
-const ensureBoardAccess = async (uid: string): Promise<boolean> => {
-  const user = (await db.collection('users').doc(uid).get()).data() as Tender | undefined;
-  return Boolean(user?.isAdmin || user?.roles?.includes(Role.BOARD));
-};
-
-const resolveStorageBucketName = (): string => {
-  const firebaseConfigRaw = process.env.FIREBASE_CONFIG;
-  if (firebaseConfigRaw) {
-    try {
-      const parsed = JSON.parse(firebaseConfigRaw) as { storageBucket?: string };
-      if (parsed.storageBucket) {
-        return parsed.storageBucket;
-      }
-    } catch {
-      // Ignore malformed FIREBASE_CONFIG and fallback.
-    }
-  }
-
-  if (process.env.FIREBASE_STORAGE_BUCKET) {
-    return process.env.FIREBASE_STORAGE_BUCKET;
-  }
-
-  if (process.env.VITE_APP_FIREBASE_STORAGE_BUCKET) {
-    return process.env.VITE_APP_FIREBASE_STORAGE_BUCKET;
-  }
-
-  return `${process.env.GCLOUD_PROJECT}.appspot.com`;
 };
 
 const extractStoragePathFromUrl = (value: string): string | null => {
@@ -372,10 +348,12 @@ app.patch('/tickets/:id/status', async (req, res) => {
     }
 
     const env = process.env.VITE_APP_ENV || 'dev';
+    const ticketRef = db.collection('env').doc(env).collection('tickets').doc(ticketId);
 
-    await db.collection('env').doc(env).collection('tickets').doc(ticketId).set(
+    await ticketRef.set(
       {
         status,
+        ...(await resolvedAtFields(ticketRef, status as TicketStatus)),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       },
       { merge: true }
@@ -469,10 +447,12 @@ app.patch('/tickets/:id', async (req, res) => {
     }
 
     const env = process.env.VITE_APP_ENV || 'dev';
+    const ticketRef = db.collection('env').doc(env).collection('tickets').doc(ticketId);
 
-    await db.collection('env').doc(env).collection('tickets').doc(ticketId).set(
+    await ticketRef.set(
       {
         ...updatePayload,
+        ...(status !== undefined ? await resolvedAtFields(ticketRef, status) : {}),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       },
       { merge: true }
@@ -565,9 +545,9 @@ app.get('/calendar/:uid', async (req, res) => {
       return res.status(500).send('Failed to create calendar');
     }
 
-    const currentUser = (await db.collection('users').doc(uid).get()).data() as Tender;
-    currentUser.lastCalendarDownload = new Date();
-    await db.collection('users').doc(uid).set(currentUser);
+    // update, not set: rewriting the whole doc could undo concurrent writes such as the data
+    // retention job's archivedShiftStats increments.
+    await db.collection('users').doc(uid).update({ lastCalendarDownload: new Date() });
 
     const filename = `calendar-${uid}.ics`;
     res.setHeader('Content-Type', 'text/calendar; charset=utf-8');

@@ -1,7 +1,7 @@
 // context/TenderContext.tsx
 
 import React, { createContext, useContext, useMemo, ReactNode } from "react";
-import { Tender, Invite } from "../types/types-file"; // Ensure this import path is correct
+import { Tender } from "../types/types-file"; // Ensure this import path is correct
 import useTenders from "../hooks/useTenders"; // Assuming this is your custom hook for handling tender data
 
 export interface TenderContextType {
@@ -10,7 +10,6 @@ export interface TenderContextType {
     isLoaded: boolean;
     tenders: (Tender)[];
   };
-  invitedTenders: (Invite & { key: string })[];
   addInvite: (email: string) => Promise<void>;
   addInvites: (
     recipients: Array<{ id: string; email: string; fullName?: string; studyline?: string }>,
@@ -29,7 +28,6 @@ const TenderContext = createContext<TenderContextType | undefined>(undefined);
 export const TenderProvider = ({ children }: { children: ReactNode }) => {
   const {
     tenderState,
-    invitedTenders,
     addInvite,
     addInvites,
     removeInvite,
@@ -40,14 +38,13 @@ export const TenderProvider = ({ children }: { children: ReactNode }) => {
   const value = useMemo(
     () => ({
       tenderState,
-      invitedTenders,
       addInvite,
       addInvites,
       removeInvite,
       updateTender,
       deleteTender,
     }),
-    [tenderState, invitedTenders, addInvite, addInvites, removeInvite, updateTender, deleteTender]
+    [tenderState, addInvite, addInvites, removeInvite, updateTender, deleteTender]
   );
 
   return <TenderContext.Provider value={value}>{children}</TenderContext.Provider>;

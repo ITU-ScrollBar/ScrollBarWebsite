@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, Suspense } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import type { MenuProps } from 'antd';
 import { ConfigProvider, Menu } from "antd";
@@ -48,8 +48,8 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
       key: 'tenders/gethelp',
     },
     {
-      label: 'Create Ticket',
-      key: 'tenders/tickets',
+      label: 'Forms',
+      key: 'tenders/forms',
     }
   ];
 
@@ -104,8 +104,18 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
         key: 'admin/applications',
       });
     }
+    if (currentUser?.roles?.includes(Role.BOARD)) {
+      adminItems.push({
+        label: 'Form Responses',
+        key: 'admin/forms',
+      });
+    }
     if (currentUser?.isAdmin) {
       adminItems.push({
+        label: 'IT Dashboard',
+        key: 'admin/it',
+      },
+      {
         label: 'System Settings',
         key: 'admin/settings',
       },
@@ -138,7 +148,13 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
     navigate(`/${e.key}`);
   }
 
-  const currentPage = items.find((item) => item?.key?.toString() && pathname.endsWith(item?.key?.toString()));
+  // Sub-pages such as /tenders/forms/lending keep their parent entry highlighted. Submenu
+  // headings (Admin) are skipped: they have children rather than a route of their own.
+  const currentPage = items.find((item) => {
+    const key = item?.key?.toString();
+    if (!key || (item && 'children' in item)) return false;
+    return pathname === `/${key}` || pathname.startsWith(`/${key}/`);
+  });
 
   return (
     <div>
@@ -178,7 +194,8 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
           </ConfigProvider>
         </div>
       </div>
-      {children || <Outlet />}
+      {/* Own boundary so the menu stays visible while a lazy page chunk loads. */}
+      <Suspense fallback={<Loading />}>{children || <Outlet />}</Suspense>
     </div>
   );
 };

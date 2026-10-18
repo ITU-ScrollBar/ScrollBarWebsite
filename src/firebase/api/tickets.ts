@@ -45,6 +45,8 @@ const safeDeleteStoragePath = async (path?: string) => {
 };
 
 export const createTicket = async (ticket: TicketCreateParams, imageFiles: File[] = []) => {
+  // Pages can render from the cached profile before Firebase Auth has restored the sign-in.
+  await auth.authStateReady();
   const currentUser = auth.currentUser;
   if (!currentUser) {
     throw new Error("You must be signed in to create a ticket.");
@@ -113,6 +115,7 @@ type ListTicketsHttpResponse = {
 };
 
 export const listTickets = async (): Promise<(Ticket & { key: string })[]> => {
+  await auth.authStateReady();
   const currentUser = auth.currentUser;
   if (!currentUser) {
     throw new Error("You must be signed in to list tickets.");
@@ -168,6 +171,7 @@ export const updateTicket = async (
     status?: TicketStatus;
   }
 ): Promise<void> => {
+  await auth.authStateReady();
   const currentUser = auth.currentUser;
   if (!currentUser) {
     throw new Error("You must be signed in to update ticket.");
@@ -190,6 +194,7 @@ export const updateTicket = async (
 };
 
 export const deleteTicket = async (id: string): Promise<void> => {
+  await auth.authStateReady();
   const currentUser = auth.currentUser;
   if (!currentUser) {
     throw new Error("You must be signed in to delete ticket.");

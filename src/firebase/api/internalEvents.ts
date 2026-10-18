@@ -5,6 +5,7 @@ import {
   deleteDoc,
   updateDoc,
   query,
+  where,
   onSnapshot,
   QuerySnapshot,
   DocumentData,
@@ -53,11 +54,12 @@ export const updateInternalEvent = ({
 };
 
 /**
- * Streams internal events ordered by start date.
+ * Streams internal events that haven't ended yet. Past ones are never shown
+ * (useInternalEvents drops them too), so there's no point downloading them.
  */
 export const streamInternalEvents = (observer: { next: (snapshot: QuerySnapshot<DocumentData>) => void; error: (error: Error) => void }): Unsubscribe => {
   const eventsRef = collection(db, 'env', env, 'internalEvents');
-  const q = query(eventsRef);
+  const q = query(eventsRef, where('end', '>=', new Date()));
 
   // Return the unsubscribe function from onSnapshot
   return onSnapshot(q, observer.next, observer.error);

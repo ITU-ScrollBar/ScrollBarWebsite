@@ -9,6 +9,11 @@ export const InactiveUserPage = () => {
     return <Navigate to="/login" replace />;
   }
 
+  // Reactivated members (or a saved active profile) don't belong here.
+  if (currentUser.active) {
+    return <Navigate to="/members/profile" replace />;
+  }
+
   const handleLogout = async (): Promise<void> => {
     await logout();
   }

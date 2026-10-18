@@ -2,6 +2,7 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   ClockCircleOutlined,
+  DownloadOutlined,
   RedoOutlined,
 } from "@ant-design/icons";
 import {
@@ -11,6 +12,7 @@ import {
   Image,
   Layout,
   message,
+  notification,
   Popconfirm,
   Space,
   Table,
@@ -20,17 +22,18 @@ import {
   Typography,
 } from "antd";
 import { Content } from "antd/es/layout/layout";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useApplications from "../../hooks/useApplications";
 import { useTenderContext } from "../../contexts/TenderContext";
 import useSettings from "../../hooks/useSettings";
 import { IntakeApplication, StudyLine } from "../../types/types-file";
 import { useAuth } from "../../contexts/AuthContext";
 import Loading from "../../components/Loading";
-import { getDownloadURL, ref } from "firebase/storage";
-import { storage } from "../../firebase";
 import { getStudyLines } from "../../firebase/api/authentication";
 import avatarPlaceholder from "../../assets/images/avatar.png";
+import ApplicationFileLink from "./ApplicationsReview/components/ApplicationFileLink";
+import useStorageDownloadUrls from "./ApplicationsReview/hooks/useStorageDownloadUrls";
+import downloadAllApplications from "./ApplicationsReview/utils/downloadAllApplications";
 
 const { Title, Paragraph } = Typography;
 
@@ -54,9 +57,8 @@ export default function ApplicationsReviewPage() {
   const [retryingFailed, setRetryingFailed] = useState(false);
   const [sendingInviteTest, setSendingInviteTest] = useState(false);
   const [sendingRejectionTest, setSendingRejectionTest] = useState(false);
+  const [downloadingAll, setDownloadingAll] = useState(false);
   const [studyLines, setStudyLines] = useState<StudyLine[]>([]);
-  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
-  const requestedPhotoIdsRef = useRef<Set<string>>(new Set());
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
 
@@ -73,6 +75,20 @@ export default function ApplicationsReviewPage() {
   const hasFailedDeliveries = useMemo(() => {
     return applicationsState.applications.some((application) => application.emailDeliveryStatus === "failed");
   }, [applicationsState.applications]);
+
+  // Statuses are set to pending before the emails are queued, because the mail functions
+  // mark each application success or failed as they send, and a later write would hide that.
+  // Returns how many emails could not be queued.
+  const sendDecisionEmails = async (accepted: IntakeApplication[], rejected: IntakeApplication[]) => {
+    await setEmailDeliveryStatuses(
+      [...accepted, ...rejected].map(({ id }) => ({ id, emailDeliveryStatus: "pending" as const }))
+    );
+    const inviteResult = await addInvites(accepted, settingsState.settings.inviteEmailBodyText);
+    const rejectResult = await queueRejectedEmails(rejected, settingsState.settings.rejectionEmailBodyText);
+    const failed = [...inviteResult.failed, ...rejectResult.failed];
+    await setEmailDeliveryStatuses(failed.map(({ id }) => ({ id, emailDeliveryStatus: "failed" as const })));
+    return failed.length;
+  };
 
   const renderDeliveryIcon = (status: "pending" | "success" | "failed") => {
     if (status === "success") {
@@ -109,24 +125,25 @@ export default function ApplicationsReviewPage() {
       });
   }, []);
 
-  useEffect(() => {
-    const missing = applicationsState.applications.filter((application) => {
-      return !!application.photoPath && !requestedPhotoIdsRef.current.has(application.id);
-    });
+  const photoFileRefs = useMemo(
+    () => applicationsState.applications.map((application) => ({ id: application.id, path: application.photoPath })),
+    [applicationsState.applications]
+  );
 
-    if (!missing.length) return;
+  const applicationFileRefs = useMemo(
+    () =>
+      applicationsState.applications.map((application) => ({
+        id: application.id,
+        path: application.applicationFilePath,
+      })),
+    [applicationsState.applications]
+  );
 
-    missing.forEach((application) => {
-      requestedPhotoIdsRef.current.add(application.id);
-      getDownloadURL(ref(storage, application.photoPath))
-        .then((url) => {
-          setPhotoUrls((prev) => ({ ...prev, [application.id]: url }));
-        })
-        .catch((error: any) => {
-          message.error(`Failed to load picture: ${error.message}`);
-        });
-    });
-  }, [applicationsState.applications]);
+  const { entries: photoEntries } = useStorageDownloadUrls(photoFileRefs, "picture");
+  const { entries: applicationFileEntries, retry: retryApplicationFile } = useStorageDownloadUrls(
+    applicationFileRefs,
+    "application file"
+  );
 
   const columns = [
     {
@@ -166,21 +183,12 @@ export default function ApplicationsReviewPage() {
       title: "Application",
       dataIndex: "applicationFilePath",
       key: "applicationFilePath",
-      render: (value: string) => (
-        <Button
-          type="link"
-          style={{ padding: 0 }}
-          onClick={async () => {
-            try {
-              const url = await getDownloadURL(ref(storage, value));
-              window.open(url, "_blank", "noopener,noreferrer");
-            } catch (error: any) {
-              message.error(`Failed to open application file: ${error.message}`);
-            }
-          }}
-        >
-          Open application
-        </Button>
+      render: (value: string, record: IntakeApplication) => (
+        <ApplicationFileLink
+          filePath={value}
+          entry={applicationFileEntries[record.id]}
+          onRetry={() => retryApplicationFile({ id: record.id, path: value })}
+        />
       ),
     },
     {
@@ -189,7 +197,7 @@ export default function ApplicationsReviewPage() {
       key: "photoPath",
       render: (_value: string, record: IntakeApplication) => (
         <Image
-          src={photoUrls[record.id] || avatarPlaceholder}
+          src={photoEntries[record.id]?.url || avatarPlaceholder}
           alt={`${record.fullName} photo`}
           width={64}
           height={64}
@@ -326,6 +334,30 @@ export default function ApplicationsReviewPage() {
             Submitted at {applicationsState.submittedAt.toLocaleString()}
           </Paragraph>
         )}
+
+        <Button
+          icon={<DownloadOutlined />}
+          loading={downloadingAll}
+          disabled={!applicationsState.applications.length}
+          onClick={async () => {
+            setDownloadingAll(true);
+            try {
+              const failed = await downloadAllApplications(
+                applicationsState.applications,
+                (id) => studyLines.find((studyLine) => studyLine.id === id)?.name || id || ""
+              );
+              if (failed) {
+                message.warning(`${failed} file${failed === 1 ? "" : "s"} could not be downloaded and are missing from the zip.`);
+              }
+            } catch (error) {
+              message.error(`Failed to download applications: ${error instanceof Error ? error.message : String(error)}`);
+            } finally {
+              setDownloadingAll(false);
+            }
+          }}
+        >
+          Download all applications
+        </Button>
 
         <Tabs
           defaultActiveKey="all"
@@ -471,40 +503,7 @@ export default function ApplicationsReviewPage() {
                   if (!currentUser?.uid) return;
                   setSubmittingRound(true);
                   try {
-                    const inviteResult = await addInvites(
-                      grouped.accept.map((application) => ({
-                        id: application.id,
-                        email: application.email,
-                        fullName: application.fullName,
-                        studyline: application.studyline,
-                      })),
-                      settingsState.settings.inviteEmailBodyText
-                    );
-                    const rejectResult = await queueRejectedEmails(
-                      grouped.reject.map((application) => ({
-                        id: application.id,
-                        email: application.email,
-                        fullName: application.fullName,
-                      })),
-                      settingsState.settings.rejectionEmailBodyText
-                    );
-
-                    await setEmailDeliveryStatuses([
-                      ...grouped.accept.map((application) => ({
-                        id: application.id,
-                        emailDeliveryStatus: inviteResult.successful.includes(application.id)
-                          ? ("pending" as const)
-                          : ("failed" as const),
-                      })),
-                      ...grouped.reject.map((application) => ({
-                        id: application.id,
-                        emailDeliveryStatus: rejectResult.successful.includes(application.id)
-                          ? ("pending" as const)
-                          : ("failed" as const),
-                      })),
-                    ]);
-
-                    const failedTotal = inviteResult.failed.length + rejectResult.failed.length;
+                    const failedTotal = await sendDecisionEmails(grouped.accept, grouped.reject);
                     if (failedTotal) {
                       message.warning(
                         `${failedTotal} email${failedTotal === 1 ? "" : "s"} could not be queued. You can retry failed entries.`
@@ -514,6 +513,11 @@ export default function ApplicationsReviewPage() {
                     }
 
                     await submitRound(currentUser.uid);
+                  } catch (error) {
+                    notification.error({
+                      message: "Submitting the round failed",
+                      description: (error as Error).message,
+                    });
                   } finally {
                     setSubmittingRound(false);
                   }
@@ -545,50 +549,12 @@ export default function ApplicationsReviewPage() {
                   onConfirm={async () => {
                     setRetryingFailed(true);
                     try {
-                      const failedInvites = applicationsState.applications.filter(
-                        (application) =>
-                          application.decision === "accept" && application.emailDeliveryStatus === "failed"
-                      );
-                      const failedRejections = applicationsState.applications.filter(
-                        (application) =>
-                          application.decision === "reject" && application.emailDeliveryStatus === "failed"
-                      );
-
-                      const inviteRetryResult = await addInvites(
-                        failedInvites.map((application) => ({
-                          id: application.id,
-                          email: application.email,
-                          fullName: application.fullName,
-                          studyline: application.studyline,
-                        })),
-                        settingsState.settings.inviteEmailBodyText
-                      );
-
-                      const rejectRetryResult = await queueRejectedEmails(
-                        failedRejections.map((application) => ({
-                          id: application.id,
-                          email: application.email,
-                          fullName: application.fullName,
-                        })),
-                        settingsState.settings.rejectionEmailBodyText
-                      );
-
-                      await setEmailDeliveryStatuses([
-                        ...failedInvites.map((application) => ({
-                          id: application.id,
-                          emailDeliveryStatus: inviteRetryResult.successful.includes(application.id)
-                            ? ("pending" as const)
-                            : ("failed" as const),
-                        })),
-                        ...failedRejections.map((application) => ({
-                          id: application.id,
-                          emailDeliveryStatus: rejectRetryResult.successful.includes(application.id)
-                            ? ("pending" as const)
-                            : ("failed" as const),
-                        })),
-                      ]);
-
-                      const failedTotal = inviteRetryResult.failed.length + rejectRetryResult.failed.length;
+                      const failedOf = (decision: string) =>
+                        applicationsState.applications.filter(
+                          (application) =>
+                            application.decision === decision && application.emailDeliveryStatus === "failed"
+                        );
+                      const failedTotal = await sendDecisionEmails(failedOf("accept"), failedOf("reject"));
                       if (failedTotal) {
                         message.warning(
                           `${failedTotal} email${failedTotal === 1 ? "" : "s"} still could not be queued after retry.`
@@ -596,6 +562,11 @@ export default function ApplicationsReviewPage() {
                       } else {
                         message.success("All previously failed email entries are queued. Delivery status will update automatically.");
                       }
+                    } catch (error) {
+                      notification.error({
+                        message: "Retrying failed emails failed",
+                        description: (error as Error).message,
+                      });
                     } finally {
                       setRetryingFailed(false);
                     }

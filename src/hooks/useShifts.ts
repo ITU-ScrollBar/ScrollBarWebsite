@@ -6,7 +6,7 @@ import {
   streamShifts,
   updateShift as update,
 } from '../firebase/api/shifts'; // Adjust the import path as necessary
-import { QuerySnapshot, DocumentData, Timestamp } from 'firebase/firestore';
+import { QuerySnapshot, DocumentData, QueryDocumentSnapshot, Timestamp } from 'firebase/firestore';
 import { Shift } from '../types/types-file'; // Ensure you have Shift type defined
 
 type FirebaseShift = {
@@ -31,20 +31,34 @@ export const sortShifts = (a:Shift, b:Shift) => {
 
   
 
+export const toShift = (doc: QueryDocumentSnapshot<DocumentData>): Shift => {
+  const data = doc.data() as FirebaseShift;
+  return {
+    ...data,
+    id: doc.id,
+    key: doc.id,
+    start: data.start?.toDate(),
+    end: data.end?.toDate(),
+  } as Shift;
+};
+
 interface ShiftState {
   loading: boolean;
   isLoaded: boolean;
   shifts: Shift[];
 }
 
-const useShifts = () => {
+// `enabled` stays false until a component actually reads this data (see
+// useStreamRequest), so routes that don't need it never download it.
+const useShifts = (enabled: boolean) => {
   const [shiftState, setShiftState] = useState<ShiftState>({
-    loading: false,
+    loading: true,
     isLoaded: false,
     shifts: [],
   });
 
   useEffect(() => {
+    if (!enabled) return;
     setShiftState((prevState) => ({
       ...prevState,
       loading: true,
@@ -52,18 +66,7 @@ const useShifts = () => {
 
     const unsubscribe = streamShifts({
       next: (snapshot: QuerySnapshot<DocumentData>) => {
-        const updatedShifts: Shift[] = snapshot.docs
-          .map((doc) => {
-            const data = doc.data() as FirebaseShift;
-            return {
-              ...data,
-              id: doc.id,
-              key: doc.id,
-              start: data.start?.toDate(),
-              end: data.end?.toDate(),
-            } as Shift;
-          })
-          .sort(sortShifts);
+        const updatedShifts: Shift[] = snapshot.docs.map(toShift).sort(sortShifts);
 
         setShiftState((prevState) => ({
           ...prevState,
@@ -82,7 +85,7 @@ const useShifts = () => {
     });
 
     return unsubscribe;
-  }, []);
+  }, [enabled]);
 
   const addShift = (shift: Shift): Promise<string> => {
     return createShift(shift);

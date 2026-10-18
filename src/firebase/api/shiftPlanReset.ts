@@ -2,7 +2,7 @@
 // (see functions/src/shiftPlanning/firebaseData.ts persistPlannerResult, which captures the
 // snapshot atomically with the one-and-only generate run for a period). Runs client-side,
 // same permission class as the existing manual engagement removal in ShiftAssignmentInfo.tsx.
-import { collection, deleteField, doc, DocumentReference, writeBatch } from "firebase/firestore";
+import { collection, deleteField, doc, DocumentReference, getDoc, writeBatch } from "firebase/firestore";
 import { db } from "..";
 import { Engagement, ShiftPlanningPeriod } from "../../types/types-file";
 
@@ -57,7 +57,16 @@ export const resetShiftPlanningPeriod = async (params: {
     ref: doc(getEngagementsCollection(), engagement.id),
   }));
 
-  for (const roleSnapshot of snapshot.roleSnapshots) {
+  // Users deleted since the plan was generated have no doc to restore roles on, and an update
+  // on a missing doc would fail the whole reset.
+  const existingUsers = await Promise.all(
+    snapshot.roleSnapshots.map(async (roleSnapshot) =>
+      (await getDoc(doc(getUsersCollection(), roleSnapshot.userId))).exists() ? roleSnapshot : null
+    )
+  );
+  const roleSnapshots = existingUsers.filter((roleSnapshot) => roleSnapshot !== null);
+
+  for (const roleSnapshot of roleSnapshots) {
     ops.push({
       kind: "update",
       ref: doc(getUsersCollection(), roleSnapshot.userId),
@@ -81,7 +90,7 @@ export const resetShiftPlanningPeriod = async (params: {
 
   return {
     deletedEngagementCount: engagementsToDelete.length,
-    restoredRoleCount: snapshot.roleSnapshots.length,
+    restoredRoleCount: roleSnapshots.length,
   };
 };
 

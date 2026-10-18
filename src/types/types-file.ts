@@ -45,6 +45,7 @@ export interface Settings {
   constitution: string;
   djdescription?: string;
   hero: string;
+  heroPoster?: string;
   homepageTitle: string;
   homepageDescription: string;
   getHelpTitle: string;
@@ -141,6 +142,9 @@ export interface Shift {
   end: Date;
   category?: ShiftCategory;
   linkedShiftId?: string; // Set on satellite shifts; points to the primary shift's ID
+  // Relative share of tenders on mandatory (big party) events, where headcount isn't fixed.
+  // Missing means 1; a shift with weight 2 gets about twice as many people as one with weight 1.
+  weight?: number;
 }
 
 export interface ShiftUpdateParams {
@@ -171,8 +175,16 @@ export type Tender = {
   teamIds?: string[];
   avoidShiftWithUserIds?: string[];
   lastCalendarDownload?: Date;
+  // Keyed by env. Written by the cleanupOldShiftsAndEvents function when it deletes old engagements.
+  archivedShiftStats?: Record<string, ArchivedShiftStats>;
   // Add other fields here
 };
+
+// Engagements removed by data retention, kept as totals so the profile's shift counter survives.
+export interface ArchivedShiftStats {
+  count: number;
+  firstShiftEnd?: Date;
+}
 
 export type Invite = {
   id: string;
@@ -372,4 +384,76 @@ export interface IntakeApplication {
   decision: ApplicationDecision;
   emailDeliveryStatus: EmailDeliveryStatus;
   createdAt?: Date;
+}
+
+// Equipment lending and anonymous feedback: the two Microsoft Forms surveys that were replaced by
+// on-site forms. Their responses live outside the ticket kanban, on the Form Responses page.
+export enum LendingEquipment {
+  SOUNDBOKS = "soundboks",
+  SPEAKER_STAND = "speaker_stand",
+  ICE_BUCKET = "ice_bucket",
+  IPAD = "ipad",
+  OTHER = "other",
+}
+
+export type LendingRequestStatus = "pending" | "approved" | "declined";
+
+// Lending needs sign-off from two different board members, so approvals are tracked per uid and
+// the status is derived from how many are registered.
+export const LENDING_REQUIRED_APPROVALS = 2;
+
+export type LendingDecision = "approve" | "withdraw" | "decline" | "reopen";
+
+export interface FormComment {
+  id: string;
+  body: string;
+  authorUid?: string;
+  createdAt?: Date;
+}
+
+export interface LendingRequest {
+  id: string;
+  key?: string;
+  equipment: LendingEquipment;
+  // Free text for LendingEquipment.OTHER.
+  equipmentDetails?: string;
+  occasion: string;
+  pickupAt?: Date;
+  returnAt?: Date;
+  responsibilityAccepted: boolean;
+  additionalInfo?: string;
+  status: LendingRequestStatus;
+  approvedByUids: string[];
+  declinedByUid?: string;
+  // Firestore stores a DocumentReference to the creator; the list endpoint flattens it to the
+  // user's uid, which is what reaches the client.
+  createdByUid?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  comments: FormComment[];
+}
+
+export interface LendingRequestCreateParams {
+  equipment: LendingEquipment;
+  equipmentDetails?: string;
+  occasion: string;
+  pickupAt: Date;
+  returnAt: Date;
+  responsibilityAccepted: boolean;
+  additionalInfo?: string;
+}
+
+export interface AnonymousFeedback {
+  id: string;
+  key?: string;
+  feedback: string;
+  name?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  comments: FormComment[];
+}
+
+export interface AnonymousFeedbackCreateParams {
+  feedback: string;
+  name?: string;
 }

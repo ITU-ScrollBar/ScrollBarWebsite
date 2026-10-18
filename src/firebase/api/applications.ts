@@ -17,10 +17,9 @@ import {
 import {
   deleteObject,
   ref,
-  uploadBytes,
 } from "firebase/storage";
-import { db, storage } from "../index";
-import { getExtension } from "./common";
+import { httpsCallable } from "firebase/functions";
+import { db, functions, storage } from "../index";
 
 const env = import.meta.env.VITE_APP_ENV as string;
 
@@ -67,62 +66,100 @@ type QueueTemplateTestEmailPayload = {
   studyline?: string;
 };
 
-const uploadApplicationFile = async (file: File, applicantEmail: string, fileTag: string) => {
-  const extension = getExtension(file.name);
-  const extensionSuffix = extension ? `.${extension}` : "";
-  const safeEmail = applicantEmail.replace(/[^a-zA-Z0-9._-]/g, "_").toLowerCase();
-  const path = `applications/${env}/${Date.now()}-${safeEmail}-${fileTag}${extensionSuffix}`;
-  const storageRef = ref(storage, path);
+const MAX_APPLICATION_FILE_BYTES = 1024 * 1024 * 1024;
+const MAX_PHOTO_BYTES = 25 * 1024 * 1024;
 
-  await uploadBytes(storageRef, file, {
-    contentType: file.type,
+type StartApplicationResult = {
+  uploadId: string;
+  applicationFileUploadUrl: string;
+  photoUploadUrl: string;
+};
+
+const getContentType = (file: File) => file.type || "application/octet-stream";
+
+const toFileInfo = (file: File) => ({
+  name: file.name,
+  contentType: getContentType(file),
+  size: file.size,
+});
+
+// XMLHttpRequest rather than fetch, because fetch cannot report upload progress.
+const uploadToSession = (
+  uploadUrl: string,
+  file: File,
+  onProgress: (loadedBytes: number) => void
+) =>
+  new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", uploadUrl);
+    xhr.setRequestHeader("Content-Type", getContentType(file));
+    xhr.upload.onprogress = (event) => onProgress(event.loaded);
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        onProgress(file.size);
+        resolve();
+      } else {
+        reject(new Error(`Uploading ${file.name} failed (${xhr.status}). Please try again.`));
+      }
+    };
+    xhr.onerror = () =>
+      reject(new Error(`Uploading ${file.name} failed. Check your connection and try again.`));
+    xhr.send(file);
   });
 
-  return { path };
-};
-
-const safeDeleteStoragePath = async (path?: string) => {
-  if (!path) return;
-  try {
-    await deleteObject(ref(storage, path));
-  } catch (error) {
-    console.error("Failed deleting partially uploaded file", error);
+// Applicants are not signed in, so a Cloud Function opens upload sessions for the
+// files, the browser uploads straight to them, and a second call files the application.
+export const submitApplication = async (
+  payload: SubmitApplicationPayload,
+  onProgress?: (percent: number) => void
+) => {
+  if (!payload.photoFile.type.startsWith("image/")) {
+    throw new Error("The photo upload must be an image file.");
   }
-};
-
-export const submitApplication = async (payload: SubmitApplicationPayload) => {
-  let uploadedApplicationPath: string | undefined;
-  let uploadedPhotoPath: string | undefined;
-
-  try {
-    if (!payload.photoFile.type.startsWith("image/")) {
-      throw new Error("The photo upload must be an image file.");
-    }
-
-    const uploaded = await uploadApplicationFile(payload.file, payload.email, "application");
-    uploadedApplicationPath = uploaded.path;
-
-    const uploadedPhoto = await uploadApplicationFile(payload.photoFile, payload.email, "photo");
-    uploadedPhotoPath = uploadedPhoto.path;
-
-    return await addDoc(getApplicationsCollection(), {
-      fullName: payload.fullName,
-      email: payload.email,
-      studyline: payload.studyline,
-      comment: payload.comment ?? "",
-      applicationFilePath: uploadedApplicationPath,
-      photoPath: uploadedPhotoPath,
-      decision: "pending",
-      emailDeliveryStatus: "pending",
-      createdAt: serverTimestamp(),
-    });
-  } catch (error) {
-    await Promise.all([
-      safeDeleteStoragePath(uploadedApplicationPath),
-      safeDeleteStoragePath(uploadedPhotoPath),
-    ]);
-    throw error;
+  if (payload.file.size > MAX_APPLICATION_FILE_BYTES) {
+    throw new Error("The application file must be 1 GB or smaller.");
   }
+  if (payload.photoFile.size > MAX_PHOTO_BYTES) {
+    throw new Error("The photo must be 25 MB or smaller.");
+  }
+
+  const startApplication = httpsCallable<Record<string, unknown>, StartApplicationResult>(
+    functions,
+    "startApplication"
+  );
+  const completeApplication = httpsCallable<{ env: string; uploadId: string }, { id: string }>(
+    functions,
+    "completeApplication"
+  );
+
+  const { data: session } = await startApplication({
+    env,
+    fullName: payload.fullName,
+    email: payload.email,
+    studyline: payload.studyline,
+    comment: payload.comment ?? "",
+    file: toFileInfo(payload.file),
+    photoFile: toFileInfo(payload.photoFile),
+  });
+
+  const totalBytes = payload.file.size + payload.photoFile.size;
+  const loaded = { file: 0, photo: 0 };
+  const reportProgress = () =>
+    onProgress?.(Math.min(100, Math.round(((loaded.file + loaded.photo) / totalBytes) * 100)));
+
+  await Promise.all([
+    uploadToSession(session.applicationFileUploadUrl, payload.file, (bytes) => {
+      loaded.file = bytes;
+      reportProgress();
+    }),
+    uploadToSession(session.photoUploadUrl, payload.photoFile, (bytes) => {
+      loaded.photo = bytes;
+      reportProgress();
+    }),
+  ]);
+
+  const { data } = await completeApplication({ env, uploadId: session.uploadId });
+  return data;
 };
 
 export const streamApplications = (

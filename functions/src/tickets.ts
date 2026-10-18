@@ -8,6 +8,7 @@ import {
   TicketRequestType,
   TicketStatus,
 } from "./types/types-file";
+import { resolvedAtFields } from "./ticketResolvedAt";
 
 type CreateTicketRequest = {
   title?: string;
@@ -213,9 +214,11 @@ export const setTicketStatus = onCall(
       throw new HttpsError("invalid-argument", "status must be a valid value.");
     }
 
-    await db.collection("env").doc(env).collection("tickets").doc(id).set(
+    const ticketRef = db.collection("env").doc(env).collection("tickets").doc(id);
+    await ticketRef.set(
       {
         status,
+        ...(await resolvedAtFields(ticketRef, status as TicketStatus)),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       },
       { merge: true }

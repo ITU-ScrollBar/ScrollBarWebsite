@@ -1,4 +1,4 @@
-import { Button, Card, Form, Input, Layout, message, Typography, Upload } from "antd";
+import { Button, Card, Form, Input, Layout, message, Progress, Typography, Upload } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { useMemo, useState } from "react";
 import { submitApplication } from "../firebase/api/applications";
@@ -21,6 +21,7 @@ export default function ApplyPage() {
   const [fileList, setFileList] = useState<any[]>([]);
   const [photoFileList, setPhotoFileList] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadPercent, setUploadPercent] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const { settingsState } = useSettings();
 
@@ -50,6 +51,7 @@ export default function ApplyPage() {
     }
 
     setSubmitting(true);
+    setUploadPercent(0);
     try {
       await submitApplication({
         fullName: values.fullName,
@@ -58,7 +60,7 @@ export default function ApplyPage() {
         comment: values.comment,
         file: fileList[0].originFileObj as File,
         photoFile: photoFileList[0].originFileObj as File,
-      });
+      }, setUploadPercent);
       message.success("Application submitted successfully.");
       form.resetFields();
       setFileList([]);
@@ -207,6 +209,15 @@ export default function ApplyPage() {
                     <Form.Item label="Any other comments?" name="comment">
                       <Input.TextArea rows={6} />
                     </Form.Item>
+
+                    {submitting && (
+                      <div style={{ marginBottom: 16 }}>
+                        <Progress percent={uploadPercent} />
+                        <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                          Uploading your files. Large videos can take a few minutes, so keep this page open.
+                        </Paragraph>
+                      </div>
+                    )}
 
                     <Button type="primary" htmlType="submit" loading={submitting}>
                       Submit application
