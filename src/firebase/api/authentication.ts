@@ -74,6 +74,9 @@ type InviteUserOptions = {
   manualInvite?: boolean;
 };
 
+// Firestore invite docs are keyed by email; normalize so lookups aren't case/whitespace sensitive
+const normalizeEmail = (email: string): string => email.trim().toLowerCase();
+
 // Create an account for a new user
 export const createAccount = async (form: FormData): Promise<User> => {
   const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, form.email, form.password);
@@ -87,7 +90,7 @@ export const createAccount = async (form: FormData): Promise<User> => {
     photoUrl: '',
   };
 
-  await updateDoc(doc(db, 'invites', form.email), { registered: true });
+  await updateDoc(doc(db, 'invites', normalizeEmail(form.email)), { registered: true });
   await saveUser(userCredential.user.uid, userData);
   return userCredential.user;
 };
@@ -104,7 +107,7 @@ export const loginWithEmailAndPassword = async (
 
 // Check if the email is already invited
 export const checkIfEmailIsInvited = (email: string): Promise<any> => {
-  return getDocument('invites', email, false);
+  return getDocument('invites', normalizeEmail(email), false);
 };
 
 // Get a list of study lines
@@ -144,6 +147,7 @@ export const streamInvitedUsers = (observer: Observer<QuerySnapshot>) => {
 };
 // Invite a user by email
 export const inviteUser = (email: string, options?: InviteUserOptions): Promise<void> => {
+  const normalizedEmail = normalizeEmail(email);
   const manualInvite = !!options?.manualInvite;
   const manualInviteRequestId = manualInvite ? `${Date.now()}-${Math.random().toString(36).slice(2)}` : undefined;
 
@@ -152,7 +156,7 @@ export const inviteUser = (email: string, options?: InviteUserOptions): Promise<
     ...(manualInviteRequestId ? { manualInviteRequestId } : {}),
   };
 
-  return getDocument('invites', email, false).then((existing) => {
+  return getDocument('invites', normalizedEmail, false).then((existing) => {
     if (existing) {
       if (!manualInvite) {
         return;
@@ -163,12 +167,12 @@ export const inviteUser = (email: string, options?: InviteUserOptions): Promise<
         registered: existing.registered ?? false,
       };
 
-      return deleteDoc(doc(db, 'invites', email)).then(() =>
-        setDoc(doc(db, 'invites', email), recreatedPayload)
+      return deleteDoc(doc(db, 'invites', normalizedEmail)).then(() =>
+        setDoc(doc(db, 'invites', normalizedEmail), recreatedPayload)
       );
     }
 
-    return setDoc(doc(db, 'invites', email), invitePayload);
+    return setDoc(doc(db, 'invites', normalizedEmail), invitePayload);
   });
 };
 
