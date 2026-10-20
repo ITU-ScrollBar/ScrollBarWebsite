@@ -107,7 +107,12 @@ export default function ShiftManagement() {
     }
 
     if (!selectedEventId || !selectedPeriodEvents.some((event) => event.id === selectedEventId)) {
-      setSelectedEventId(selectedPeriodEvents[0].id);
+      // Default to the next event that hasn't ended yet, else the period's last event.
+      const now = Date.now();
+      const nextEvent =
+        selectedPeriodEvents.find((event) => event.end.getTime() >= now) ??
+        selectedPeriodEvents[selectedPeriodEvents.length - 1];
+      setSelectedEventId(nextEvent.id);
     }
   }, [selectedEventId, selectedPeriodEvents]);
 
