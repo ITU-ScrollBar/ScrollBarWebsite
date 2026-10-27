@@ -81,6 +81,7 @@ export const DRINK_INGREDIENTS: DrinkIngredient[] = [
   { id: "sambuca", name: "Sambuca", category: "alcohol", color: CLEAR, clear: true },
   { id: "jagermeister", name: "Jägermeister", category: "alcohol", color: "#21150e" },
   { id: "fernet-branca", name: "Fernet Branca", category: "alcohol", color: "#1a1512" },
+  { id: "licor-43", name: "Licor 43", category: "alcohol", color: "#e9a92a" },
   { id: "pure-apple", name: "Pure Shot Apple", category: "alcohol", color: "#6abf3c", strong: true },
   { id: "pure-liquorice", name: "Pure Shot Liquorice", category: "alcohol", color: "#121212", strong: true },
   { id: "pure-pink-grape", name: "Pure Shot Pink Grape", category: "alcohol", color: "#f06292", strong: true },
