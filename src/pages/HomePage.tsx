@@ -116,7 +116,6 @@ export default function HomePage() {
           title: nextEvent.title,
           start: nextEvent.start,
           end: nextEvent.end,
-          event_url: nextEvent.event_url,
         } : null} />}
         <DrinkBuilderBanner />
         <Row justify="center">
