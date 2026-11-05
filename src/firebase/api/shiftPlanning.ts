@@ -6,6 +6,7 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -178,6 +179,17 @@ export const updateShiftPlanningPeriod = async (
 ): Promise<void> => {
   const ref = doc(getPeriodsCollection(), periodId);
   return updateDoc(ref, updates);
+};
+
+// Deletes the period and its survey responses, like the retention cleanup does. Engagements
+// from a generated plan belong to the events' shifts and are left alone.
+export const deleteShiftPlanningPeriod = async (periodId: string): Promise<void> => {
+  const responses = await getDocs(query(getResponsesCollection(), where("periodId", "==", periodId)));
+  // shortcut: one batch caps out at 499 responses (fails without deleting anything), chunk it if a period ever gets that many.
+  const batch = writeBatch(db);
+  responses.forEach((response) => batch.delete(response.ref));
+  batch.delete(doc(getPeriodsCollection(), periodId));
+  await batch.commit();
 };
 
 export const submitShiftPlanningResponse = async (

@@ -1,5 +1,5 @@
 
-import { Button, Space } from 'antd'
+import { Space } from 'antd'
 import Title from 'antd/es/typography/Title';
 import Text from 'antd/es/typography/Text';
 import { useWindowSize } from '../../hooks/useWindowSize';
@@ -11,7 +11,6 @@ interface CountDownProps {
     title: string;
     start: Date;
     end: Date;
-    event_url?: string;
   } | null;
 }
 
@@ -20,7 +19,6 @@ export default function CountDown({ nextEvent }: CountDownProps) {
   const { isMobile } = useWindowSize();
 
   const TEXT_SHADOW = `2px 2px 4px 'rgba(0, 0, 0, 0.8)'`;
-  const BASE_EVENT_URL = "https://www.facebook.com/ScrollBar"
   const units = [
     { label: 'Days', value: timeLeft.days.toString().padStart(2, '0') },
     { label: 'Hours', value: timeLeft.hours.toString().padStart(2, '0') },
@@ -126,26 +124,6 @@ export default function CountDown({ nextEvent }: CountDownProps) {
             ))}
           </Space>
         )}
-        <Button
-          type="primary"
-          size="large"
-          style={{
-            background: 'yellow',
-            borderColor: 'rgba(46, 46, 46, 0.6)',
-            borderWidth: 1,
-            color: 'black',
-            marginTop: 8,
-            borderRadius: 25,
-            alignSelf: 'flex-start',
-            fontSize: isMobile ? 14 : 16,
-            padding: isMobile ? '8px 24px' : '10px 40px',
-            height: 'auto',
-          }}
-          href={nextEvent.event_url || BASE_EVENT_URL}
-          target="_blank"
-        >
-          {nextEvent.event_url ? 'Go To Facebook Event' : 'Go To Facebook'}
-        </Button>
       </Space>
     </div>
   );

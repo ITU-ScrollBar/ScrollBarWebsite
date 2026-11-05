@@ -2,7 +2,6 @@ import { Button } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import { useWindowSize } from '../../hooks/useWindowSize'
 
-// Temporary promotion for the drink builder competition. Remove together with /forms/drinks.
 export default function DrinkBuilderBanner() {
   const navigate = useNavigate();
   const { isMobile } = useWindowSize();
@@ -28,11 +27,11 @@ export default function DrinkBuilderBanner() {
       </span>
       <div style={{ flex: 1 }}>
         <h2 style={{ color: '#FFE600', margin: '0 0 8px', fontSize: isMobile ? 22 : 28 }}>
-          Build a drink for our advent calendar
+          Build your own drink
         </h2>
         <p style={{ margin: 0, fontSize: 16, lineHeight: '26px', color: 'rgba(255, 255, 255, 0.85)' }}>
-          Mix your own drink from what we have in the bar. It could end up in ScrollBar's advent
-          calendar, and it might even be served at a Friday bar.
+          Mix your own drink from what we have in the bar and send it in. It might even be served
+          at a Friday bar.
         </p>
       </div>
       <Button

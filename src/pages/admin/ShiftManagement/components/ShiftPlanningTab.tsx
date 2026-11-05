@@ -3,6 +3,7 @@ import { Alert, Button, Popconfirm, Space } from "antd";
 import Text from "antd/es/typography/Text";
 import ShiftEventInformationSection from "./ShiftEventInformationSection";
 import ResetPeriodButton from "./ResetPeriodButton";
+import DeletePeriodButton from "./DeletePeriodButton";
 import SeedSurveyResponsesButton from "./SeedSurveyResponsesButton";
 import { Event, ShiftPlanningPeriod } from "../../../../types/types-file";
 
@@ -91,6 +92,8 @@ export default function ShiftPlanningTab({
           </Popconfirm>
 
           <SeedSurveyResponsesButton period={selectedPeriod} />
+
+          <DeletePeriodButton period={selectedPeriod} />
 
           {generationSummary && <Alert type="success" showIcon message={generationSummary} />}
           {generationWarnings.length > 0 && (
