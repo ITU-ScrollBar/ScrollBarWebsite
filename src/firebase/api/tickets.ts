@@ -110,6 +110,7 @@ type ListTicketsHttpResponse = {
     status: TicketStatus;
     createdByUid?: string;
     assigneeUid?: string;
+    linkedTicketIds?: string[];
     createdAtMs?: number;
     updatedAtMs?: number;
   }[];
@@ -150,6 +151,7 @@ export const listTickets = async (): Promise<(Ticket & { key: string })[]> => {
     status: ticket.status,
     createdByUid: ticket.createdByUid,
     assigneeUid: ticket.assigneeUid,
+    linkedTicketIds: ticket.linkedTicketIds ?? [],
     createdAt: ticket.createdAtMs ? new Date(ticket.createdAtMs) : undefined,
     updatedAt: ticket.updatedAtMs ? new Date(ticket.updatedAtMs) : undefined,
   }));
@@ -173,6 +175,8 @@ export const updateTicket = async (
     status?: TicketStatus;
     // null unassigns.
     assigneeUid?: string | null;
+    linkTicketIds?: string[];
+    unlinkTicketIds?: string[];
   }
 ): Promise<void> => {
   await auth.authStateReady();

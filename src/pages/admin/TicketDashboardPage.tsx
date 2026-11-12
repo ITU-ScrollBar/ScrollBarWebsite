@@ -107,6 +107,7 @@ export default function TicketDashboardPage() {
     impact: TicketImpact;
     status: TicketStatus;
     assigneeUid?: string;
+    linkedTicketIds: string[];
   } | null>(null);
   const [isSavingTicket, setIsSavingTicket] = useState(false);
   const [draggedTicketId, setDraggedTicketId] = useState<string | null>(null);
@@ -146,6 +147,15 @@ export default function TicketDashboardPage() {
     return new Map(tenderState.tenders.map((tender) => [tender.uid, tender]));
   }, [tenderState.tenders]);
 
+  const ticketById = useMemo(
+    () => new Map(ticketState.tickets.map((ticket) => [ticket.id, ticket])),
+    [ticketState.tickets]
+  );
+
+  // Links to deleted tickets (or, for developers, non-IT ones) are left out.
+  const visibleLinks = (ticket: Ticket) =>
+    (ticket.linkedTicketIds ?? []).filter((id) => ticketById.has(id));
+
   const developerOptions = useMemo(
     () =>
       tenderState.tenders
@@ -176,8 +186,11 @@ export default function TicketDashboardPage() {
       impact: selectedTicket.impact,
       status: selectedTicket.status,
       assigneeUid: selectedTicket.assigneeUid,
+      linkedTicketIds: (selectedTicket.linkedTicketIds ?? []).filter((id) =>
+        ticketById.has(id)
+      ),
     });
-  }, [selectedTicket]);
+  }, [selectedTicket, ticketById]);
 
   useEffect(() => {
     if (!selectedTicket) {
@@ -215,6 +228,8 @@ export default function TicketDashboardPage() {
       impact?: TicketImpact;
       status?: TicketStatus;
       assigneeUid?: string | null;
+      linkTicketIds?: string[];
+      unlinkTicketIds?: string[];
     } = {};
 
     if (editableTicket.department !== selectedTicket.department) {
@@ -239,6 +254,20 @@ export default function TicketDashboardPage() {
       editableTicket.assigneeUid !== selectedTicket.assigneeUid
     ) {
       updatePayload.assigneeUid = editableTicket.assigneeUid ?? null;
+    }
+
+    const savedLinks = visibleLinks(selectedTicket);
+    const linkTicketIds = editableTicket.linkedTicketIds.filter(
+      (id) => !savedLinks.includes(id)
+    );
+    const unlinkTicketIds = savedLinks.filter(
+      (id) => !editableTicket.linkedTicketIds.includes(id)
+    );
+    if (linkTicketIds.length) {
+      updatePayload.linkTicketIds = linkTicketIds;
+    }
+    if (unlinkTicketIds.length) {
+      updatePayload.unlinkTicketIds = unlinkTicketIds;
     }
 
     if (Object.keys(updatePayload).length === 0) {
@@ -412,6 +441,11 @@ export default function TicketDashboardPage() {
                                 {tenderByUid.get(ticket.assigneeUid)?.displayName ?? "Assigned"}
                               </Tag>
                             ) : null}
+                            {visibleLinks(ticket).length ? (
+                              <Tag color="purple">
+                                {visibleLinks(ticket).length} linked
+                              </Tag>
+                            ) : null}
                           </Space>
                           <Text type="secondary">Updated: {formatDate(ticket.updatedAt)}</Text>
                         </Space>
@@ -547,6 +581,39 @@ export default function TicketDashboardPage() {
                     />
                   </Descriptions.Item>
                 ) : null}
+                <Descriptions.Item label="Linked tickets">
+                  <Select
+                    mode="multiple"
+                    style={{ width: "100%" }}
+                    showSearch
+                    optionFilterProp="label"
+                    placeholder="Link similar tickets"
+                    options={ticketState.tickets
+                      .filter((ticket) => ticket.id !== selectedTicket.id)
+                      .map((ticket) => ({ label: ticket.title, value: ticket.id }))}
+                    value={editableTicket.linkedTicketIds}
+                    onChange={(linkedTicketIds: string[]) =>
+                      setEditableTicket({
+                        ...editableTicket,
+                        linkedTicketIds,
+                      })
+                    }
+                  />
+                  {visibleLinks(selectedTicket).length ? (
+                    <Space wrap style={{ marginTop: 8 }}>
+                      {visibleLinks(selectedTicket).map((id) => (
+                        <Button
+                          key={id}
+                          size="small"
+                          type="link"
+                          onClick={() => setSelectedTicket(ticketById.get(id) ?? null)}
+                        >
+                          Open: {ticketById.get(id)?.title}
+                        </Button>
+                      ))}
+                    </Space>
+                  ) : null}
+                </Descriptions.Item>
                 <Descriptions.Item label="Submitted by">
                   {ticketCreator?.displayName ? (
                     ticketCreator.displayName

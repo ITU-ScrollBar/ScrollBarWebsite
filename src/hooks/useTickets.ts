@@ -93,6 +93,8 @@ const useTickets = ({ autoLoad = true }: UseTicketsOptions = {}) => {
       impact?: TicketImpact;
       status?: TicketStatus;
       assigneeUid?: string | null;
+      linkTicketIds?: string[];
+      unlinkTicketIds?: string[];
     }
   ) => {
     await updateTicketInDb(id, update);
