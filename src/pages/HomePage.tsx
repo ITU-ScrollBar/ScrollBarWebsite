@@ -12,7 +12,6 @@ import { useLocation } from 'react-router-dom'
 import { UserList, TenderWithRole } from '../components/UserList'
 import { useWindowSize } from '../hooks/useWindowSize'
 import { getSignupWindowState } from '../utils/signupWindow'
-import DrinkBuilderBanner from '../components/HomePage/DrinkBuilderBanner'
 
 // The markdown renderer is only needed when signups are open.
 const Markdown = lazy(() => import('../components/Markdown'))
@@ -117,7 +116,6 @@ export default function HomePage() {
           start: nextEvent.start,
           end: nextEvent.end,
         } : null} />}
-        <DrinkBuilderBanner />
         <Row justify="center">
           <Col
             md={24}
