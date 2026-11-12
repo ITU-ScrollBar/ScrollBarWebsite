@@ -188,7 +188,7 @@ function App() {
                       <Route
                         element={
                           <RoleProtectedRoute
-                            requiredRole={Role.BOARD}
+                            requiredRole={[Role.BOARD, Role.DEVELOPER]}
                             allowAdminBypass={false}
                           />
                         }

@@ -213,6 +213,7 @@ export enum Role {
   PASSIVE = "passive",
   LEGACY = "legacy",
   TENDER = "tender",
+  DEVELOPER = "developer",
 }
 
 export const scopeOptions = [Role.BOARD, Role.ANCHOR, Role.TENDER];
@@ -359,6 +360,8 @@ export interface Ticket {
   // Firestore stores a DocumentReference to the creator; the list endpoint flattens it to
   // the user's uid, which is what reaches the client.
   createdByUid?: string;
+  // Only IT tickets are assigned, and only to users with the DEVELOPER role.
+  assigneeUid?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }

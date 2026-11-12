@@ -60,6 +60,8 @@ export const roleToColor = (role: Role): string => {
       return "lime";
     case Role.TENDER:
       return "pink";
+    case Role.DEVELOPER:
+      return "processing";
     default:
       return "default";
   }
@@ -91,6 +93,8 @@ export const roleToLabel = (role: Role): string => {
       return "Legacy";
     case Role.TENDER:
       return "Tender";
+    case Role.DEVELOPER:
+      return "Developer";
     default:
       return "Unknown";
   }
