@@ -28,8 +28,11 @@ export const getTicketAccess = async (uid: string): Promise<TicketAccess> => {
 };
 
 export const isDeveloper = async (uid: string): Promise<boolean> => {
+  if (!uid || uid.includes('/')) {
+    return false; // not a valid doc id; Firestore would throw
+  }
   const user = (await db.collection('users').doc(uid).get()).data() as Tender | undefined;
-  return Boolean(user?.roles?.includes(Role.DEVELOPER));
+  return Boolean(user?.active !== false && user?.roles?.includes(Role.DEVELOPER));
 };
 
 const verifyBearerToken = async (req: Request): Promise<string | null> => {
