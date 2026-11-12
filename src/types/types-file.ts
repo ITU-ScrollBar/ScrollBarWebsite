@@ -362,6 +362,8 @@ export interface Ticket {
   createdByUid?: string;
   // Only IT tickets are assigned, and only to users with the DEVELOPER role.
   assigneeUid?: string;
+  // Similar reports, linked both ways. May hold ids of deleted tickets.
+  linkedTicketIds?: string[];
   createdAt?: Date;
   updatedAt?: Date;
 }
