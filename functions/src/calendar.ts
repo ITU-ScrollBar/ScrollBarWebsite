@@ -87,6 +87,9 @@ type TicketUpdatePayload = {
   status?: TicketStatus;
   // null or '' unassigns.
   assigneeUid?: string | null;
+  // Links are symmetric: linking A to B also links B to A.
+  linkTicketIds?: string[];
+  unlinkTicketIds?: string[];
 };
 
 const isItTicket = async (ticketRef: admin.firestore.DocumentReference): Promise<boolean> => {
@@ -292,6 +295,7 @@ app.get('/tickets', async (req, res) => {
           deleted?: boolean;
           createdByRef?: admin.firestore.DocumentReference;
           assigneeUid?: string;
+          linkedTicketIds?: string[];
           createdAt?: admin.firestore.Timestamp;
           updatedAt?: admin.firestore.Timestamp;
         };
@@ -317,6 +321,7 @@ app.get('/tickets', async (req, res) => {
           status: data.status ?? 'open',
           createdByUid: data.createdByRef?.id,
           assigneeUid: data.assigneeUid,
+          linkedTicketIds: data.linkedTicketIds ?? [],
           createdAtMs: data.createdAt?.toMillis(),
           updatedAtMs: data.updatedAt?.toMillis(),
         };
@@ -413,6 +418,8 @@ app.patch('/tickets/:id', async (req, res) => {
       impact,
       status,
       assigneeUid,
+      linkTicketIds,
+      unlinkTicketIds,
     } = (req.body ?? {}) as TicketUpdatePayload;
 
     const env = process.env.VITE_APP_ENV || 'dev';
@@ -495,11 +502,44 @@ app.patch('/tickets/:id', async (req, res) => {
       updatePayload.status = status;
     }
 
-    if (Object.keys(updatePayload).length === 0) {
+    const isIdList = (value: unknown): value is string[] =>
+      Array.isArray(value) &&
+      value.length <= 50 &&
+      // Ticket ids are Firestore auto ids, so anything else is rejected before building a doc ref.
+      value.every((id) => typeof id === 'string' && /^[A-Za-z0-9]+$/.test(id) && id !== ticketId);
+    if (
+      (linkTicketIds !== undefined && !isIdList(linkTicketIds)) ||
+      (unlinkTicketIds !== undefined && !isIdList(unlinkTicketIds))
+    ) {
+      return res.status(400).send('linkTicketIds and unlinkTicketIds must be lists of other ticket ids');
+    }
+    const toLink = linkTicketIds ?? [];
+    const toUnlink = (unlinkTicketIds ?? []).filter((id) => !toLink.includes(id));
+    const otherSnapshots = toLink.length + toUnlink.length
+      ? await db.getAll(...[...toLink, ...toUnlink].map((id) => ticketRef.parent.doc(id)))
+      : [];
+    for (const snapshot of otherSnapshots) {
+      const linking = toLink.includes(snapshot.id);
+      // Unlinking a ticket that has since been deleted only cleans up this side.
+      if (!snapshot.exists || snapshot.get('deleted') === true) {
+        if (linking) return res.status(400).send('Linked ticket not found');
+        continue;
+      }
+      if (access === 'it' && (snapshot.get('department') ?? TicketDepartment.IT) !== TicketDepartment.IT) {
+        return res.status(403).send('Insufficient permissions');
+      }
+    }
+    if (toLink.length) {
+      updatePayload.linkedTicketIds = admin.firestore.FieldValue.arrayUnion(...toLink);
+    }
+
+    if (Object.keys(updatePayload).length === 0 && toUnlink.length === 0) {
       return res.status(400).send('No valid fields to update');
     }
 
-    await ticketRef.set(
+    const batch = db.batch();
+    batch.set(
+      ticketRef,
       {
         ...updatePayload,
         ...(status !== undefined ? await resolvedAtFields(ticketRef, status) : {}),
@@ -507,6 +547,22 @@ app.patch('/tickets/:id', async (req, res) => {
       },
       { merge: true }
     );
+    // Firestore can't arrayUnion and arrayRemove the same field in one write.
+    if (toUnlink.length) {
+      batch.update(ticketRef, {
+        linkedTicketIds: admin.firestore.FieldValue.arrayRemove(...toUnlink),
+      });
+    }
+    for (const snapshot of otherSnapshots) {
+      if (!snapshot.exists || snapshot.get('deleted') === true) continue;
+      const linking = toLink.includes(snapshot.id);
+      batch.update(snapshot.ref, {
+        linkedTicketIds: linking
+          ? admin.firestore.FieldValue.arrayUnion(ticketId)
+          : admin.firestore.FieldValue.arrayRemove(ticketId),
+      });
+    }
+    await batch.commit();
 
     return res.status(200).json({ ok: true });
   } catch (error) {
