@@ -6,7 +6,7 @@ import { Result } from 'antd';
 import { Loading } from '../components/Loading';
 
 interface RoleProtectedRouteProps {
-  requiredRole?: string;
+  requiredRole?: string | string[]; // any one of these roles grants access
   fallbackPath?: string; // Where to redirect if access denied
   allowAdminBypass?: boolean;
   children?: React.ReactNode;
@@ -30,7 +30,7 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({
   }
 
   const hasRequiredRole = requiredRole
-    ? Boolean(currentUser.roles?.includes(requiredRole))
+    ? [requiredRole].flat().some((role) => currentUser.roles?.includes(role))
     : false;
 
   const hasAccess = requiredRole

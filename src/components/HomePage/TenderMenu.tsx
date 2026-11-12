@@ -70,6 +70,7 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
     || currentUser?.roles?.includes(Role.TENDER_MANAGER)
     || currentUser?.roles?.includes(Role.SHIFT_MANAGER)
     || currentUser?.roles?.includes(Role.BOARD)
+    || currentUser?.roles?.includes(Role.DEVELOPER)
   ) {
     const adminItems = [];
     if (currentUser?.isAdmin || currentUser?.roles?.includes(Role.EVENT_MANAGER)) {
@@ -90,11 +91,13 @@ export const TenderMenu = ({ children }: TenderMenuProps) => {
         key: 'admin/users',
       });
     }
-    if (currentUser?.isAdmin || currentUser?.roles?.includes(Role.BOARD)) {
+    if (currentUser?.isAdmin || currentUser?.roles?.includes(Role.BOARD) || currentUser?.roles?.includes(Role.DEVELOPER)) {
       adminItems.push({
         label: 'Ticket Dashboard',
         key: 'admin/dashboard',
       });
+    }
+    if (currentUser?.isAdmin || currentUser?.roles?.includes(Role.BOARD)) {
       adminItems.push({
         label: 'Manage Internal Events',
         key: 'admin/internalEvents',

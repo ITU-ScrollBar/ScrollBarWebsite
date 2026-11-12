@@ -19,9 +19,11 @@ import {
 } from "antd";
 import { Content } from "antd/es/layout/layout";
 import { Loading } from "../../components/Loading";
+import { useAuth } from "../../contexts/AuthContext";
 import { useTenderContext } from "../../contexts/TenderContext";
 import useTickets from "../../hooks/useTickets";
 import {
+  Role,
   Ticket,
   TicketDepartment,
   TicketImpact,
@@ -91,6 +93,11 @@ export default function TicketDashboardPage() {
   const { message } = AntdApp.useApp();
   const { ticketState, deleteTicket, updateTicket, updateTicketStatus } = useTickets();
   const { tenderState } = useTenderContext();
+  const { currentUser } = useAuth();
+  // Developers only get IT tickets from the server, and can't re-department or delete them.
+  const canSeeAllTickets = Boolean(
+    currentUser?.isAdmin || currentUser?.roles?.includes(Role.BOARD)
+  );
   const [selectedDepartment, setSelectedDepartment] =
     useState<DepartmentFilter>("all");
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
@@ -99,6 +106,7 @@ export default function TicketDashboardPage() {
     requestType: TicketRequestType;
     impact: TicketImpact;
     status: TicketStatus;
+    assigneeUid?: string;
   } | null>(null);
   const [isSavingTicket, setIsSavingTicket] = useState(false);
   const [draggedTicketId, setDraggedTicketId] = useState<string | null>(null);
@@ -138,6 +146,14 @@ export default function TicketDashboardPage() {
     return new Map(tenderState.tenders.map((tender) => [tender.uid, tender]));
   }, [tenderState.tenders]);
 
+  const developerOptions = useMemo(
+    () =>
+      tenderState.tenders
+        .filter((tender) => tender.roles?.includes(Role.DEVELOPER))
+        .map((tender) => ({ label: tender.displayName, value: tender.uid })),
+    [tenderState.tenders]
+  );
+
   // Tickets only carry the creator's uid, so the display name and email are resolved from
   // the users already streamed by TenderProvider rather than fetched per ticket.
   const ticketCreator = useMemo(() => {
@@ -159,6 +175,7 @@ export default function TicketDashboardPage() {
       requestType: selectedTicket.requestType,
       impact: selectedTicket.impact,
       status: selectedTicket.status,
+      assigneeUid: selectedTicket.assigneeUid,
     });
   }, [selectedTicket]);
 
@@ -197,6 +214,7 @@ export default function TicketDashboardPage() {
       requestType?: TicketRequestType;
       impact?: TicketImpact;
       status?: TicketStatus;
+      assigneeUid?: string | null;
     } = {};
 
     if (editableTicket.department !== selectedTicket.department) {
@@ -213,6 +231,14 @@ export default function TicketDashboardPage() {
 
     if (editableTicket.status !== selectedTicket.status) {
       updatePayload.status = editableTicket.status;
+    }
+
+    // Moving a ticket out of IT clears its assignee on the server, so only send it for IT tickets.
+    if (
+      editableTicket.department === TicketDepartment.IT &&
+      editableTicket.assigneeUid !== selectedTicket.assigneeUid
+    ) {
+      updatePayload.assigneeUid = editableTicket.assigneeUid ?? null;
     }
 
     if (Object.keys(updatePayload).length === 0) {
@@ -293,17 +319,19 @@ export default function TicketDashboardPage() {
           </Text>
         </div>
 
-        <div style={{ marginBottom: 20 }}>
-          <Space wrap>
-            <Text strong>Department</Text>
-            <Select
-              value={selectedDepartment}
-              options={departmentOptions}
-              onChange={(value: DepartmentFilter) => setSelectedDepartment(value)}
-              style={{ minWidth: 220 }}
-            />
-          </Space>
-        </div>
+        {canSeeAllTickets ? (
+          <div style={{ marginBottom: 20 }}>
+            <Space wrap>
+              <Text strong>Department</Text>
+              <Select
+                value={selectedDepartment}
+                options={departmentOptions}
+                onChange={(value: DepartmentFilter) => setSelectedDepartment(value)}
+                style={{ minWidth: 220 }}
+              />
+            </Space>
+          </div>
+        ) : null}
 
         {ticketState.error ? (
           <Alert
@@ -379,6 +407,11 @@ export default function TicketDashboardPage() {
                             <Tag color="geekblue">{departmentLabel[ticket.department]}</Tag>
                             <Tag color="gold">{requestTypeLabel[ticket.requestType]}</Tag>
                             <Tag color="volcano">{impactLabel[ticket.impact]}</Tag>
+                            {ticket.assigneeUid ? (
+                              <Tag>
+                                {tenderByUid.get(ticket.assigneeUid)?.displayName ?? "Assigned"}
+                              </Tag>
+                            ) : null}
                           </Space>
                           <Text type="secondary">Updated: {formatDate(ticket.updatedAt)}</Text>
                         </Space>
@@ -452,6 +485,7 @@ export default function TicketDashboardPage() {
                   <Select
                     style={{ width: "100%" }}
                     options={departmentOptions.filter((option) => option.value !== "all")}
+                    disabled={!canSeeAllTickets}
                     value={editableTicket.department}
                     onChange={(department: TicketDepartment) =>
                       setEditableTicket({
@@ -494,6 +528,25 @@ export default function TicketDashboardPage() {
                     }
                   />
                 </Descriptions.Item>
+                {editableTicket.department === TicketDepartment.IT ? (
+                  <Descriptions.Item label="Assignee">
+                    <Select
+                      style={{ width: "100%" }}
+                      allowClear
+                      showSearch
+                      optionFilterProp="label"
+                      placeholder="Unassigned"
+                      options={developerOptions}
+                      value={editableTicket.assigneeUid}
+                      onChange={(assigneeUid?: string) =>
+                        setEditableTicket({
+                          ...editableTicket,
+                          assigneeUid,
+                        })
+                      }
+                    />
+                  </Descriptions.Item>
+                ) : null}
                 <Descriptions.Item label="Submitted by">
                   {ticketCreator?.displayName ? (
                     ticketCreator.displayName
@@ -544,20 +597,22 @@ export default function TicketDashboardPage() {
                 <Button type="primary" onClick={saveTicketChanges} loading={isSavingTicket}>
                   Save Changes
                 </Button>
-                <Popconfirm
-                  title="Delete this ticket?"
-                  description="This will remove the ticket from the board."
-                  okText="Delete"
-                  cancelText="Cancel"
-                  okButtonProps={{ danger: true, loading: isSavingTicket }}
-                  onConfirm={() => {
-                    void onDeleteTicket();
-                  }}
-                >
-                  <Button danger disabled={isSavingTicket}>
-                    Delete Ticket
-                  </Button>
-                </Popconfirm>
+                {canSeeAllTickets ? (
+                  <Popconfirm
+                    title="Delete this ticket?"
+                    description="This will remove the ticket from the board."
+                    okText="Delete"
+                    cancelText="Cancel"
+                    okButtonProps={{ danger: true, loading: isSavingTicket }}
+                    onConfirm={() => {
+                      void onDeleteTicket();
+                    }}
+                  >
+                    <Button danger disabled={isSavingTicket}>
+                      Delete Ticket
+                    </Button>
+                  </Popconfirm>
+                ) : null}
               </div>
             </Space>
           ) : null}

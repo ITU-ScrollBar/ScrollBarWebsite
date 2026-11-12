@@ -109,6 +109,7 @@ type ListTicketsHttpResponse = {
     impact: Ticket["impact"];
     status: TicketStatus;
     createdByUid?: string;
+    assigneeUid?: string;
     createdAtMs?: number;
     updatedAtMs?: number;
   }[];
@@ -148,6 +149,7 @@ export const listTickets = async (): Promise<(Ticket & { key: string })[]> => {
     impact: ticket.impact,
     status: ticket.status,
     createdByUid: ticket.createdByUid,
+    assigneeUid: ticket.assigneeUid,
     createdAt: ticket.createdAtMs ? new Date(ticket.createdAtMs) : undefined,
     updatedAt: ticket.updatedAtMs ? new Date(ticket.updatedAtMs) : undefined,
   }));
@@ -169,6 +171,8 @@ export const updateTicket = async (
     requestType?: TicketRequestType;
     impact?: TicketImpact;
     status?: TicketStatus;
+    // null unassigns.
+    assigneeUid?: string | null;
   }
 ): Promise<void> => {
   await auth.authStateReady();

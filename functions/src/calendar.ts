@@ -3,7 +3,7 @@ import * as admin from 'firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 import { createEvents, EventAttributes } from 'ics';
 import formsRouter from './forms';
-import { ensureBoardAccess } from './httpAuth';
+import { ensureBoardAccess, getTicketAccess, isDeveloper } from './httpAuth';
 import { resolveStorageBucketName } from './dataRetention/common';
 import { resolvedAtFields } from './ticketResolvedAt';
 import {
@@ -85,6 +85,13 @@ type TicketUpdatePayload = {
   requestType?: TicketRequestType;
   impact?: TicketImpact;
   status?: TicketStatus;
+  // null or '' unassigns.
+  assigneeUid?: string | null;
+};
+
+const isItTicket = async (ticketRef: admin.firestore.DocumentReference): Promise<boolean> => {
+  const snapshot = await ticketRef.get();
+  return snapshot.exists && (snapshot.get('department') ?? TicketDepartment.IT) === TicketDepartment.IT;
 };
 
 const extractStoragePathFromUrl = (value: string): string | null => {
@@ -263,8 +270,8 @@ app.get('/tickets', async (req, res) => {
 
     const decoded = await admin.auth().verifyIdToken(token);
     const uid = decoded.uid;
-    const hasAccess = await ensureBoardAccess(uid);
-    if (!hasAccess) {
+    const access = await getTicketAccess(uid);
+    if (!access) {
       return res.status(403).send('Insufficient permissions');
     }
 
@@ -284,11 +291,17 @@ app.get('/tickets', async (req, res) => {
           status?: TicketStatus;
           deleted?: boolean;
           createdByRef?: admin.firestore.DocumentReference;
+          assigneeUid?: string;
           createdAt?: admin.firestore.Timestamp;
           updatedAt?: admin.firestore.Timestamp;
         };
 
         if (data.deleted === true) {
+          return null;
+        }
+
+        const department = data.department ?? TicketDepartment.IT;
+        if (access === 'it' && department !== TicketDepartment.IT) {
           return null;
         }
 
@@ -298,11 +311,12 @@ app.get('/tickets', async (req, res) => {
           description: data.description ?? '',
           imageUrls: data.imageUrls ?? [],
           imagePaths: data.imagePaths ?? [],
-          department: data.department ?? TicketDepartment.IT,
+          department,
           requestType: data.requestType ?? TicketRequestType.BROKEN,
           impact: data.impact ?? TicketImpact.LOW,
           status: data.status ?? 'open',
           createdByUid: data.createdByRef?.id,
+          assigneeUid: data.assigneeUid,
           createdAtMs: data.createdAt?.toMillis(),
           updatedAtMs: data.updatedAt?.toMillis(),
         };
@@ -332,8 +346,8 @@ app.patch('/tickets/:id/status', async (req, res) => {
 
     const decoded = await admin.auth().verifyIdToken(token);
     const uid = decoded.uid;
-    const hasAccess = await ensureBoardAccess(uid);
-    if (!hasAccess) {
+    const access = await getTicketAccess(uid);
+    if (!access) {
       return res.status(403).send('Insufficient permissions');
     }
 
@@ -349,6 +363,10 @@ app.patch('/tickets/:id/status', async (req, res) => {
 
     const env = process.env.VITE_APP_ENV || 'dev';
     const ticketRef = db.collection('env').doc(env).collection('tickets').doc(ticketId);
+
+    if (access === 'it' && !(await isItTicket(ticketRef))) {
+      return res.status(403).send('Insufficient permissions');
+    }
 
     await ticketRef.set(
       {
@@ -377,8 +395,8 @@ app.patch('/tickets/:id', async (req, res) => {
 
     const decoded = await admin.auth().verifyIdToken(token);
     const uid = decoded.uid;
-    const hasAccess = await ensureBoardAccess(uid);
-    if (!hasAccess) {
+    const access = await getTicketAccess(uid);
+    if (!access) {
       return res.status(403).send('Insufficient permissions');
     }
 
@@ -394,7 +412,26 @@ app.patch('/tickets/:id', async (req, res) => {
       requestType,
       impact,
       status,
+      assigneeUid,
     } = (req.body ?? {}) as TicketUpdatePayload;
+
+    const env = process.env.VITE_APP_ENV || 'dev';
+    const ticketRef = db.collection('env').doc(env).collection('tickets').doc(ticketId);
+    const ticketSnapshot = await ticketRef.get();
+    if (!ticketSnapshot.exists) {
+      return res.status(404).send('Ticket not found');
+    }
+    const currentDepartment =
+      (ticketSnapshot.get('department') as TicketDepartment | undefined) ?? TicketDepartment.IT;
+
+    // Developers may only work on IT tickets, and may not move them to another department.
+    if (
+      access === 'it' &&
+      (currentDepartment !== TicketDepartment.IT ||
+        (department !== undefined && department !== TicketDepartment.IT))
+    ) {
+      return res.status(403).send('Insufficient permissions');
+    }
 
     const updatePayload: Record<string, unknown> = {};
 
@@ -419,6 +456,22 @@ app.patch('/tickets/:id', async (req, res) => {
         return res.status(400).send('department must be a valid value');
       }
       updatePayload.department = department;
+      // Assignment only exists on IT tickets, so moving a ticket out of IT drops it.
+      if (department !== TicketDepartment.IT) {
+        updatePayload.assigneeUid = admin.firestore.FieldValue.delete();
+      }
+    }
+
+    if (assigneeUid !== undefined) {
+      if (!assigneeUid) {
+        updatePayload.assigneeUid = admin.firestore.FieldValue.delete();
+      } else if (typeof assigneeUid !== 'string' || !(await isDeveloper(assigneeUid))) {
+        return res.status(400).send('assigneeUid must be a developer');
+      } else if ((department ?? currentDepartment) !== TicketDepartment.IT) {
+        return res.status(400).send('Only IT tickets can be assigned');
+      } else {
+        updatePayload.assigneeUid = assigneeUid;
+      }
     }
 
     if (requestType !== undefined) {
@@ -445,9 +498,6 @@ app.patch('/tickets/:id', async (req, res) => {
     if (Object.keys(updatePayload).length === 0) {
       return res.status(400).send('No valid fields to update');
     }
-
-    const env = process.env.VITE_APP_ENV || 'dev';
-    const ticketRef = db.collection('env').doc(env).collection('tickets').doc(ticketId);
 
     await ticketRef.set(
       {
