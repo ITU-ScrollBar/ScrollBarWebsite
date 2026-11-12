@@ -1,5 +1,5 @@
 
-import { Space } from 'antd'
+import { Button, Space } from 'antd'
 import Title from 'antd/es/typography/Title';
 import Text from 'antd/es/typography/Text';
 import { useWindowSize } from '../../hooks/useWindowSize';
@@ -124,6 +124,27 @@ export default function CountDown({ nextEvent }: CountDownProps) {
             ))}
           </Space>
         )}
+        <Button
+          type="primary"
+          size="large"
+          style={{
+            background: 'yellow',
+            borderColor: 'rgba(46, 46, 46, 0.6)',
+            borderWidth: 1,
+            color: 'black',
+            marginTop: 8,
+            borderRadius: 25,
+            alignSelf: 'flex-start',
+            fontSize: isMobile ? 14 : 16,
+            padding: isMobile ? '8px 24px' : '10px 40px',
+            height: 'auto',
+          }}
+          href="https://www.instagram.com/scrollbaritu/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Follow us on Instagram
+        </Button>
       </Space>
     </div>
   );
