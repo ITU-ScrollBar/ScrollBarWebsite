@@ -11,7 +11,6 @@ interface CountDownProps {
     title: string;
     start: Date;
     end: Date;
-    event_url?: string;
   } | null;
 }
 
@@ -20,7 +19,6 @@ export default function CountDown({ nextEvent }: CountDownProps) {
   const { isMobile } = useWindowSize();
 
   const TEXT_SHADOW = `2px 2px 4px 'rgba(0, 0, 0, 0.8)'`;
-  const BASE_EVENT_URL = "https://www.facebook.com/ScrollBar"
   const units = [
     { label: 'Days', value: timeLeft.days.toString().padStart(2, '0') },
     { label: 'Hours', value: timeLeft.hours.toString().padStart(2, '0') },
@@ -141,10 +139,11 @@ export default function CountDown({ nextEvent }: CountDownProps) {
             padding: isMobile ? '8px 24px' : '10px 40px',
             height: 'auto',
           }}
-          href={nextEvent.event_url || BASE_EVENT_URL}
+          href="https://www.instagram.com/scrollbaritu/"
           target="_blank"
+          rel="noopener noreferrer"
         >
-          {nextEvent.event_url ? 'Go To Facebook Event' : 'Go To Facebook'}
+          Follow us on Instagram
         </Button>
       </Space>
     </div>
