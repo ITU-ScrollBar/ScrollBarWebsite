@@ -505,7 +505,8 @@ app.patch('/tickets/:id', async (req, res) => {
     const isIdList = (value: unknown): value is string[] =>
       Array.isArray(value) &&
       value.length <= 50 &&
-      value.every((id) => typeof id === 'string' && id && id !== ticketId && !id.includes('/'));
+      // Ticket ids are Firestore auto ids, so anything else is rejected before building a doc ref.
+      value.every((id) => typeof id === 'string' && /^[A-Za-z0-9]+$/.test(id) && id !== ticketId);
     if (
       (linkTicketIds !== undefined && !isIdList(linkTicketIds)) ||
       (unlinkTicketIds !== undefined && !isIdList(unlinkTicketIds))
