@@ -92,6 +92,7 @@ const useTickets = ({ autoLoad = true }: UseTicketsOptions = {}) => {
       requestType?: TicketRequestType;
       impact?: TicketImpact;
       status?: TicketStatus;
+      assigneeUid?: string | null;
     }
   ) => {
     await updateTicketInDb(id, update);

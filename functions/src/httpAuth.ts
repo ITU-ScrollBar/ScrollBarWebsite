@@ -16,6 +16,22 @@ export const ensureBoardAccess = async (uid: string): Promise<boolean> => {
   return Boolean(user?.isAdmin || user?.roles?.includes(Role.BOARD));
 };
 
+export type TicketAccess = 'all' | 'it' | null;
+
+// Board and admins see every ticket; developers only see (and work on) IT tickets.
+export const getTicketAccess = async (uid: string): Promise<TicketAccess> => {
+  const user = (await db.collection('users').doc(uid).get()).data() as Tender | undefined;
+  if (user?.isAdmin || user?.roles?.includes(Role.BOARD)) {
+    return 'all';
+  }
+  return user?.roles?.includes(Role.DEVELOPER) ? 'it' : null;
+};
+
+export const isDeveloper = async (uid: string): Promise<boolean> => {
+  const user = (await db.collection('users').doc(uid).get()).data() as Tender | undefined;
+  return Boolean(user?.roles?.includes(Role.DEVELOPER));
+};
+
 const verifyBearerToken = async (req: Request): Promise<string | null> => {
   const authHeader = req.headers.authorization;
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : '';
