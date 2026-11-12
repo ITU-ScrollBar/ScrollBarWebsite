@@ -19,15 +19,20 @@ jobs:
           fetch-depth: 0
 
       # A conflict fails the job; merge main into dev by hand then.
+      # shortcut: GITHUB_TOKEN can't push workflow-file changes dev doesn't already have, so that also fails; use a PAT with workflow scope if it gets annoying.
       - name: Merge main into dev
+        id: merge
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          before=$(git rev-parse HEAD)
           git merge --no-edit origin/main
           git push origin dev
+          [ "$before" = "$(git rev-parse HEAD)" ] || echo "changed=true" >> "$GITHUB_OUTPUT"
 
       # Pushes made with GITHUB_TOKEN don't trigger workflows, so start the dev deploy explicitly.
       - name: Deploy dev
+        if: steps.merge.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run firebase-hosting-merge-main.yml --ref dev
