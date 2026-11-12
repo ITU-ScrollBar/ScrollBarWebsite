@@ -1,0 +1,33 @@
+name: Merge main into dev
+on:
+  push:
+    branches:
+      - main
+concurrency:
+  group: merge-main-into-dev
+  cancel-in-progress: false
+permissions:
+  contents: write
+  actions: write
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      # A conflict fails the job; merge main into dev by hand then.
+      - name: Merge main into dev
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git merge --no-edit origin/main
+          git push origin dev
+
+      # Pushes made with GITHUB_TOKEN don't trigger workflows, so start the dev deploy explicitly.
+      - name: Deploy dev
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run firebase-hosting-merge-main.yml --ref dev
